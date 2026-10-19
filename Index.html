@@ -1,1439 +1,1125 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-[#0d0d0f] text-gray-100">
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Athletics Performance Tracker - PWA</title>
-
-  <!-- Web App Metadata for Mobile Installation -->
-  <meta name="theme-color" content="#0d0d0f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Athletics Tracker">
-  
-  <!-- Dynamic PWA Manifest Injection via Data URI -->
-  <script>
-    const manifestJson = {
-      "name": "Athletics Tracker Pro",
-      "short_name": "AthleticsApp",
-      "start_url": "./",
-      "display": "standalone",
-      "background_color": "#0d0d0f",
-      "theme_color": "#0d0d0f",
-      "icons": [
-        {
-          "src": "https://img.icons8.com/isometric/192/running.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        },
-        {
-          "src": "https://img.icons8.com/isometric/512/running.png",
-          "sizes": "512x512",
-          "type": "image/png"
-        }
-      ]
-    };
-    const stringManifest = JSON.stringify(manifestJson);
-    const blob = new Blob([stringManifest], {type: 'application/json'});
-    const manifestUrl = URL.createObjectURL(blob);
-    const link = document.createElement('link');
-    link.rel = 'manifest';
-    link.href = manifestUrl;
-    document.head.appendChild(link);
-  </script>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              black: '#0d0d0f',
-              card: '#16161a',
-              cardHover: '#1f1f24',
-              accent: '#ff8f00',
-              gold: '#f5a623',
-              goldLight: '#ffd073'
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- FontAwesome & Google Fonts -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0d0d0f;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #282830;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #f5a623;
-    }
-    .accent-gradient-text {
-      background: linear-gradient(135deg, #f5a623 0%, #ff8f00 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .accent-gradient-bg {
-      background: linear-gradient(135deg, #f5a623 0%, #ff8f00 100%);
-    }
-  </style>
-</head>
-<body class="bg-brand-black text-gray-100 flex flex-col min-h-screen overflow-x-hidden">
-
-  <!-- AUTHENTICATION OVERLAY / SCREEN (IF NOT LOGGED IN) -->
-  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-black/95 backdrop-blur-md">
-    <div class="bg-brand-card border border-gray-800 w-full max-w-md rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-      <div class="absolute -top-12 -right-12 w-32 h-32 bg-brand-gold/10 rounded-full blur-2xl"></div>
-      
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-gold/10 text-brand-gold mb-3 border border-brand-gold/20">
-          <i class="fa-solid fa-person-running text-3xl"></i>
-        </div>
-        <h2 class="text-2xl font-extrabold tracking-tight">Athletics <span class="accent-gradient-text">Tracker</span></h2>
-        <p class="text-gray-400 text-xs mt-1">Sincronización en la Nube & PWA Multiplataforma</p>
-      </div>
-
-      <!-- Auth Tabs -->
-      <div class="flex bg-black/40 p-1 rounded-xl mb-6 border border-gray-800">
-        <button id="tabLogin" onclick="switchAuthMode('login')" class="flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-white bg-brand-gold/20 border border-brand-gold/30">Iniciar Sesión</button>
-        <button id="tabSignup" onclick="switchAuthMode('signup')" class="flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">Registrarse</button>
-      </div>
-
-      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Correo Electrónico</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              <i class="fa-solid fa-envelope text-xs"></i>
-            </span>
-            <input type="email" id="authEmail" required placeholder="tu@atleta.com" class="w-full bg-black/60 border border-gray-800 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold transition-colors text-white">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-medium text-gray-400 mb-1">Contraseña</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              <i class="fa-solid fa-lock text-xs"></i>
-            </span>
-            <input type="password" id="authPassword" required minlength="6" placeholder="••••••••" class="w-full bg-black/60 border border-gray-800 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold transition-colors text-white">
-          </div>
-        </div>
-
-        <div id="authError" class="hidden text-red-400 text-xs bg-red-950/40 border border-red-800/50 rounded-lg p-2.5 text-center"></div>
-
-        <button type="submit" id="authSubmitBtn" class="w-full accent-gradient-bg text-black font-bold py-3 rounded-xl hover:opacity-90 transition-all text-sm shadow-lg shadow-brand-accent/20 flex items-center justify-center space-x-2">
-          <span id="authBtnText">Entrar a mi Cuenta</span>
-          <i class="fa-solid fa-arrow-right text-xs"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- HEADER / NAVBAR -->
-  <header class="bg-brand-card border-b border-gray-800/80 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      
-      <!-- Logo -->
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-accent to-brand-gold flex items-center justify-center text-black font-extrabold shadow-md">
-          <i class="fa-solid fa-trophy text-sm"></i>
-        </div>
-        <div>
-          <h1 class="font-bold text-base tracking-tight leading-none text-white">Athletics <span class="accent-gradient-text">Pro</span></h1>
-          <span class="text-[10px] text-gray-400 font-medium">Sincronizado en la Nube</span>
-        </div>
-      </div>
-
-      <!-- User Bar & PWA Prompt -->
-      <div class="flex items-center space-x-3">
-        <button id="pwaInstallBtn" onclick="installPWA()" class="hidden md:flex items-center space-x-1.5 bg-brand-gold/10 text-brand-gold text-xs font-semibold px-3 py-1.5 rounded-lg border border-brand-gold/30 hover:bg-brand-gold/20 transition-all">
-          <i class="fa-solid fa-download"></i>
-          <span>Instalar App</span>
-        </button>
-
-        <div id="userInfo" class="hidden flex items-center space-x-2 bg-black/40 px-3 py-1.5 rounded-xl border border-gray-800">
-          <i class="fa-solid fa-user-circle text-brand-gold text-sm"></i>
-          <span id="userEmailDisplay" class="text-xs font-medium text-gray-300 max-w-[120px] sm:max-w-[180px] truncate"></span>
-          <button onclick="handleLogout()" class="text-gray-500 hover:text-red-400 text-xs ml-2" title="Cerrar Sesión">
-            <i class="fa-solid fa-right-from-bracket"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Navigation Tabs -->
-    <nav class="flex overflow-x-auto no-scrollbar max-w-7xl mx-auto px-4 border-t border-gray-800/50 space-x-1 py-1">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active-nav flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-brand-gold bg-brand-gold/10">
-        <i class="fa-solid fa-chart-line"></i><span>Dashboard</span>
-      </button>
-      <button onclick="switchTab('especifico')" id="nav-especifico" class="nav-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-gray-400 hover:text-white">
-        <i class="fa-solid fa-stopwatch"></i><span>Trabajo Específico</span>
-      </button>
-      <button onclick="switchTab('gimnasio')" id="nav-gimnasio" class="nav-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-gray-400 hover:text-white">
-        <i class="fa-solid fa-dumbbell"></i><span>Gimnasio (% 1RM)</span>
-      </button>
-      <button onclick="switchTab('tests')" id="nav-tests" class="nav-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-gray-400 hover:text-white">
-        <i class="fa-solid fa-vial"></i><span>Test Mensual (10 Lanz. / Fuerza)</span>
-      </button>
-      <button onclick="switchTab('competiciones')" id="nav-competiciones" class="nav-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-gray-400 hover:text-white">
-        <i class="fa-solid fa-medal"></i><span>Competiciones & PBs</span>
-      </button>
-    </nav>
-  </header>
-
-  <!-- MAIN CONTAINER -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
-
-    <!-- SYNC STATUS INDICATOR -->
-    <div id="syncBadge" class="flex items-center justify-between bg-brand-card/60 border border-gray-800 rounded-xl px-4 py-2 text-xs">
-      <div class="flex items-center space-x-2">
-        <span class="relative flex h-2.5 w-2.5">
-          <span id="syncDotPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span id="syncDot" class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-        </span>
-        <span id="syncStatusText" class="text-gray-300 font-medium">Sincronizado en tiempo real</span>
-      </div>
-      <div class="flex items-center space-x-2">
-        <button onclick="exportDataJSON()" class="text-gray-400 hover:text-brand-gold transition-colors text-xs flex items-center space-x-1" title="Exportar Copia JSON">
-          <i class="fa-solid fa-file-export"></i><span class="hidden sm:inline">Exportar JSON</span>
-        </button>
-        <span class="text-gray-700">|</span>
-        <label class="text-gray-400 hover:text-brand-gold transition-colors text-xs flex items-center space-x-1 cursor-pointer" title="Importar Copia JSON">
-          <i class="fa-solid fa-file-import"></i><span class="hidden sm:inline">Importar JSON</span>
-          <input type="file" id="importJsonInput" accept=".json" class="hidden" onchange="importDataJSON(event)">
-        </label>
-      </div>
-    </div>
-
-    <!-- TAB 1: DASHBOARD -->
-    <section id="section-dashboard" class="space-y-6">
-      
-      <!-- Top Stats Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-brand-card p-4 rounded-2xl border border-gray-800/80 relative overflow-hidden">
-          <div class="text-gray-400 text-xs font-medium">Total Sesiones</div>
-          <div id="statTotalSesiones" class="text-2xl font-extrabold text-white mt-1">0</div>
-          <i class="fa-solid fa-calendar-check absolute right-3 bottom-3 text-3xl text-gray-800/40"></i>
-        </div>
-
-        <div class="bg-brand-card p-4 rounded-2xl border border-gray-800/80 relative overflow-hidden">
-          <div class="text-gray-400 text-xs font-medium">Lanzamientos Realizados</div>
-          <div id="statTotalLanzamientos" class="text-2xl font-extrabold text-brand-gold mt-1">0</div>
-          <i class="fa-solid fa-meteor absolute right-3 bottom-3 text-3xl text-brand-gold/10"></i>
-        </div>
-
-        <div class="bg-brand-card p-4 rounded-2xl border border-gray-800/80 relative overflow-hidden">
-          <div class="text-gray-400 text-xs font-medium">Competiciones</div>
-          <div id="statTotalCompeticiones" class="text-2xl font-extrabold text-white mt-1">0</div>
-          <i class="fa-solid fa-flag-checkered absolute right-3 bottom-3 text-3xl text-gray-800/40"></i>
-        </div>
-
-        <div class="bg-brand-card p-4 rounded-2xl border border-gray-800/80 relative overflow-hidden">
-          <div class="text-gray-400 text-xs font-medium">Mejores Marcas (PB)</div>
-          <div id="statTotalPBs" class="text-2xl font-extrabold text-emerald-400 mt-1">0</div>
-          <i class="fa-solid fa-trophy absolute right-3 bottom-3 text-3xl text-emerald-500/10"></i>
-        </div>
-      </div>
-
-      <!-- Charts & Personal Bests Summary -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Chart -->
-        <div class="lg:col-span-2 bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-sm text-gray-200 flex items-center space-x-2">
-              <i class="fa-solid fa-chart-line text-brand-gold"></i>
-              <span>Progreso de Test de 10 Lanzamientos</span>
-            </h3>
-            <select id="chartDisciplineFilter" onchange="updateDashboardChart()" class="bg-black/60 border border-gray-800 rounded-lg px-2.5 py-1 text-xs text-gray-300 focus:outline-none">
-              <option value="Jabalina">Jabalina</option>
-              <option value="Peso">Peso</option>
-              <option value="Balón Espaldas">Balón Espaldas</option>
-            </select>
-          </div>
-          <div class="h-64">
-            <canvas id="throwsChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Personal Bests Highlight -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80 flex flex-col">
-          <h3 class="font-bold text-sm text-gray-200 mb-3 flex items-center space-x-2">
-            <i class="fa-solid fa-award text-brand-gold"></i>
-            <span>Mejores Marcas Personales (PB)</span>
-          </h3>
-          <div id="dashboardPBList" class="flex-1 space-y-2.5 overflow-y-auto max-h-64 pr-1">
-            <!-- Dynamic PB list -->
-            <div class="text-xs text-gray-500 text-center py-6">Registra competiciones o tests para generar tus PBs.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Activity Feed -->
-      <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-        <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-          <i class="fa-solid fa-clock-rotate-left text-brand-gold"></i>
-          <span>Actividad Reciente</span>
-        </h3>
-        <div id="recentActivityList" class="space-y-3">
-          <!-- Dynamic activity list -->
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 2: TRABAJO ESPECÍFICO -->
-    <section id="section-especifico" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athletics Pro - Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0b0c; color: #f4f4f5; }
+        .solid-card { background-color: #16161a; border: 1px solid #27272a; border-radius: 1rem; }
+        .header-bg { background-color: #121215; border-bottom: 1px solid #27272a; }
+        .tab-btn { background-color: #1f1f23; color: #a1a1aa; border: 1px solid #27272a; transition: all 0.2s ease; }
+        .tab-btn:hover { background-color: #27272a; color: #e4e4e7; }
+        .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; border-color: #f59e0b; }
+        input, select, textarea { background-color: #0b0b0c !important; border: 1px solid #27272a !important; color: #ffffff !important; border-radius: 0.5rem !important; }
+        input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; box-shadow: 0 0 0 1px #f59e0b !important; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0b0c; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
         
-        <!-- Formulario Registro -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80 h-fit">
-          <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-plus-circle text-brand-gold"></i>
-            <span>Registrar Sesión Específica</span>
-          </h3>
-
-          <form onsubmit="saveEspecificoEntry(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1">Fecha</label>
-              <input type="date" id="espFecha" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1">Disciplina / Bloque</label>
-              <select id="espDisciplina" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
-                <option value="Jabalina">Jabalina</option>
-                <option value="Peso">Peso</option>
-                <option value="Velocidad / Sprints">Velocidad / Sprints</option>
-                <option value="Saltos">Saltos</option>
-                <option value="Técnica / Multilanzamientos">Técnica / Multilanzamientos</option>
-                <option value="Movilidad / Fisioterapia">Movilidad / Fisioterapia</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-medium text-gray-400 mb-1">Series x Reps</label>
-                <input type="text" id="espSeriesReps" placeholder="Ej: 5 x 60m" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-gray-400 mb-1">Marca / Tiempo / Peso</label>
-                <input type="text" id="espMarca" placeholder="Ej: 7.12s / 55m" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold">
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1">Percepción de Esfuerzo (RPE 1-10)</label>
-              <input type="range" id="espRPE" min="1" max="10" value="7" oninput="document.getElementById('rpeVal').innerText = this.value" class="w-full accent-brand-gold">
-              <div class="flex justify-between text-[10px] text-gray-500 mt-1">
-                <span>1 (Regenerativo)</span>
-                <span id="rpeVal" class="text-brand-gold font-bold text-xs">7</span>
-                <span>10 (Máximo)</span>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs font-medium text-gray-400 mb-1">Notas / Sensaciones</label>
-              <textarea id="espNotas" rows="3" placeholder="Sensaciones en el bloqueo, viento, molestias..." class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-gold"></textarea>
-            </div>
-
-            <button type="submit" class="w-full accent-gradient-bg text-black font-bold py-2.5 rounded-xl hover:opacity-90 transition-all text-xs">
-              Guardar Sesión Específica
-            </button>
-          </form>
-        </div>
-
-        <!-- Historial de Trabajo Específico -->
-        <div class="lg:col-span-2 bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-list-check text-brand-gold"></i>
-            <span>Historial de Sesiones Específicas</span>
-          </h3>
-          <div id="especificoList" class="space-y-3">
-            <!-- Dynamic entries -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- TAB 3: GIMNASIO (% 1RM) -->
-    <section id="section-gimnasio" class="hidden space-y-6">
-      <!-- Panel Configuración de 1RM Base -->
-      <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-        <h3 class="font-bold text-sm text-gray-200 mb-3 flex items-center space-x-2">
-          <i class="fa-solid fa-sliders text-brand-gold"></i>
-          <span>Mis Marcas Máximas de Gimnasio (1RM Base)</span>
-        </h3>
-        <p class="text-xs text-gray-400 mb-4">Introduce tus 1RM actuales en kilogramos para calcular automáticamente las cargas de trabajo por porcentajes.</p>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Sentadilla Pesada</label>
-            <div class="relative">
-              <input type="number" id="rmSentadilla" value="140" onchange="save1RMs()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              <span class="absolute right-3 top-2 text-xs text-gray-500">kg</span>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Press Banca</label>
-            <div class="relative">
-              <input type="number" id="rmBanca" value="100" onchange="save1RMs()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              <span class="absolute right-3 top-2 text-xs text-gray-500">kg</span>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Power Clean / Cargada</label>
-            <div class="relative">
-              <input type="number" id="rmClean" value="95" onchange="save1RMs()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              <span class="absolute right-3 top-2 text-xs text-gray-500">kg</span>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs text-gray-400 mb-1">Peso Muerto</label>
-            <div class="relative">
-              <input type="number" id="rmPesoMuerto" value="160" onchange="save1RMs()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              <span class="absolute right-3 top-2 text-xs text-gray-500">kg</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Calculadora Rápida & Diario de Pesas -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Calculadora de % -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <h3 class="font-bold text-sm text-gray-200 mb-3 flex items-center space-x-2">
-            <i class="fa-solid fa-calculator text-brand-gold"></i>
-            <span>Calculadora Rápida de Cargas</span>
-          </h3>
-
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Seleccionar Ejercicio</label>
-              <select id="calcEjercicio" onchange="calculatePercentage()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-                <option value="rmSentadilla">Sentadilla Pesada</option>
-                <option value="rmBanca">Press Banca</option>
-                <option value="rmClean">Power Clean</option>
-                <option value="rmPesoMuerto">Peso Muerto</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Porcentaje Deseado (% 1RM)</label>
-              <input type="range" id="calcPorcentaje" min="50" max="100" step="5" value="80" oninput="calculatePercentage()" class="w-full accent-brand-gold">
-              <div class="text-right text-xs text-brand-gold font-bold" id="calcPctDisplay">80%</div>
-            </div>
-
-            <div class="bg-black/40 border border-gray-800 p-4 rounded-xl text-center">
-              <span class="text-xs text-gray-400 block mb-1">Carga Resultante Objetivo</span>
-              <span id="calcKgResult" class="text-3xl font-extrabold text-brand-gold">0</span> <span class="text-sm font-bold text-gray-400">kg</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Registro Diario Gimnasio -->
-        <div class="lg:col-span-2 bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-square-plus text-brand-gold"></i>
-            <span>Añadir Registro al Diario de Pesas</span>
-          </h3>
-
-          <form onsubmit="saveGymLog(event)" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Fecha</label>
-                <input type="date" id="gymFecha" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Ejercicio</label>
-                <select id="gymEjercicio" onchange="autoCalcGymKg()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-                  <option value="Sentadilla Pesada">Sentadilla Pesada</option>
-                  <option value="Press Banca">Press Banca</option>
-                  <option value="Power Clean">Power Clean</option>
-                  <option value="Peso Muerto">Peso Muerto</option>
-                  <option value="Otro">Otro (Accesorio)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">% Programado</label>
-                <input type="number" id="gymPct" min="30" max="120" placeholder="Ej: 85" oninput="autoCalcGymKg()" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Series x Repeticiones</label>
-                <input type="text" id="gymSeriesReps" placeholder="Ej: 4 x 3" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Kilos Calculados / Reales</label>
-                <input type="number" id="gymKg" step="0.5" placeholder="Ej: 112" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Carácter del Esfuerzo (RPE)</label>
-                <input type="number" id="gymRPE" min="1" max="10" placeholder="Ej: 8" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-            </div>
-
-            <button type="submit" class="w-full accent-gradient-bg text-black font-bold py-2.5 rounded-xl hover:opacity-90 transition-all text-xs">
-              Guardar Sesión de Pesas
-            </button>
-          </form>
-
-          <!-- Historial Gimnasio -->
-          <div class="mt-6 border-t border-gray-800 pt-4">
-            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Registros de Gimnasio</h4>
-            <div id="gymLogsList" class="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-              <!-- Dynamic gym logs -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 4: TEST MENSUAL (10 LANZAMIENTOS Y FUERZA) -->
-    <section id="section-tests" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        <!-- TEST DE 10 LANZAMIENTOS -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-sm text-gray-200 flex items-center space-x-2">
-              <i class="fa-solid fa-bullseye text-brand-gold"></i>
-              <span>Test Mensual de 10 Lanzamientos</span>
-            </h3>
-            <span class="text-[10px] bg-brand-gold/10 text-brand-gold px-2 py-0.5 rounded border border-brand-gold/20">Consistencia</span>
-          </div>
-
-          <form onsubmit="saveThrowTest(event)" class="space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Fecha</label>
-                <input type="date" id="throwTestFecha" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Artefacto / Disciplina</label>
-                <select id="throwTestDisc" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-                  <option value="Jabalina">Jabalina</option>
-                  <option value="Peso">Peso</option>
-                  <option value="Balón Espaldas">Balón Espaldas (Medicinal)</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- 10 Input Grid -->
-            <div>
-              <label class="block text-xs text-gray-400 mb-2">Ingresa la distancia de los 10 lanzamientos seguidos (metros):</label>
-              <div class="grid grid-cols-5 gap-2">
-                <input type="number" step="0.01" placeholder="1º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="2º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="3º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="4º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="5º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="6º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="7º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="8º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="9º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-                <input type="number" step="0.01" placeholder="10º" class="throw-input bg-black/60 border border-gray-800 text-center py-2 rounded-lg text-xs font-bold text-brand-gold focus:border-brand-gold outline-none" oninput="recalcThrowStats()">
-              </div>
-            </div>
-
-            <!-- Stats Box -->
-            <div class="grid grid-cols-3 gap-2 bg-black/40 border border-gray-800 p-3 rounded-xl text-center">
-              <div>
-                <span class="text-[10px] text-gray-500 block">Mejor Marca</span>
-                <span id="throwStatMax" class="text-sm font-extrabold text-emerald-400">0.00m</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-gray-500 block">Promedio</span>
-                <span id="throwStatAvg" class="text-sm font-extrabold text-brand-gold">0.00m</span>
-              </div>
-              <div>
-                <span class="text-[10px] text-gray-500 block">Válidos</span>
-                <span id="throwStatCount" class="text-sm font-extrabold text-gray-300">0 / 10</span>
-              </div>
-            </div>
-
-            <button type="submit" class="w-full accent-gradient-bg text-black font-bold py-2.5 rounded-xl hover:opacity-90 transition-all text-xs">
-              Guardar Test de Lanzamientos
-            </button>
-          </form>
-        </div>
-
-        <!-- TEST DE FUERZA (ESTIMACIÓN 1RM EPLEY) -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-sm text-gray-200 flex items-center space-x-2">
-              <i class="fa-solid fa-weight-hanging text-brand-gold"></i>
-              <span>Test de Repeticiones al Fallo (Fórmula Epley)</span>
-            </h3>
-            <span class="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">Estimador 1RM</span>
-          </div>
-
-          <form onsubmit="calculateEpley(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Ejercicio</label>
-              <select id="epleyEjercicio" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-                <option value="rmSentadilla">Sentadilla Pesada</option>
-                <option value="rmBanca">Press Banca</option>
-                <option value="rmClean">Power Clean</option>
-                <option value="rmPesoMuerto">Peso Muerto</option>
-              </select>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Peso Utilizado (kg)</label>
-                <input type="number" id="epleyPeso" step="0.5" required placeholder="Ej: 100" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Reps Logradas</label>
-                <input type="number" id="epleyReps" min="1" max="30" required placeholder="Ej: 6" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-            </div>
-
-            <div class="bg-black/40 border border-gray-800 p-4 rounded-xl text-center space-y-1">
-              <span class="text-xs text-gray-400 block">1RM Estimado (Epley)</span>
-              <div id="epleyResult" class="text-3xl font-extrabold text-brand-gold">-- kg</div>
-              <p class="text-[10px] text-gray-500">Fórmula: Peso × (1 + 0.0333 × Repeticiones)</p>
-            </div>
-
-            <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-all text-xs border border-gray-700">
-              Calcular Estimación
-            </button>
-            <button type="button" onclick="applyEpleyToRM()" class="w-full accent-gradient-bg text-black font-bold py-2.5 rounded-xl hover:opacity-90 transition-all text-xs">
-              Actualizar como mi nuevo 1RM Base
-            </button>
-          </form>
-        </div>
-
-      </div>
-
-      <!-- Historial de Tests de Lanzamientos -->
-      <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-        <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-          <i class="fa-solid fa-history text-brand-gold"></i>
-          <span>Historial de Tests de Lanzamientos Guardados</span>
-        </h3>
-        <div id="throwTestsHistory" class="space-y-3">
-          <!-- Dynamic throw tests history -->
-        </div>
-      </div>
-    </section>
-
-    <!-- TAB 5: COMPETICIONES & PBs -->
-    <section id="section-competiciones" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Formulario Competición -->
-        <div class="bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-flag-checkered text-brand-gold"></i>
-            <span>Registrar Competición / Control</span>
-          </h3>
-
-          <form onsubmit="saveCompetition(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Nombre del Torneo / Control</label>
-              <input type="text" id="compNombre" placeholder="Ej: Campeonato Regional Absoluto" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Fecha</label>
-                <input type="date" id="compFecha" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Lugar / Pista</label>
-                <input type="text" id="compLugar" placeholder="Ej: Madrid" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Disciplina</label>
-                <select id="compDisciplina" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-                  <option value="Jabalina">Jabalina</option>
-                  <option value="Peso">Peso</option>
-                  <option value="100m Lisa">100m Lisa</option>
-                  <option value="200m Lisa">200m Lisa</option>
-                  <option value="Salto de Longitud">Salto de Longitud</option>
-                  <option value="Otra">Otra</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Marca Obt. (m o seg)</label>
-                <input type="text" id="compMarca" placeholder="Ej: 58.45m o 11.20s" required class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-brand-gold font-bold focus:outline-none">
-              </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Puesto Final</label>
-                <input type="text" id="compPuesto" placeholder="Ej: 1º (Oro)" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-400 mb-1">Viento (m/s)</label>
-                <input type="text" id="compViento" placeholder="Ej: +1.2" class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none">
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-xs text-gray-400 mb-1">Observaciones / Serie de Intentos</label>
-              <textarea id="compNotas" rows="2" placeholder="Intentos: 52m, X, 55m, 58.45m..." class="w-full bg-black/60 border border-gray-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none"></textarea>
-            </div>
-
-            <button type="submit" class="w-full accent-gradient-bg text-black font-bold py-2.5 rounded-xl hover:opacity-90 transition-all text-xs">
-              Guardar Competición
-            </button>
-          </form>
-        </div>
-
-        <!-- Historial & Lista de Competiciones -->
-        <div class="lg:col-span-2 bg-brand-card p-5 rounded-2xl border border-gray-800/80">
-          <h3 class="font-bold text-sm text-gray-200 mb-4 flex items-center space-x-2">
-            <i class="fa-solid fa-trophy text-brand-gold"></i>
-            <span>Historial de Competiciones</span>
-          </h3>
-          <div id="competicionesList" class="space-y-3">
-            <!-- Dynamic comps -->
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="bg-brand-card border-t border-gray-800/80 py-4 mt-auto text-center text-xs text-gray-500">
-    <p>Athletics Tracker Pro &copy; PWA Multiplataforma • Sincronizado en Firebase Firestore</p>
-  </footer>
-
-  <!-- FIREBASE SDKs (Modular Client CDN) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { 
-      getAuth, 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword, 
-      onAuthStateChanged, 
-      signOut 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { 
-      getFirestore, 
-      doc, 
-      setDoc, 
-      onSnapshot 
-    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-    // Configuration object
-    const firebaseConfig = {
-      apiKey: "AIzaSyCZO4i0vQbMxdY3DMmfnbnoNOmTBDCiE0U",
-      authDomain: "athleticstracker-15125.firebaseapp.com",
-      projectId: "athleticstracker-15125",
-      storageBucket: "athleticstracker-15125.firebasestorage.app",
-      messagingSenderId: "649006902093",
-      appId: "1:649006902093:web:ffe33f07d93639af1ae504"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Global App State
-    window.appState = {
-      user: null,
-      authMode: 'login',
-      rms: {
-        rmSentadilla: 140,
-        rmBanca: 100,
-        rmClean: 95,
-        rmPesoMuerto: 160
-      },
-      especifico: [],
-      gymLogs: [],
-      throwTests: [],
-      competiciones: []
-    };
-
-    let chartInstance = null;
-    let deferredPrompt = null;
-
-    // --- PWA INSTALL PROMPT ---
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      const installBtn = document.getElementById('pwaInstallBtn');
-      if (installBtn) installBtn.classList.remove('hidden');
-    });
-
-    window.installPWA = async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          console.log('PWA instalada con éxito');
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            background-color: #16161a; border-left: 4px solid #f59e0b; color: #fff;
+            padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            font-size: 0.875rem; animation: slideIn 0.3s ease forwards, fadeOut 0.3s 2.7s ease forwards;
+            opacity: 0; transform: translateX(100%);
         }
-        deferredPrompt = null;
-        document.getElementById('pwaInstallBtn').classList.add('hidden');
-      }
-    };
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
 
-    // --- AUTHENTICATION HANDLERS ---
-    window.switchAuthMode = (mode) => {
-      window.appState.authMode = mode;
-      const tabLogin = document.getElementById('tabLogin');
-      const tabSignup = document.getElementById('tabSignup');
-      const btnText = document.getElementById('authBtnText');
-      const errorDiv = document.getElementById('authError');
-      errorDiv.classList.add('hidden');
-
-      if (mode === 'login') {
-        tabLogin.className = "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-white bg-brand-gold/20 border border-brand-gold/30";
-        tabSignup.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
-        btnText.innerText = "Iniciar Sesión";
-      } else {
-        tabSignup.className = "flex-1 py-2 text-xs font-semibold rounded-lg transition-all text-white bg-brand-gold/20 border border-brand-gold/30";
-        tabLogin.className = "flex-1 py-2 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all";
-        btnText.innerText = "Crear Cuenta Gratuita";
-      }
-    };
-
-    window.handleAuthSubmit = async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('authEmail').value;
-      const password = document.getElementById('authPassword').value;
-      const errorDiv = document.getElementById('authError');
-      errorDiv.classList.add('hidden');
-
-      try {
-        if (window.appState.authMode === 'login') {
-          await signInWithEmailAndPassword(auth, email, password);
-        } else {
-          await createUserWithEmailAndPassword(auth, email, password);
-        }
-      } catch (err) {
-        errorDiv.innerText = err.message.replace('Firebase: ', '');
-        errorDiv.classList.remove('hidden');
-      }
-    };
-
-    window.handleLogout = () => {
-      signOut(auth);
-    };
-
-    // --- FIRESTORE SYNC ---
-    onAuthStateChanged(auth, (user) => {
-      const authScreen = document.getElementById('authScreen');
-      const userInfo = document.getElementById('userInfo');
-      const userEmailDisplay = document.getElementById('userEmailDisplay');
-
-      if (user) {
-        window.appState.user = user;
-        authScreen.classList.add('hidden');
-        userInfo.classList.remove('hidden');
-        userEmailDisplay.innerText = user.email;
-
-        // Set up real-time listener following mandatory rule
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'athleticstracker-15125';
-        const userDocRef = doc(db, 'artifacts', appId, 'users', user.uid, 'userData', 'main');
-
-        onSnapshot(userDocRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data();
-            if (data.rms) window.appState.rms = data.rms;
-            if (data.especifico) window.appState.especifico = data.especifico;
-            if (data.gymLogs) window.appState.gymLogs = data.gymLogs;
-            if (data.throwTests) window.appState.throwTests = data.throwTests;
-            if (data.competiciones) window.appState.competiciones = data.competiciones;
-          } else {
-            // First time initialization in firestore
-            syncDataToFirestore();
-          }
-          renderAllUI();
-          updateSyncStatus('Sincronizado', true);
-        }, (error) => {
-          console.error("Error en sincronización:", error);
-          updateSyncStatus('Error de conexión', false);
-        });
-
-      } else {
-        window.appState.user = null;
-        authScreen.classList.remove('hidden');
-        userInfo.classList.add('hidden');
-      }
-    });
-
-    async function syncDataToFirestore() {
-      if (!window.appState.user) return;
-      updateSyncStatus('Guardando...', false);
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'athleticstracker-15125';
-      const userDocRef = doc(db, 'artifacts', appId, 'users', window.appState.user.uid, 'userData', 'main');
-
-      const payload = {
-        rms: window.appState.rms,
-        especifico: window.appState.especifico,
-        gymLogs: window.appState.gymLogs,
-        throwTests: window.appState.throwTests,
-        competiciones: window.appState.competiciones,
-        updatedAt: new Date().toISOString()
-      };
-
-      try {
-        await setDoc(userDocRef, payload, { merge: true });
-        updateSyncStatus('Sincronizado', true);
-      } catch (e) {
-        console.error("Error guardando datos:", e);
-        updateSyncStatus('Error de sincronización', false);
-      }
-    }
-
-    function updateSyncStatus(text, isOk) {
-      const syncText = document.getElementById('syncStatusText');
-      const syncDot = document.getElementById('syncDot');
-      const syncDotPing = document.getElementById('syncDotPing');
-
-      if (syncText) syncText.innerText = text;
-      if (isOk) {
-        syncDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500";
-        syncDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
-      } else {
-        syncDot.className = "relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500";
-        syncDotPing.className = "hidden";
-      }
-    }
-
-    // --- TAB SWITCHING ---
-    window.switchTab = (tabId) => {
-      const tabs = ['dashboard', 'especifico', 'gimnasio', 'tests', 'competiciones'];
-      tabs.forEach(t => {
-        const sec = document.getElementById(`section-${t}`);
-        const btn = document.getElementById(`nav-${t}`);
-        if (t === tabId) {
-          sec.classList.remove('hidden');
-          btn.className = "nav-btn active-nav flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-brand-gold bg-brand-gold/10";
-        } else {
-          sec.classList.add('hidden');
-          btn.className = "nav-btn flex items-center space-x-2 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap text-gray-400 hover:text-white";
-        }
-      });
-      if (tabId === 'dashboard') {
-        setTimeout(updateDashboardChart, 100);
-      }
-    };
-
-    // --- RENDER ALL UI COMPONENTS ---
-    function renderAllUI() {
-      // Set input dates to today by default if empty
-      const today = new Date().toISOString().split('T')[0];
-      ['espFecha', 'gymFecha', 'throwTestFecha', 'compFecha'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el && !el.value) el.value = today;
-      });
-
-      // RMs
-      document.getElementById('rmSentadilla').value = window.appState.rms.rmSentadilla || 140;
-      document.getElementById('rmBanca').value = window.appState.rms.rmBanca || 100;
-      document.getElementById('rmClean').value = window.appState.rms.rmClean || 95;
-      document.getElementById('rmPesoMuerto').value = window.appState.rms.rmPesoMuerto || 160;
-
-      calculatePercentage();
-      autoCalcGymKg();
-      renderEspecificoList();
-      renderGymLogsList();
-      renderThrowHistory();
-      renderCompeticionesList();
-      renderDashboard();
-    }
-
-    // --- ACTIONS & FORM HANDLERS ---
-    
-    // Save 1RMs
-    window.save1RMs = () => {
-      window.appState.rms = {
-        rmSentadilla: parseFloat(document.getElementById('rmSentadilla').value) || 0,
-        rmBanca: parseFloat(document.getElementById('rmBanca').value) || 0,
-        rmClean: parseFloat(document.getElementById('rmClean').value) || 0,
-        rmPesoMuerto: parseFloat(document.getElementById('rmPesoMuerto').value) || 0
-      };
-      syncDataToFirestore();
-      calculatePercentage();
-      autoCalcGymKg();
-    };
-
-    // Percentage Calc
-    window.calculatePercentage = () => {
-      const exerciseKey = document.getElementById('calcEjercicio').value;
-      const pct = parseFloat(document.getElementById('calcPorcentaje').value);
-      document.getElementById('calcPctDisplay').innerText = pct + '%';
-      
-      const rmBase = window.appState.rms[exerciseKey] || 0;
-      const result = (rmBase * (pct / 100)).toFixed(1);
-      document.getElementById('calcKgResult').innerText = result;
-    };
-
-    // Auto Calc Gym Kg
-    window.autoCalcGymKg = () => {
-      const exerciseName = document.getElementById('gymEjercicio').value;
-      const pctVal = parseFloat(document.getElementById('gymPct').value);
-      const kgInput = document.getElementById('gymKg');
-
-      if (exerciseName === 'Otro' || isNaN(pctVal)) return;
-
-      let key = 'rmSentadilla';
-      if (exerciseName === 'Press Banca') key = 'rmBanca';
-      if (exerciseName === 'Power Clean') key = 'rmClean';
-      if (exerciseName === 'Peso Muerto') key = 'rmPesoMuerto';
-
-      const rmBase = window.appState.rms[key] || 0;
-      kgInput.value = (rmBase * (pctVal / 100)).toFixed(1);
-    };
-
-    // Save Gym Log
-    window.saveGymLog = (e) => {
-      e.preventDefault();
-      const item = {
-        id: Date.now(),
-        fecha: document.getElementById('gymFecha').value,
-        ejercicio: document.getElementById('gymEjercicio').value,
-        pct: document.getElementById('gymPct').value || '-',
-        seriesReps: document.getElementById('gymSeriesReps').value,
-        kg: document.getElementById('gymKg').value,
-        rpe: document.getElementById('gymRPE').value || '-'
-      };
-      window.appState.gymLogs.unshift(item);
-      syncDataToFirestore();
-      renderGymLogsList();
-      e.target.reset();
-      renderAllUI();
-    };
-
-    function renderGymLogsList() {
-      const container = document.getElementById('gymLogsList');
-      if (window.appState.gymLogs.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">No hay sesiones de gimnasio registradas.</div>`;
-        return;
-      }
-      container.innerHTML = window.appState.gymLogs.map(g => `
-        <div class="bg-black/40 border border-gray-800 p-3 rounded-xl flex items-center justify-between text-xs">
-          <div>
-            <div class="font-bold text-white">${g.ejercicio} <span class="text-brand-gold">(${g.kg} kg)</span></div>
-            <div class="text-gray-400 text-[11px]">${g.fecha} • ${g.seriesReps} ${g.pct !== '-' ? `• ${g.pct}%` : ''}</div>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="bg-gray-800 text-gray-300 px-2 py-0.5 rounded font-mono text-[10px]">RPE ${g.rpe}</span>
-            <button onclick="deleteGymLog(${g.id})" class="text-gray-600 hover:text-red-400"><i class="fa-solid fa-trash"></i></button>
-          </div>
+    <!-- MODAL DE LOGIN FIREBASE -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 hidden">
+        <div class="solid-card p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="w-14 h-14 mx-auto rounded-xl bg-amber-500 flex items-center justify-center text-black mb-3">
+                    <i data-lucide="zap" class="w-8 h-8 fill-current"></i>
+                </div>
+                <span class="text-3xl font-black tracking-wider">ATHLETICS <span class="text-amber-500">PRO</span></span>
+            </div>
+            <div id="auth-error" class="hidden mb-4 p-3 bg-red-900/30 border border-red-800 text-red-300 text-xs rounded-lg text-center"></div>
+            <form id="auth-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase font-bold text-zinc-500 mb-1">Correo Electrónico</label>
+                    <input type="email" id="auth-email" required class="w-full px-4 py-2.5">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase font-bold text-zinc-500 mb-1">Contraseña</label>
+                    <input type="password" id="auth-password" required class="w-full px-4 py-2.5">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" id="btn-login" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Iniciar Sesión</button>
+                    <button type="button" id="btn-register" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2.5 rounded-lg text-sm transition border border-zinc-700">Registrarse</button>
+                </div>
+            </form>
         </div>
-      `).join('');
-    }
+    </div>
 
-    window.deleteGymLog = (id) => {
-      window.appState.gymLogs = window.appState.gymLogs.filter(item => item.id !== id);
-      syncDataToFirestore();
-      renderGymLogsList();
-      renderDashboard();
-    };
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
 
-    // Save Especifico
-    window.saveEspecificoEntry = (e) => {
-      e.preventDefault();
-      const item = {
-        id: Date.now(),
-        fecha: document.getElementById('espFecha').value,
-        disciplina: document.getElementById('espDisciplina').value,
-        seriesReps: document.getElementById('espSeriesReps').value,
-        marca: document.getElementById('espMarca').value || '-',
-        rpe: document.getElementById('espRPE').value,
-        notas: document.getElementById('espNotas').value || ''
-      };
-      window.appState.especifico.unshift(item);
-      syncDataToFirestore();
-      renderEspecificoList();
-      e.target.reset();
-      renderAllUI();
-    };
+    <!-- CABECERA PRINCIPAL SÓLIDA -->
+    <header class="header-bg sticky top-0 z-40">
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 text-black">
+                    <i data-lucide="trophy" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="font-black tracking-tight text-xl leading-none mb-1">Athletics <span class="text-amber-500">Pro</span></h1>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span class="text-[11px] text-zinc-400 font-medium">Sincronizado en la Nube</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button id="btn-install-pwa" onclick="app.installPWA()" class="hidden px-4 py-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-bold transition border border-amber-500/20 flex items-center gap-2">
+                    <i data-lucide="download-cloud" class="w-4 h-4"></i> Instalar App
+                </button>
+                <div class="flex items-center bg-[#1f1f23] rounded-lg border border-zinc-800 p-1">
+                    <div class="flex items-center gap-2 px-3 py-1.5 border-r border-zinc-800">
+                        <i data-lucide="user" class="w-4 h-4 text-zinc-400"></i>
+                        <span class="text-xs text-zinc-300 font-medium truncate max-w-[150px]" id="user-email-display">Cargando...</span>
+                    </div>
+                    <button onclick="app.logout()" class="px-3 py-1.5 text-zinc-500 hover:text-red-400 transition" title="Cerrar Sesión">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
-    function renderEspecificoList() {
-      const container = document.getElementById('especificoList');
-      if (window.appState.especifico.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 text-center py-6">No hay entrenamientos específicos registrados.</div>`;
-        return;
-      }
-      container.innerHTML = window.appState.especifico.map(item => `
-        <div class="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-brand-gold bg-brand-gold/10 px-2.5 py-0.5 rounded border border-brand-gold/20">${item.disciplina}</span>
-            <span class="text-[11px] text-gray-500">${item.fecha}</span>
-          </div>
-          <div class="text-xs text-gray-200">
-            <strong>Series / Reps:</strong> ${item.seriesReps} ${item.marca !== '-' ? `• <strong>Marca:</strong> ${item.marca}` : ''}
-          </div>
-          ${item.notas ? `<p class="text-xs text-gray-400 bg-black/30 p-2 rounded-lg italic border border-gray-800/50">"${item.notas}"</p>` : ''}
-          <div class="flex items-center justify-between border-t border-gray-800/60 pt-2 text-[10px] text-gray-400">
-            <span>RPE: <strong class="text-brand-gold">${item.rpe}/10</strong></span>
-            <button onclick="deleteEspecifico(${item.id})" class="text-gray-600 hover:text-red-400 transition-colors">
-              <i class="fa-solid fa-trash"></i> Eliminar
+    <!-- NAVEGACIÓN EN CÁPSULAS -->
+    <nav class="py-4 border-b border-zinc-800/50 bg-[#0b0b0c]">
+        <div class="max-w-[1400px] mx-auto px-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
+            <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="dashboard">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
             </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    window.deleteEspecifico = (id) => {
-      window.appState.especifico = window.appState.especifico.filter(i => i.id !== id);
-      syncDataToFirestore();
-      renderEspecificoList();
-      renderDashboard();
-    };
-
-    // Throw Tests
-    window.recalcThrowStats = () => {
-      const inputs = Array.from(document.querySelectorAll('.throw-input'));
-      const vals = inputs.map(i => parseFloat(i.value)).filter(v => !isNaN(v) && v > 0);
-
-      const max = vals.length > 0 ? Math.max(...vals).toFixed(2) : '0.00';
-      const avg = vals.length > 0 ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2) : '0.00';
-
-      document.getElementById('throwStatMax').innerText = max + 'm';
-      document.getElementById('throwStatAvg').innerText = avg + 'm';
-      document.getElementById('throwStatCount').innerText = `${vals.length} / 10`;
-    };
-
-    window.saveThrowTest = (e) => {
-      e.preventDefault();
-      const inputs = Array.from(document.querySelectorAll('.throw-input'));
-      const vals = inputs.map(i => parseFloat(i.value) || 0);
-      const validVals = vals.filter(v => v > 0);
-
-      if (validVals.length === 0) {
-        alert("Introduce al menos un tiro válido.");
-        return;
-      }
-
-      const item = {
-        id: Date.now(),
-        fecha: document.getElementById('throwTestFecha').value,
-        disciplina: document.getElementById('throwTestDisc').value,
-        throws: vals,
-        max: Math.max(...validVals),
-        avg: parseFloat((validVals.reduce((a, b) => a + b, 0) / validVals.length).toFixed(2))
-      };
-
-      window.appState.throwTests.unshift(item);
-      syncDataToFirestore();
-      renderThrowHistory();
-      e.target.reset();
-      recalcThrowStats();
-      renderDashboard();
-    };
-
-    function renderThrowHistory() {
-      const container = document.getElementById('throwTestsHistory');
-      if (window.appState.throwTests.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">Sin tests de lanzamientos guardados.</div>`;
-        return;
-      }
-      container.innerHTML = window.appState.throwTests.map(t => `
-        <div class="bg-black/40 border border-gray-800 p-3.5 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-bold text-white">${t.disciplina}</span>
-              <span class="text-[10px] text-gray-500">${t.fecha}</span>
-            </div>
-            <div class="text-xs text-gray-400 mt-1">
-              Máximo: <span class="text-emerald-400 font-bold">${t.max}m</span> • Promedio: <span class="text-brand-gold font-bold">${t.avg}m</span>
-            </div>
-            <div class="text-[10px] text-gray-500 mt-0.5 truncate max-w-xs sm:max-w-md">
-              Lanzamientos: ${t.throws.map(v => v > 0 ? v + 'm' : 'X').join(', ')}
-            </div>
-          </div>
-          <button onclick="deleteThrowTest(${t.id})" class="text-gray-600 hover:text-red-400 text-xs self-end sm:self-center">
-            <i class="fa-solid fa-trash"></i>
-          </button>
-        </div>
-      `).join('');
-    }
-
-    window.deleteThrowTest = (id) => {
-      window.appState.throwTests = window.appState.throwTests.filter(t => t.id !== id);
-      syncDataToFirestore();
-      renderThrowHistory();
-      renderDashboard();
-    };
-
-    // Epley Formula Calculator
-    let calculatedEpleyRM = 0;
-    window.calculateEpley = (e) => {
-      e.preventDefault();
-      const peso = parseFloat(document.getElementById('epleyPeso').value);
-      const reps = parseInt(document.getElementById('epleyReps').value);
-
-      if (isNaN(peso) || isNaN(reps)) return;
-
-      // Epley Formula: 1RM = Weight * (1 + 0.0333 * reps)
-      calculatedEpleyRM = Math.round(peso * (1 + 0.0333 * reps));
-      document.getElementById('epleyResult').innerText = calculatedEpleyRM + ' kg';
-    };
-
-    window.applyEpleyToRM = () => {
-      if (!calculatedEpleyRM) {
-        alert("Calcula primero el 1RM con la fórmula.");
-        return;
-      }
-      const exerciseKey = document.getElementById('epleyEjercicio').value;
-      window.appState.rms[exerciseKey] = calculatedEpleyRM;
-      syncDataToFirestore();
-      renderAllUI();
-      alert(`¡1RM base actualizado a ${calculatedEpleyRM} kg!`);
-    };
-
-    // Competitions & PBs
-    window.saveCompetition = (e) => {
-      e.preventDefault();
-      const item = {
-        id: Date.now(),
-        nombre: document.getElementById('compNombre').value,
-        fecha: document.getElementById('compFecha').value,
-        lugar: document.getElementById('compLugar').value || '-',
-        disciplina: document.getElementById('compDisciplina').value,
-        marca: document.getElementById('compMarca').value,
-        puesto: document.getElementById('compPuesto').value || '-',
-        viento: document.getElementById('compViento').value || '-',
-        notas: document.getElementById('compNotas').value || ''
-      };
-
-      window.appState.competiciones.unshift(item);
-      syncDataToFirestore();
-      renderCompeticionesList();
-      e.target.reset();
-      renderDashboard();
-    };
-
-    function renderCompeticionesList() {
-      const container = document.getElementById('competicionesList');
-      if (window.appState.competiciones.length === 0) {
-        container.innerHTML = `<div class="text-xs text-gray-500 text-center py-6">No has registrado competiciones aún.</div>`;
-        return;
-      }
-      container.innerHTML = window.appState.competiciones.map(c => `
-        <div class="bg-black/40 border border-gray-800 p-4 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="font-bold text-sm text-white">${c.nombre}</h4>
-            <span class="text-[11px] text-gray-500">${c.fecha} • ${c.lugar}</span>
-          </div>
-          <div class="flex items-center justify-between bg-black/30 p-2.5 rounded-lg border border-gray-800/40">
-            <div>
-              <span class="text-xs font-semibold text-brand-gold">${c.disciplina}</span>
-              <span class="text-xs text-gray-400 block">Puesto: ${c.puesto} ${c.viento !== '-' ? `• Viento: ${c.viento}m/s` : ''}</span>
-            </div>
-            <div class="text-base font-extrabold text-emerald-400 font-mono">${c.marca}</div>
-          </div>
-          ${c.notas ? `<p class="text-xs text-gray-400 italic">${c.notas}</p>` : ''}
-          <div class="text-right">
-            <button onclick="deleteCompetition(${c.id})" class="text-gray-600 hover:text-red-400 text-xs">
-              <i class="fa-solid fa-trash"></i> Eliminar
+            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="especifico">
+                <i data-lucide="timer" class="w-4 h-4"></i> Trabajo Específico
             </button>
-          </div>
+            <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="gimnasio">
+                <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio (% 1RM)
+            </button>
+            <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests">
+                <i data-lucide="target" class="w-4 h-4"></i> Test Mensual
+            </button>
+            <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones">
+                <i data-lucide="award" class="w-4 h-4"></i> Competiciones & PBs
+            </button>
         </div>
-      `).join('');
-    }
+    </nav>
 
-    window.deleteCompetition = (id) => {
-      window.appState.competiciones = window.appState.competiciones.filter(c => c.id !== id);
-      syncDataToFirestore();
-      renderCompeticionesList();
-      renderDashboard();
-    };
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-    // --- DASHBOARD CALCULATIONS & RENDER ---
-    function renderDashboard() {
-      const totalSesiones = window.appState.especifico.length + window.appState.gymLogs.length;
-      document.getElementById('statTotalSesiones').innerText = totalSesiones;
-
-      let totalThrowsCount = 0;
-      window.appState.throwTests.forEach(t => {
-        totalThrowsCount += t.throws.filter(v => v > 0).length;
-      });
-      document.getElementById('statTotalLanzamientos').innerText = totalThrowsCount;
-
-      document.getElementById('statTotalCompeticiones').innerText = window.appState.competiciones.length;
-
-      // Calculate Personal Bests from Competitions
-      const pbs = {};
-      window.appState.competiciones.forEach(c => {
-        if (!pbs[c.disciplina] || c.marca > pbs[c.disciplina].marca) {
-          pbs[c.disciplina] = c;
-        }
-      });
-      document.getElementById('statTotalPBs').innerText = Object.keys(pbs).length;
-
-      // Render PB list
-      const pbContainer = document.getElementById('dashboardPBList');
-      const pbKeys = Object.keys(pbs);
-      if (pbKeys.length === 0) {
-        pbContainer.innerHTML = `<div class="text-xs text-gray-500 text-center py-6">Registra competiciones para mostrar tus mejores marcas personales (PB).</div>`;
-      } else {
-        pbContainer.innerHTML = pbKeys.map(k => `
-          <div class="bg-black/40 border border-gray-800 p-2.5 rounded-xl flex items-center justify-between">
-            <span class="text-xs font-semibold text-gray-300">${k}</span>
-            <span class="text-xs font-extrabold text-brand-gold font-mono">${pbs[k].marca}</span>
-          </div>
-        `).join('');
-      }
-
-      // Recent Activity Feed
-      const recentList = document.getElementById('recentActivityList');
-      const allActivities = [
-        ...window.appState.especifico.map(i => ({ type: 'Específico', title: `${i.disciplina} (${i.seriesReps})`, date: i.fecha, icon: 'fa-stopwatch' })),
-        ...window.appState.gymLogs.map(i => ({ type: 'Gimnasio', title: `${i.ejercicio} (${i.kg}kg)`, date: i.fecha, icon: 'fa-dumbbell' })),
-        ...window.appState.throwTests.map(i => ({ type: 'Test 10 Lanz.', title: `${i.disciplina} (Max: ${i.max}m)`, date: i.fecha, icon: 'fa-bullseye' })),
-        ...window.appState.competiciones.map(i => ({ type: 'Competición', title: `${i.nombre} - ${i.marca}`, date: i.fecha, icon: 'fa-flag-checkered' }))
-      ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-
-      if (allActivities.length === 0) {
-        recentList.innerHTML = `<div class="text-xs text-gray-500 text-center py-4">Aún no hay actividad registrada.</div>`;
-      } else {
-        recentList.innerHTML = allActivities.map(act => `
-          <div class="flex items-center justify-between bg-black/40 border border-gray-800/60 p-2.5 rounded-xl text-xs">
-            <div class="flex items-center space-x-2.5">
-              <i class="fa-solid ${act.icon} text-brand-gold text-sm"></i>
-              <div>
-                <span class="font-bold text-white block">${act.title}</span>
-                <span class="text-[10px] text-gray-500">${act.type}</span>
-              </div>
+        <div class="solid-card px-5 py-3.5 flex items-center justify-between">
+            <div class="flex items-center gap-2.5 text-sm">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-bold text-white">Sincronizado</span>
+                <span class="text-zinc-500">en tiempo real con Firebase.</span>
             </div>
-            <span class="text-[10px] text-gray-500 font-mono">${act.date}</span>
-          </div>
-        `).join('');
-      }
+            <div class="flex items-center gap-3">
+                <button onclick="app.exportJSON()" class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-2 transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400"></i> Exportar JSON
+                </button>
+                <label class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-2 transition cursor-pointer">
+                    <i data-lucide="upload" class="w-3.5 h-3.5 text-rose-400"></i> Importar JSON
+                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="app.importJSON(event)">
+                </label>
+            </div>
+        </div>
 
-      updateDashboardChart();
-    }
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="space-y-6 tab-content">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="solid-card p-6 relative overflow-hidden group">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">TOTAL SESIONES</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-white" id="stat-esp">0</h3>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="calendar" class="w-10 h-10"></i></div>
+                </div>
+                <div class="solid-card p-6 relative overflow-hidden group">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">TESTS REALIZADOS</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-lanz-count">0</h3>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="flame" class="w-10 h-10"></i></div>
+                </div>
+                <div class="solid-card p-6 relative overflow-hidden group">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">COMPETICIONES</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-white" id="stat-comp">0</h3>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="flag" class="w-10 h-10"></i></div>
+                </div>
+                <div class="solid-card p-6 relative overflow-hidden group">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">MEJORES MARCAS (PB)</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-pb-count">0</h3>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="trophy" class="w-10 h-10"></i></div>
+                </div>
+            </div>
 
-    // Chart.js Setup & Update
-    window.updateDashboardChart = () => {
-      const disc = document.getElementById('chartDisciplineFilter').value;
-      const filtered = window.appState.throwTests
-        .filter(t => t.disciplina === disc)
-        .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="solid-card p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-base flex items-center gap-2 text-white">
+                            <i data-lucide="trending-up" class="w-5 h-5 text-blue-400"></i> Progreso de Tests
+                        </h3>
+                        <select id="chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23]">
+                            <option value="Jabalina">Jabalina</option>
+                            <option value="Balón Medicinal de Espaldas">Balón Med. Espaldas</option>
+                            <option value="Lanzamiento de Peso">Lanzamiento de Peso</option>
+                        </select>
+                    </div>
+                    <div class="h-72"><canvas id="mainChart"></canvas></div>
+                </div>
+                
+                <div class="solid-card p-6 flex flex-col">
+                    <h3 class="font-bold text-base mb-6 flex items-center gap-2 text-white">
+                        <i data-lucide="medal" class="w-5 h-5 text-amber-500"></i> Récords (PB)
+                    </h3>
+                    <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+        </section>
 
-      const labels = filtered.map(t => t.fecha);
-      const maxData = filtered.map(t => t.max);
-      const avgData = filtered.map(t => t.avg);
+        <!-- TAB 2: TRABAJO ESPECÍFICO -->
+        <section id="tab-especifico" class="space-y-6 tab-content hidden">
+            <div class="solid-card p-6">
+                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="pen-line" class="w-5 h-5"></i> Registrar Sesión Específica</h2>
+                <form id="form-especifico" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="esp-fecha" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina / Enfoque</label>
+                            <input type="text" id="esp-disciplina" placeholder="Ej: Velocidad, Saltos, Fondo..." required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">RPE / Sensaciones (1-10)</label>
+                            <input type="number" id="esp-rpe" min="1" max="10" value="8" required class="w-full px-4 py-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Estructura del Entrenamiento</label>
+                        <textarea id="esp-contenido" rows="3" placeholder="Ej: Calentamiento, 5x60m lanzados..." required class="w-full px-4 py-2"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Notas Técnicas</label>
+                        <input type="text" id="esp-notas" placeholder="Ej: Viento a favor..." class="w-full px-4 py-2">
+                    </div>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar Sesión</button>
+                </form>
+            </div>
 
-      const ctx = document.getElementById('throwsChart').getContext('2d');
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-zinc-400"></i> Historial Específico</h3>
+                <div id="lista-especifico" class="space-y-3"></div>
+            </div>
+        </section>
 
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
+        <!-- TAB 3: GIMNASIO & 1RM -->
+        <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="solid-card p-6">
+                    <h2 class="text-base font-bold mb-3 text-amber-500 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base</h2>
+                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos registrados.</p>
+                    <div id="rm-config-list" class="space-y-2"></div>
+                </div>
 
-      chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels.length > 0 ? labels : ['Sin datos'],
-          datasets: [
-            {
-              label: 'Mejor Marca (m)',
-              data: maxData.length > 0 ? maxData : [0],
-              borderColor: '#f5a623',
-              backgroundColor: 'rgba(245, 166, 35, 0.1)',
-              tension: 0.3,
-              fill: true
-            },
-            {
-              label: 'Promedio (m)',
-              data: avgData.length > 0 ? avgData : [0],
-              borderColor: '#3b82f6',
-              backgroundColor: 'transparent',
-              borderDash: [5, 5],
-              tension: 0.3
+                <div class="solid-card p-6 lg:col-span-2">
+                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Sesión de Fuerza</h2>
+                    <form id="form-gym" class="space-y-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre Sesión</label>
+                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna" required class="w-full px-4 py-2">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                                <label class="text-xs uppercase font-bold text-zinc-500">Ejercicios de la Sesión</label>
+                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700">+ Añadir Ejercicio</button>
+                            </div>
+                            <div id="gym-ejercicios-container" class="space-y-4"></div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Sesión de Gimnasio</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-zinc-400"></i> Historial de Gimnasio</h3>
+                <div id="lista-gym" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- TAB 4: TESTS MENSUALES -->
+        <section id="tab-tests" class="space-y-6 tab-content hidden">
+            <div class="solid-card p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-amber-500 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Registro de Tests</h2>
+                    </div>
+                    <div class="flex bg-[#0b0b0c] p-1 rounded-lg border border-zinc-800">
+                        <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black">Test Fuerza (1RM)</button>
+                        <button type="button" onclick="app.setTestType('lanzamientos')" id="btn-tipo-lanz" class="px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white">10 Lanzamientos</button>
+                    </div>
+                </div>
+
+                <form id="form-test-gym" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Ejercicio</label>
+                            <input type="text" id="test-gym-ejercicio" placeholder="Ej: Sentadilla Profunda" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Peso (kg)</label>
+                            <input type="number" step="0.5" id="test-gym-peso" required class="w-full px-4 py-2">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Repeticiones al Fallo</label>
+                        <input type="number" id="test-gym-reps" required class="w-full px-4 py-2">
+                        <p class="text-[11px] text-zinc-500 mt-1.5 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Estimación Epley: Peso × (1 + 0.0333 × Reps)</p>
+                    </div>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar y Actualizar 1RM Base</button>
+                </form>
+
+                <form id="form-test-lanz" class="space-y-5 hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="test-lanz-fecha" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina</label>
+                            <input type="text" id="test-lanz-tipo" placeholder="Ej: Jabalina, Balón Med..." required class="w-full px-4 py-2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2">Marcas Consecutivas (metros)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="intentos-lanz-container"></div>
+                    </div>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar Test</button>
+                </form>
+            </div>
+
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="list" class="w-5 h-5 text-zinc-400"></i> Historial de Tests</h3>
+                <div id="lista-tests" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- TAB 5: COMPETICIONES Y FORMULARIO DINÁMICO -->
+        <section id="tab-competiciones" class="space-y-6 tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="solid-card p-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-base mb-4 text-amber-500 flex items-center gap-2"><i data-lucide="medal" class="w-5 h-5"></i> Récords Personales (PB)</h3>
+                        <div id="comp-pb-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+                <!-- Gráfico de Competición con filtro independiente -->
+                <div class="solid-card p-6 lg:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-bold text-base text-white flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-400"></i> Evolución en Competiciones</h3>
+                        <select id="comp-chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23]">
+                            <!-- Opciones cargadas dinámicamente según lo registrado -->
+                        </select>
+                    </div>
+                    <div class="h-64 w-full"><canvas id="compChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="solid-card p-6">
+                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="flag" class="w-5 h-5"></i> Registrar Competición Oficial</h2>
+                <form id="form-competicion" class="space-y-5">
+                    
+                    <!-- Fila 1: Básicos -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="comp-fecha" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Campeonato</label>
+                            <input type="text" id="comp-nombre" placeholder="Ej: Cto. Nacional" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina</label>
+                            <select id="comp-disciplina" required class="w-full px-4 py-2 font-medium">
+                                <optgroup label="Sprints y Vallas">
+                                    <option value="60m">60m</option>
+                                    <option value="100m" selected>100m</option>
+                                    <option value="200m">200m</option>
+                                    <option value="400m">400m</option>
+                                    <option value="60m vallas">60m Vallas</option>
+                                    <option value="100m vallas">100m Vallas</option>
+                                    <option value="110m vallas">110m Vallas</option>
+                                    <option value="400m vallas">400m Vallas</option>
+                                </optgroup>
+                                <optgroup label="Mediofondo, Fondo y Marcha">
+                                    <option value="800m">800m</option>
+                                    <option value="1500m">1500m</option>
+                                    <option value="3000m">3000m</option>
+                                    <option value="3000m obstaculos">3000m Obstáculos</option>
+                                    <option value="5000m">5000m</option>
+                                    <option value="10000m">10000m</option>
+                                    <option value="Maraton">Maratón / Medio Maratón</option>
+                                    <option value="Marcha">Marcha (Varias distancias)</option>
+                                </optgroup>
+                                <optgroup label="Saltos">
+                                    <option value="Longitud">Salto de Longitud</option>
+                                    <option value="Triple Salto">Triple Salto</option>
+                                    <option value="Altura">Salto de Altura</option>
+                                    <option value="Pertiga">Salto con Pértiga</option>
+                                </optgroup>
+                                <optgroup label="Lanzamientos">
+                                    <option value="Peso">Lanzamiento de Peso</option>
+                                    <option value="Disco">Lanzamiento de Disco</option>
+                                    <option value="Jabalina">Lanzamiento de Jabalina</option>
+                                    <option value="Martillo">Lanzamiento de Martillo</option>
+                                </optgroup>
+                                <optgroup label="Pruebas Combinadas">
+                                    <option value="Decatlon">Decatlón</option>
+                                    <option value="Heptatlon">Heptatlón</option>
+                                    <option value="Pentatlon">Pentatlón</option>
+                                </optgroup>
+                                <optgroup label="Relevos">
+                                    <option value="4x100m">4x100m</option>
+                                    <option value="4x400m">4x400m</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Puesto, Marca Principal y Viento -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Final / Puntuación Total</label>
+                            <input type="text" id="comp-resultado" placeholder="Ej: 10.50, 8.20, 8500..." required class="w-full px-4 py-2 font-bold text-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Puesto / Ronda</label>
+                            <input type="text" id="comp-notas" placeholder="Ej: 1º (Final)" class="w-full px-4 py-2">
+                        </div>
+                        <div id="container-viento" class="hidden">
+                            <label class="block text-xs uppercase font-bold text-cyan-500 mb-1.5">Viento (m/s)</label>
+                            <input type="text" id="comp-viento" placeholder="Ej: +1.5" class="w-full px-4 py-2 border-cyan-900/50 focus:border-cyan-500">
+                        </div>
+                    </div>
+
+                    <!-- Condicional: INTENTOS -->
+                    <div id="container-intentos" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-3"><i data-lucide="list-ordered" class="w-4 h-4 inline mb-0.5"></i> Desglose de Intentos (1 al 6)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-2 text-center text-sm">
+                        </div>
+                    </div>
+
+                    <!-- Condicional: PROGRESIÓN -->
+                    <div id="container-progresion" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2"><i data-lucide="trending-up" class="w-4 h-4 inline mb-0.5"></i> Progresión de Saltos</label>
+                        <input type="text" id="comp-progresion" placeholder="Ej: 1.80 (O), 1.85 (XO), 1.90 (XXX)" class="w-full px-4 py-2 text-sm">
+                    </div>
+
+                    <!-- Condicional: COMBINADAS -->
+                    <div id="container-combinadas" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-amber-500 mb-3"><i data-lucide="layout-grid" class="w-4 h-4 inline mb-0.5"></i> Marcas Parciales de la Combinada</label>
+                        <div id="inputs-combinadas-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3"></div>
+                    </div>
+
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Registrar Competición Oficial</button>
+                </form>
+            </div>
+
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="archive" class="w-5 h-5 text-zinc-400"></i> Historial de Competiciones</h3>
+                <div id="lista-competiciones" class="space-y-3"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FIREBASE & LÓGICA JAVASCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        lucide.createIcons();
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCZO4i0vQbMxdY3DMmfnbnoNOmTBDCiE0U",
+            authDomain: "athleticstracker-15125.firebaseapp.com",
+            projectId: "athleticstracker-15125",
+            storageBucket: "athleticstracker-15125.firebasestorage.app",
+            messagingSenderId: "649006902093",
+            appId: "1:649006902093:web:ffe33f07d93639af1ae504"
+        };
+
+        const appFB = initializeApp(firebaseConfig);
+        const auth = getAuth(appFB);
+        const db = getFirestore(appFB);
+
+        class AthleticsApp {
+            constructor() {
+                this.currentUser = null;
+                this.data = { especifico: [], gym: [], tests: [], competiciones: [], rmBase: {} };
+                this.mainChartInstance = null;
+                this.compChartInstance = null;
+                this.activeTestType = 'gimnasio';
+                this.deferredPrompt = null;
+                
+                const today = new Date().toISOString().split('T')[0];
+                ['esp-fecha', 'gym-fecha', 'test-gym-fecha', 'test-lanz-fecha', 'comp-fecha'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) el.value = today;
+                });
+
+                this.initApp();
             }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              labels: { color: '#9ca3af', font: { size: 11 } }
+
+            initApp() {
+                const lanzContainer = document.getElementById('intentos-lanz-container');
+                if(lanzContainer) {
+                    lanzContainer.innerHTML = '';
+                    for(let i=1; i<=10; i++) lanzContainer.innerHTML += `<div><input type="number" step="0.01" placeholder="Int ${i}" class="test-lanz-val w-full px-2 py-2 text-sm text-center"></div>`;
+                }
+
+                document.getElementById('comp-disciplina').addEventListener('change', () => this.updateCompeticionForm());
+                this.updateCompeticionForm();
+
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    this.deferredPrompt = e;
+                    document.getElementById('btn-install-pwa').classList.remove('hidden');
+                    document.getElementById('btn-install-pwa').classList.add('flex');
+                });
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        this.currentUser = user;
+                        document.getElementById('user-email-display').textContent = user.email;
+                        document.getElementById('auth-modal').classList.add('hidden');
+                        await this.loadUserData();
+                        this.renderAll();
+                    } else {
+                        this.currentUser = null;
+                        document.getElementById('auth-modal').classList.remove('hidden');
+                    }
+                });
+
+                document.getElementById('auth-form').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
+                    catch(err) { this.showAuthError("Credenciales incorrectas."); }
+                });
+
+                document.getElementById('btn-register').addEventListener('click', async () => {
+                    try { await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
+                    catch(err) { this.showAuthError("Error al registrar cuenta."); }
+                });
+
+                document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
+                document.getElementById('form-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveGym(); });
+                document.getElementById('form-test-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
+                document.getElementById('form-test-lanz').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
+                document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
+
+                this.agregarEjercicioGym();
             }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#9ca3af', font: { size: 10 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#9ca3af', font: { size: 10 } }
+
+            installPWA() {
+                if (this.deferredPrompt) {
+                    this.deferredPrompt.prompt();
+                    this.deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') document.getElementById('btn-install-pwa').classList.add('hidden');
+                        this.deferredPrompt = null;
+                    });
+                }
             }
-          }
+
+            showToast(message) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i><span>${message}</span></div>`;
+                container.appendChild(toast);
+                lucide.createIcons();
+                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
+            }
+
+            showAuthError(msg) {
+                const err = document.getElementById('auth-error');
+                err.textContent = msg;
+                err.classList.remove('hidden');
+            }
+
+            logout() { signOut(auth); }
+
+            switchTab(tabId) {
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if(btn.dataset.target === tabId) btn.className = "tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
+                    else btn.className = "tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
+                });
+                
+                if(tabId === 'dashboard' || tabId === 'competiciones') setTimeout(() => this.renderCharts(), 50);
+            }
+
+            setTestType(type) {
+                this.activeTestType = type;
+                if(type === 'gimnasio') {
+                    document.getElementById('form-test-gym').classList.remove('hidden');
+                    document.getElementById('form-test-lanz').classList.add('hidden');
+                    document.getElementById('btn-tipo-gym').className = "px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black";
+                    document.getElementById('btn-tipo-lanz').className = "px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white";
+                } else {
+                    document.getElementById('form-test-gym').classList.add('hidden');
+                    document.getElementById('form-test-lanz').classList.remove('hidden');
+                    document.getElementById('btn-tipo-gym').className = "px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white";
+                    document.getElementById('btn-tipo-lanz').className = "px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black";
+                }
+            }
+
+            updateCompeticionForm() {
+                const disc = document.getElementById('comp-disciplina').value;
+                const conViento = ['100m', '200m', '100m vallas', '110m vallas', 'Longitud', 'Triple Salto'];
+                const conIntentos = ['Longitud', 'Triple Salto', 'Peso', 'Disco', 'Jabalina', 'Martillo'];
+                const conProgresion = ['Altura', 'Pertiga'];
+                const esCombinada = ['Decatlon', 'Heptatlon', 'Pentatlon'];
+
+                document.getElementById('container-viento').classList.toggle('hidden', !conViento.includes(disc));
+                document.getElementById('container-intentos').classList.toggle('hidden', !conIntentos.includes(disc));
+                document.getElementById('container-progresion').classList.toggle('hidden', !conProgresion.includes(disc));
+                document.getElementById('container-combinadas').classList.toggle('hidden', !esCombinada.includes(disc));
+
+                if(esCombinada.includes(disc)) {
+                    const container = document.getElementById('inputs-combinadas-grid');
+                    let pruebas = [];
+                    if(disc === 'Decatlon') pruebas = ['100m', 'Longitud', 'Peso', 'Altura', '400m', '110m vallas', 'Disco', 'Pértiga', 'Jabalina', '1500m'];
+                    else if(disc === 'Heptatlon') pruebas = ['100m vallas', 'Altura', 'Peso', '200m', 'Longitud', 'Jabalina', '800m'];
+                    else if(disc === 'Pentatlon') pruebas = ['60m vallas', 'Altura', 'Peso', 'Longitud', '800m'];
+
+                    container.innerHTML = pruebas.map(p => `
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1 truncate">${p}</label>
+                            <input type="text" data-prueba="${p}" class="input-combinada w-full px-2 py-1.5 text-sm bg-[#0b0b0c] border border-zinc-700 rounded-md focus:border-amber-500">
+                        </div>
+                    `).join('');
+                }
+            }
+
+            agregarEjercicioGym() {
+                const container = document.getElementById('gym-ejercicios-container');
+                const div = document.createElement('div');
+                div.className = "bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 space-y-3";
+                div.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <input type="text" class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3 border border-zinc-700 rounded bg-[#0b0b0c]" placeholder="Ej: Sentadilla...">
+                        <button type="button" onclick="this.closest('.bg-\\[\\#1f1f23\\]').remove()" class="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 bg-[#2a1215] rounded border border-[#4a1c1f] flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Quitar</button>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] uppercase font-bold text-zinc-500">Series (Kilos / Reps)</span>
+                            <button type="button" onclick="app.agregarSerieGym(this)" class="text-[10px] text-amber-500 font-bold uppercase hover:underline">+ Añadir Serie</button>
+                        </div>
+                        <div class="gym-series-list space-y-2">
+                            <div class="flex items-center gap-2 serie-row">
+                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                                <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+                lucide.createIcons();
+            }
+
+            agregarSerieGym(btn) {
+                const seriesList = btn.closest('div.space-y-3').querySelector('.gym-series-list');
+                const row = document.createElement('div');
+                row.className = "flex items-center gap-2 serie-row";
+                row.innerHTML = `
+                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                    <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
+                `;
+                seriesList.appendChild(row);
+            }
+
+            async loadUserData() {
+                try {
+                    const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
+                    const qs = await getDocs(q);
+                    if (!qs.empty) {
+                        const d = qs.docs[0].data();
+                        this.data = { especifico: d.especifico||[], gym: d.gym||[], tests: d.tests||[], competiciones: d.competiciones||[], rmBase: d.rmBase||{} };
+                    }
+                } catch(e) {}
+            }
+
+            async saveToCloud() {
+                if(!this.currentUser) return;
+                try {
+                    const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
+                    const qs = await getDocs(q);
+                    const payload = { userId: this.currentUser.uid, ...this.data };
+                    if(qs.empty) await addDoc(collection(db, "atletismo_users"), payload);
+                    else await setDoc(doc(db, "atletismo_users", qs.docs[0].id), payload);
+                } catch(e) {}
+            }
+
+            async saveEspecifico() {
+                this.data.especifico.unshift({
+                    id: Date.now().toString(),
+                    fecha: document.getElementById('esp-fecha').value,
+                    disciplina: document.getElementById('esp-disciplina').value,
+                    rpe: document.getElementById('esp-rpe').value,
+                    contenido: document.getElementById('esp-contenido').value,
+                    notas: document.getElementById('esp-notas').value
+                });
+                await this.saveToCloud();
+                document.getElementById('form-especifico').reset();
+                this.showToast("Sesión específica guardada");
+                this.renderAll();
+            }
+
+            async saveGym() {
+                const ejerciciosDivs = document.querySelectorAll('#gym-ejercicios-container > div');
+                const ejercicios = [];
+                ejerciciosDivs.forEach(div => {
+                    const ejNombre = div.querySelector('.gym-ej-nombre').value;
+                    const series = [];
+                    div.querySelectorAll('.serie-row').forEach(row => {
+                        series.push({ kg: parseFloat(row.querySelector('.serie-kg').value)||0, reps: parseInt(row.querySelector('.serie-reps').value)||0 });
+                    });
+                    if(series.length > 0) ejercicios.push({ ejercicio: ejNombre, series });
+                });
+                if(ejercicios.length === 0) return alert("Añade al menos un ejercicio.");
+
+                this.data.gym.unshift({
+                    id: Date.now().toString(),
+                    fecha: document.getElementById('gym-fecha').value,
+                    nombre: document.getElementById('gym-nombre').value,
+                    ejercicios
+                });
+                await this.saveToCloud();
+                document.getElementById('form-gym').reset();
+                document.getElementById('gym-ejercicios-container').innerHTML = '';
+                this.agregarEjercicioGym();
+                this.showToast("Sesión de fuerza guardada");
+                this.renderAll();
+            }
+
+            async saveTestGym() {
+                const ejercicio = document.getElementById('test-gym-ejercicio').value;
+                const peso = parseFloat(document.getElementById('test-gym-peso').value);
+                const reps = parseInt(document.getElementById('test-gym-reps').value);
+                const rmEstimado = Math.round(peso * (1 + 0.0333 * reps));
+
+                this.data.rmBase[ejercicio] = rmEstimado;
+                this.data.tests.unshift({
+                    id: Date.now().toString(), tipo: 'gimnasio', fecha: document.getElementById('test-gym-fecha').value,
+                    ejercicio, peso, reps, resultado: rmEstimado
+                });
+                await this.saveToCloud();
+                document.getElementById('form-test-gym').reset();
+                this.showToast(`Test de 1RM guardado: ${rmEstimado} kg`);
+                this.renderAll();
+            }
+
+            async saveTestLanzamiento() {
+                const tipo = document.getElementById('test-lanz-tipo').value;
+                const intentos = [];
+                document.querySelectorAll('.test-lanz-val').forEach(inp => {
+                    if(!isNaN(parseFloat(inp.value))) intentos.push(parseFloat(inp.value));
+                });
+                if(intentos.length === 0) return alert("Introduce al menos una marca.");
+
+                const max = Math.max(...intentos);
+                const prom = (intentos.reduce((a,b)=>a+b,0)/intentos.length).toFixed(2);
+
+                this.data.tests.unshift({
+                    id: Date.now().toString(), tipo: 'lanzamientos', fecha: document.getElementById('test-lanz-fecha').value,
+                    subtipo: tipo, intentos, resultado: max, promedio: parseFloat(prom)
+                });
+                await this.saveToCloud();
+                document.getElementById('form-test-lanz').reset();
+                document.querySelectorAll('.test-lanz-val').forEach(i => i.value = '');
+                this.showToast(`Test guardado. Marca: ${max}m`);
+                this.renderAll();
+            }
+
+            async saveCompeticion() {
+                const disc = document.getElementById('comp-disciplina').value;
+                const datosExtra = {};
+
+                if (!document.getElementById('container-viento').classList.contains('hidden')) {
+                    datosExtra.viento = document.getElementById('comp-viento').value.trim();
+                }
+                if (!document.getElementById('container-intentos').classList.contains('hidden')) {
+                    const ints = [];
+                    document.querySelectorAll('.comp-int').forEach(inp => { if(inp.value.trim() !== '') ints.push(inp.value.trim()); });
+                    datosExtra.intentos = ints;
+                }
+                if (!document.getElementById('container-progresion').classList.contains('hidden')) {
+                    datosExtra.progresion = document.getElementById('comp-progresion').value.trim();
+                }
+                if (!document.getElementById('container-combinadas').classList.contains('hidden')) {
+                    const parciales = {};
+                    document.querySelectorAll('.input-combinada').forEach(inp => {
+                        if(inp.value.trim() !== '') parciales[inp.dataset.prueba] = inp.value.trim();
+                    });
+                    datosExtra.combinadas = parciales;
+                }
+
+                this.data.competiciones.unshift({
+                    id: Date.now().toString(),
+                    fecha: document.getElementById('comp-fecha').value,
+                    nombre: document.getElementById('comp-nombre').value,
+                    disciplina: disc,
+                    resultado: document.getElementById('comp-resultado').value.trim(),
+                    notas: document.getElementById('comp-notas').value,
+                    ...datosExtra
+                });
+
+                await this.saveToCloud();
+                document.getElementById('form-competicion').reset();
+                document.querySelectorAll('.comp-int, .input-combinada, #comp-viento, #comp-progresion').forEach(i => i.value = '');
+                this.updateCompeticionForm();
+                this.showToast("Competición registrada");
+                this.renderAll();
+            }
+
+            async deleteItem(type, id) {
+                if(confirm("¿Eliminar registro permanentemente?")) {
+                    this.data[type] = this.data[type].filter(x => x.id !== id);
+                    await this.saveToCloud();
+                    this.showToast("Registro eliminado");
+                    this.renderAll();
+                }
+            }
+
+            exportJSON() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+                const a = document.createElement('a');
+                a.href = dataStr; a.download = `backup_atletismo_pro.json`; a.click();
+            }
+
+            importJSON(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if(parsed && typeof parsed === 'object') {
+                            this.data = { especifico: parsed.especifico||[], gym: parsed.gym||[], tests: parsed.tests||[], competiciones: parsed.competiciones||[], rmBase: parsed.rmBase||{} };
+                            await this.saveToCloud();
+                            this.renderAll();
+                            this.showToast("Datos importados");
+                        }
+                    } catch(err) { alert("Error al leer JSON."); }
+                };
+                reader.readAsText(file);
+            }
+
+            renderAll() {
+                document.getElementById('stat-esp').textContent = this.data.especifico.length;
+                document.getElementById('stat-lanz-count').textContent = this.data.tests.length;
+                document.getElementById('stat-comp').textContent = this.data.competiciones.length;
+
+                const pbs = {};
+                this.data.competiciones.forEach(c => { if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) pbs[c.disciplina] = c.resultado; });
+                this.data.tests.forEach(t => { if(t.tipo === 'lanzamientos') { if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) pbs[t.subtipo] = t.resultado; } });
+                document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
+
+                this.renderEspecificoList();
+                this.renderGymList();
+                this.renderRMConfig();
+                this.renderTestsList();
+                this.renderCompeticionesList();
+                this.renderPBSummary(pbs);
+                this.renderCharts();
+                
+                lucide.createIcons();
+            }
+
+            renderEspecificoList() {
+                const c = document.getElementById('lista-especifico');
+                if(!this.data.especifico.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.especifico.map(item => `
+                    <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800/60 flex justify-between items-start">
+                        <div>
+                            <div class="flex gap-2 items-center mb-1.5">
+                                <span class="text-xs font-bold text-amber-500 uppercase">${item.disciplina}</span>
+                                <span class="text-xs text-zinc-500 border-l border-zinc-700 pl-2">${item.fecha}</span>
+                            </div>
+                            <p class="text-sm text-zinc-300 whitespace-pre-line">${item.contenido}</p>
+                            ${item.notas ? `<p class="text-xs text-zinc-500 italic mt-2 flex items-center gap-1"><i data-lucide="message-square" class="w-3 h-3"></i> ${item.notas}</p>` : ''}
+                        </div>
+                        <button onclick="app.deleteItem('especifico', '${item.id}')" class="text-xs text-red-500 hover:text-red-400 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            renderGymList() {
+                const c = document.getElementById('lista-gym');
+                if(!this.data.gym.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.gym.map(item => `
+                    <div class="bg-[#1f1f23] p-5 rounded-lg border border-zinc-800/60">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h4 class="font-bold text-base text-white">${item.nombre}</h4>
+                                <span class="text-[11px] text-zinc-500">${item.fecha}</span>
+                            </div>
+                            <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            ${item.ejercicios.map(ej => `
+                                <div class="bg-[#121215] p-3 rounded-lg border border-zinc-800">
+                                    <span class="text-xs font-bold text-amber-500 block mb-2">${ej.ejercicio}</span>
+                                    <div class="space-y-1">
+                                        ${ej.series.map((s, i) => `
+                                            <div class="text-[11px] text-zinc-400 flex justify-between bg-[#1a1a1f] px-2 py-1 rounded">
+                                                <span>Serie ${i+1}</span>
+                                                <span class="text-zinc-200 font-semibold">${s.kg} kg × ${s.reps} reps</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderRMConfig() {
+                const c = document.getElementById('rm-config-list');
+                const ejs = ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust'];
+                c.innerHTML = ejs.map(ej => `
+                    <div class="bg-[#1f1f23] p-3 rounded-lg flex justify-between items-center border border-zinc-800">
+                        <span class="text-sm font-semibold text-zinc-300">${ej}</span>
+                        <div class="flex gap-4 items-center">
+                            <span class="text-base text-amber-500 font-black">${this.data.rmBase[ej] ? this.data.rmBase[ej]+' kg' : '--'}</span>
+                            <button onclick="app.editarRM('${ej}')" class="text-[11px] font-bold bg-zinc-800 px-3 py-1.5 rounded flex items-center gap-1 hover:bg-zinc-700 transition">
+                                <i data-lucide="edit-3" class="w-3 h-3"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            async editarRM(ej) {
+                const v = prompt(`Nuevo 1RM para ${ej} (kg):`, this.data.rmBase[ej]||'');
+                if(v && !isNaN(parseFloat(v))) { this.data.rmBase[ej] = parseFloat(v); await this.saveToCloud(); this.renderAll(); }
+            }
+
+            renderTestsList() {
+                const c = document.getElementById('lista-tests');
+                if(!this.data.tests.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.tests.map(item => `
+                    <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] text-zinc-500 font-medium">${item.fecha} - ${item.tipo === 'gimnasio'?'FUERZA (1RM)':'LANZAMIENTOS'}</span>
+                            <h4 class="text-sm font-bold text-white mt-1">${item.tipo === 'gimnasio'?item.ejercicio:item.subtipo}</h4>
+                            <p class="text-sm text-amber-500 font-extrabold mt-0.5">${item.tipo === 'gimnasio'?`${item.resultado} kg`:`${item.resultado} m`}</p>
+                            ${item.tipo === 'lanzamientos' ? `<p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Promedio: ${item.promedio}m <br> Intentos:${item.intentos.join(', ')}</p>` : ''}
+                        </div>
+                        <button onclick="app.deleteItem('tests', '${item.id}')" class="text-xs text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                `).join('');
+            }
+
+            renderCompeticionesList() {
+                const c = document.getElementById('lista-competiciones');
+                if(!this.data.competiciones.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.competiciones.map(item => `
+                    <div class="bg-[#1f1f23] p-5 rounded-lg border border-zinc-800 flex justify-between items-start">
+                        <div class="w-full">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="text-xs font-bold text-amber-500 uppercase">${item.disciplina}</span> 
+                                <span class="text-[11px] text-zinc-500 border-l border-zinc-700 pl-2">${item.fecha}</span>
+                                ${item.viento ? `<span class="text-[10px] font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded ml-2 border border-cyan-900/50">Viento: ${item.viento} m/s</span>` : ''}
+                            </div>
+                            
+                            <div class="flex justify-between items-start w-full">
+                                <div>
+                                    <h4 class="text-base font-bold text-white leading-none">${item.nombre}</h4>
+                                    <p class="text-2xl font-black text-amber-400 mt-2">${item.resultado}</p>
+                                    ${item.notas ? `<p class="text-xs text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> ${item.notas}</p>` : ''}
+                                </div>
+                                <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-500 p-2 hover:bg-red-500/10 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+
+                            ${item.intentos && item.intentos.length > 0 ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Intentos:</span>
+                                    <div class="flex flex-wrap gap-2 text-sm text-zinc-300">
+                                        ${item.intentos.map((int, i) => `<span><span class="text-zinc-600 text-[10px]">#${i+1}</span> ${int}</span>`).join('<span class="text-zinc-700">|</span>')}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${item.progresion ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Progresión:</span>
+                                    <p class="text-sm text-zinc-300 font-medium">${item.progresion}</p>
+                                </div>
+                            ` : ''}
+
+                            ${item.combinadas ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Parciales Combinada:</span>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                                        ${Object.entries(item.combinadas).map(([k,v]) => `
+                                            <div class="bg-[#1a1a1f] p-1.5 rounded text-center">
+                                                <div class="text-[9px] text-zinc-500 uppercase font-bold truncate">${k}</div>
+                                                <div class="text-xs text-amber-500 font-black">${v}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderPBSummary(pbs) {
+                const c1 = document.getElementById('pb-summary-list'), c2 = document.getElementById('comp-pb-list');
+                const keys = Object.keys(pbs);
+                if(!keys.length) return [c1,c2].forEach(c => { if(c) c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;});
+                
+                const html = keys.map(k => `
+                    <div class="flex justify-between items-center py-2.5 border-b border-zinc-800 last:border-0">
+                        <span class="text-sm font-medium text-zinc-300 uppercase">${k}</span>
+                        <span class="text-base font-black text-amber-500">${pbs[k]}</span>
+                    </div>
+                `).join('');
+                if(c1) c1.innerHTML = html; if(c2) c2.innerHTML = html;
+            }
+
+            renderCharts() {
+                Chart.defaults.color = '#71717a';
+                Chart.defaults.font.family = 'Inter';
+                
+                // 1. Gráfico de Tests
+                const ctxMain = document.getElementById('mainChart');
+                if(ctxMain) {
+                    const sel = document.getElementById('chart-filter-disc')?.value || 'Jabalina';
+                    const lanzTests = this.data.tests.filter(t => t.tipo === 'lanzamientos' && t.subtipo === sel).reverse();
+                    
+                    if(this.mainChartInstance) this.mainChartInstance.destroy();
+                    this.mainChartInstance = new Chart(ctxMain, {
+                        type: 'line',
+                        data: {
+                            labels: lanzTests.length ? lanzTests.map(t=>t.fecha) : ['Sin datos'],
+                            datasets: [
+                                {
+                                    label: 'Mejor Marca (m)',
+                                    data: lanzTests.length ? lanzTests.map(t=>t.resultado) : [0],
+                                    borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                    borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#f59e0b',
+                                    pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.3
+                                },
+                                {
+                                    label: 'Promedio (m)',
+                                    data: lanzTests.length ? lanzTests.map(t=>t.promedio) : [0],
+                                    borderColor: '#3b82f6', borderDash: [5, 5],
+                                    borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } } },
+                            scales: {
+                                x: { grid: { color: '#27272a', drawBorder: false } },
+                                y: { grid: { color: '#27272a', drawBorder: false } }
+                            }
+                        }
+                    });
+                }
+
+                // 2. Gráfico de Competición con FILTRO INDEPENDIENTE
+                const ctxComp = document.getElementById('compChart');
+                if(ctxComp) {
+                    const compSelect = document.getElementById('comp-chart-filter-disc');
+                    if(compSelect) {
+                        const distinctDiscs = [...new Set(this.data.competiciones.map(c => c.disciplina))];
+                        const currentVal = compSelect.value;
+                        compSelect.innerHTML = distinctDiscs.length 
+                            ? distinctDiscs.map(d => `<option value="${d}">${d}</option>`).join('')
+                            : `<option value="100m">100m</option>`;
+                        if(distinctDiscs.includes(currentVal)) compSelect.value = currentVal;
+                    }
+
+                    const selectedCompDisc = compSelect?.value || '100m';
+                    const comps = this.data.competiciones.filter(c => c.disciplina === selectedCompDisc).reverse();
+
+                    if(this.compChartInstance) this.compChartInstance.destroy();
+                    this.compChartInstance = new Chart(ctxComp, {
+                        type: 'line',
+                        data: {
+                            labels: comps.length ? comps.map(c => c.fecha) : ['Sin datos'],
+                            datasets: [{
+                                label: `Evolución (${selectedCompDisc})`,
+                                data: comps.length ? comps.map(c => parseFloat(c.resultado) || 0) : [0],
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#f59e0b',
+                                pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } } },
+                            scales: {
+                                x: { grid: { color: '#27272a', drawBorder: false } },
+                                y: { grid: { color: '#27272a', drawBorder: false } }
+                            }
+                        }
+                    });
+                }
+            }
         }
-      });
-    };
 
-    // Export/Import Local JSON Backups
-    window.exportDataJSON = () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.appState, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `Athletics_Backup_${new Date().toISOString().split('T')[0]}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    };
-
-    window.importDataJSON = (e) => {
-      const fileReader = new FileReader();
-      fileReader.onload = (event) => {
-        try {
-          const parsed = JSON.parse(event.target.result);
-          if (parsed.rms) window.appState.rms = parsed.rms;
-          if (parsed.especifico) window.appState.especifico = parsed.especifico;
-          if (parsed.gymLogs) window.appState.gymLogs = parsed.gymLogs;
-          if (parsed.throwTests) window.appState.throwTests = parsed.throwTests;
-          if (parsed.competiciones) window.appState.competiciones = parsed.competiciones;
-
-          syncDataToFirestore();
-          renderAllUI();
-          alert("¡Copia de seguridad importada y sincronizada correctamente!");
-        } catch (err) {
-          alert("Error al leer el archivo JSON.");
-        }
-      };
-      if (e.target.files[0]) {
-        fileReader.readAsText(e.target.files[0]);
-      }
-    };
-
-  </script>
+        const app = new AthleticsApp();
+        window.app = app;
+    </script>
 </body>
-</html>  
+</html>
