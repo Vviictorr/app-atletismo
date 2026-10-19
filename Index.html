@@ -64,32 +64,34 @@
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- CABECERA -->
+    <!-- CABECERA IDÉNTICA A LA CAPTURA -->
     <header class="glass-header sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-amber-500/20">⚡</div>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-amber-500/20">🏆</div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <h1 class="font-extrabold tracking-wider text-base sm:text-lg">ATHLETICS <span class="text-amber-400">PRO</span></h1>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Sincronizado Cloud</span>
+                        <h1 class="font-extrabold tracking-wider text-base sm:text-lg">Athletics <span class="text-amber-400">Pro</span></h1>
                     </div>
-                    <p class="text-[11px] text-zinc-400" id="user-email-display">Conectando...</p>
+                    <p class="text-[11px] text-zinc-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sincronizado en la Nube</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button id="btn-install-pwa" onclick="app.installPWA()" class="hidden px-3.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-xs font-bold text-amber-400 transition border border-amber-500/40 items-center gap-1.5">📱 Instalar App</button>
-                <button onclick="app.exportJSON()" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700">Exportar JSON</button>
-                <button onclick="app.logout()" class="px-3.5 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-xs font-semibold text-red-300 transition border border-red-900/50">Salir</button>
+            <div class="flex items-center gap-3">
+                <button id="btn-install-pwa" onclick="app.installPWA()" class="hidden px-4 py-2 rounded-xl bg-amber-500 text-black text-xs font-bold transition shadow-lg shadow-amber-500/20 items-center gap-1.5">📱 Instalar App</button>
+                <div class="flex items-center gap-2 bg-zinc-900 px-3 py-1.5 rounded-xl border border-zinc-800">
+                    <span class="text-xs text-amber-400">👤</span>
+                    <span class="text-xs text-zinc-300 font-medium truncate max-w-[150px]" id="user-email-display">Cargando...</span>
+                    <button onclick="app.logout()" class="text-xs text-red-400 hover:text-red-300 ml-1 font-bold" title="Salir">🚪</button>
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- NAVEGACIÓN EN CÁPSULAS -->
+    <!-- NAVEGACIÓN EN CÁPSULAS EXACTA -->
     <nav class="bg-zinc-950/90 border-b border-zinc-900 overflow-x-auto py-3">
         <div class="max-w-7xl mx-auto px-4 flex gap-2">
             <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="dashboard">📊 Dashboard</button>
-            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="especifico">🏃‍♂️ Trabajo Específico</button>
+            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="especifico">⏱️ Trabajo Específico</button>
             <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="gimnasio">🏋️‍♂️ Gimnasio (% 1RM)</button>
             <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests">🎯 Test Mensual (10 Lanz. / Fuerza)</button>
             <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones">🏆 Competiciones & PBs</button>
@@ -99,31 +101,54 @@
     <!-- CONTENEDOR PRINCIPAL -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- TAB 1: DASHBOARD -->
+        <!-- BARRA DE ACCIONES RÁPIDAS (Sincronización y JSON) -->
+        <div class="flex items-center justify-between glass-card px-4 py-3">
+            <div class="flex items-center gap-2 text-xs text-zinc-400">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-bold text-zinc-200">Sincronizado</span> en tiempo real con la nube de Firebase.
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="app.exportJSON()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700 flex items-center gap-1.5">📥 Exportar JSON</button>
+                <label class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700 cursor-pointer flex items-center gap-1.5">
+                    📤 Importar JSON <input type="file" id="import-file" accept=".json" class="hidden" onchange="app.importJSON(event)">
+                </label>
+            </div>
+        </div>
+
+        <!-- TAB 1: DASHBOARD EXACTO -->
         <section id="tab-dashboard" class="space-y-6 tab-content">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-card p-5">
+                <div class="glass-card p-5 relative overflow-hidden">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Total Sesiones</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-esp">0</h3>
+                    <h3 class="text-3xl font-extrabold mt-2 text-white" id="stat-esp">0</h3>
+                    <div class="absolute right-4 bottom-3 text-2xl opacity-20">📅</div>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Entrenos Gimnasio</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-gym">0</h3>
+                <div class="glass-card p-5 relative overflow-hidden">
+                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Lanzamientos Realizados</p>
+                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-lanz-count">0</h3>
+                    <div class="absolute right-4 bottom-3 text-2xl opacity-20">☄️</div>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Tests Realizados</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-test">0</h3>
-                </div>
-                <div class="glass-card p-5">
+                <div class="glass-card p-5 relative overflow-hidden">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Competiciones</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-comp">0</h3>
+                    <h3 class="text-3xl font-extrabold mt-2 text-white" id="stat-comp">0</h3>
+                    <div class="absolute right-4 bottom-3 text-2xl opacity-20">🏁</div>
+                </div>
+                <div class="glass-card p-5 relative overflow-hidden">
+                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Mejores Marcas (PB)</p>
+                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-pb-count">0</h3>
+                    <div class="absolute right-4 bottom-3 text-2xl opacity-20">🏆</div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="glass-card p-6 lg:col-span-2">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-bold text-base flex items-center gap-2">📈 Progreso de Test de Lanzamientos</h3>
+                        <h3 class="font-bold text-base flex items-center gap-2">📈 Progreso de Test de 10 Lanzamientos</h3>
+                        <select id="chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1 text-xs font-semibold rounded-lg">
+                            <option value="Jabalina">Jabalina</option>
+                            <option value="Balón Medicinal de Espaldas">Balón Medicinal de Espaldas</option>
+                            <option value="Lanzamiento de Peso">Lanzamiento de Peso</option>
+                        </select>
                     </div>
                     <div class="h-72"><canvas id="mainChart"></canvas></div>
                 </div>
@@ -139,7 +164,7 @@
         <!-- TAB 2: TRABAJO ESPECÍFICO -->
         <section id="tab-especifico" class="space-y-6 tab-content hidden">
             <div class="glass-card p-6">
-                <h2 class="text-lg font-bold mb-4 text-amber-400">📝 Registrar Sesión Específica (Atletismo)</h2>
+                <h2 class="text-lg font-bold mb-4 text-amber-400">⏱️ Registrar Sesión Específica (Atletismo)</h2>
                 <form id="form-especifico" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -228,10 +253,10 @@
         <!-- TAB 3: GIMNASIO & 1RM -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Referencias 1RM (Sin valores ficticios por defecto) -->
+                <!-- Referencias 1RM (Sin valores ficticios) -->
                 <div class="glass-card p-6">
                     <h2 class="text-base font-bold mb-3 text-amber-400">⚙️ Referencias 1RM Base</h2>
-                    <p class="text-xs text-zinc-400 mb-4">Tus máximos teóricos registrados. Si no has hecho test, aparece `--` limpio.</p>
+                    <p class="text-xs text-zinc-400 mb-4">Tus máximos teóricos registrados. Si no hay test, aparece `--` limpio.</p>
                     <div id="rm-config-list" class="space-y-3"></div>
                 </div>
 
@@ -285,7 +310,7 @@
                     </div>
                 </div>
 
-                <!-- TEST DE FUERZA (Epley con peso y repes al fallo) -->
+                <!-- TEST DE FUERZA (Epley) -->
                 <form id="form-test-gym" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -497,7 +522,6 @@
                     }
                 }
 
-                // PWA Install Prompt Listener
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     this.deferredPrompt = e;
@@ -821,11 +845,40 @@
                 a.click();
             }
 
+            importJSON(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        if(parsed && typeof parsed === 'object') {
+                            this.data = {
+                                especifico: parsed.especifico || [],
+                                gym: parsed.gym || [],
+                                tests: parsed.tests || [],
+                                competiciones: parsed.competiciones || [],
+                                rmBase: parsed.rmBase || {}
+                            };
+                            await this.saveToCloud();
+                            this.renderAll();
+                            this.showToast("Datos importados y sincronizados con éxito");
+                        }
+                    } catch(err) {
+                        alert("Error al leer el archivo JSON.");
+                    }
+                };
+                reader.readAsText(file);
+            }
+
             renderAll() {
                 document.getElementById('stat-esp').textContent = this.data.especifico.length;
-                document.getElementById('stat-gym').textContent = this.data.gym.length;
-                document.getElementById('stat-test').textContent = this.data.tests.length;
+                const totalLanzTests = this.data.tests.filter(t => t.tipo === 'lanzamientos').length;
+                document.getElementById('stat-lanz-count').textContent = totalLanzTests;
                 document.getElementById('stat-comp').textContent = this.data.competiciones.length;
+
+                const pbs = this.getPBMap();
+                document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
 
                 this.renderEspecificoList();
                 this.renderGymList();
@@ -834,6 +887,23 @@
                 this.renderCompeticionesList();
                 this.renderPBSummary();
                 this.renderCharts();
+            }
+
+            getPBMap() {
+                const pbs = {};
+                this.data.competiciones.forEach(c => {
+                    if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) {
+                        pbs[c.disciplina] = c.resultado;
+                    }
+                });
+                this.data.tests.forEach(t => {
+                    if(t.tipo === 'lanzamientos') {
+                        if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) {
+                            pbs[t.subtipo] = t.resultado + " m";
+                        }
+                    }
+                });
+                return pbs;
             }
 
             renderEspecificoList() {
@@ -971,20 +1041,7 @@
             }
 
             renderPBSummary() {
-                const pbs = {};
-                this.data.competiciones.forEach(c => {
-                    if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) {
-                        pbs[c.disciplina] = c.resultado;
-                    }
-                });
-                this.data.tests.forEach(t => {
-                    if(t.tipo === 'lanzamientos') {
-                        if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) {
-                            pbs[t.subtipo] = t.resultado + " m";
-                        }
-                    }
-                });
-
+                const pbs = this.getPBMap();
                 const c1 = document.getElementById('pb-summary-list'), c2 = document.getElementById('comp-pb-list');
                 const keys = Object.keys(pbs);
                 if(!keys.length) {
@@ -1006,19 +1063,34 @@
             renderCharts() {
                 const ctxMain = document.getElementById('mainChart');
                 if(ctxMain) {
-                    const lanzTests = this.data.tests.filter(t => t.tipo === 'lanzamientos').reverse();
+                    const selectedDisc = document.getElementById('chart-filter-disc')?.value || 'Jabalina';
+                    const lanzTests = this.data.tests.filter(t => t.tipo === 'lanzamientos' && t.subtipo === selectedDisc).reverse();
+                    
+                    const labels = lanzTests.length ? lanzTests.map(t => t.fecha) : ['Sin datos'];
+                    const dataMejor = lanzTests.length ? lanzTests.map(t => t.resultado) : [0];
+                    const dataProm = lanzTests.length ? lanzTests.map(t => t.promedio) : [0];
+
                     if(this.mainChartInstance) this.mainChartInstance.destroy();
                     this.mainChartInstance = new Chart(ctxMain, {
                         type: 'line',
                         data: {
-                            labels: lanzTests.length ? lanzTests.map(t => t.fecha) : ['Sin datos'],
-                            datasets: [{
-                                label: 'Mejor Marca (m)',
-                                data: lanzTests.length ? lanzTests.map(t => t.resultado) : [0],
-                                borderColor: '#f59e0b',
-                                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                                borderWidth: 3, fill: true, tension: 0.3
-                            }]
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: 'Mejor Marca (m)',
+                                    data: dataMejor,
+                                    borderColor: '#f59e0b',
+                                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                    borderWidth: 3, fill: true, tension: 0.3
+                                },
+                                {
+                                    label: 'Promedio (m)',
+                                    data: dataProm,
+                                    borderColor: '#3b82f6',
+                                    borderDash: [5, 5],
+                                    borderWidth: 2, fill: false, tension: 0.3
+                                }
+                            ]
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
