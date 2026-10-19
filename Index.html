@@ -21,6 +21,25 @@
         .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; border-color: #f59e0b; }
         input, select, textarea { background-color: #0b0b0c !important; border: 1px solid #27272a !important; color: #ffffff !important; border-radius: 0.5rem !important; }
         input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; box-shadow: 0 0 0 1px #f59e0b !important; }
+        
+        /* Slider personalizado */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: #27272a !important;
+            height: 8px;
+            border-radius: 4px;
+            border: none !important;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: #f59e0b;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+        }
+
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0b0b0c; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
@@ -69,7 +88,7 @@
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
-    <!-- CABECERA PRINCIPAL SÓLIDA -->
+    <!-- CABECERA PRINCIPAL -->
     <header class="header-bg sticky top-0 z-40">
         <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-4">
@@ -229,17 +248,76 @@
             </div>
         </section>
 
-        <!-- TAB 3: GIMNASIO & 1RM -->
+        <!-- TAB 3: GIMNASIO & CALCULADORA PORCENTAJES 1RM -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="solid-card p-6">
-                    <h2 class="text-base font-bold mb-3 text-amber-500 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base</h2>
-                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos registrados.</p>
-                    <div id="rm-config-list" class="space-y-2"></div>
+            
+            <!-- CALCULADORA RÁPIDA CON BARRITA (SLIDER) DE PORCENTAJE -->
+            <div class="solid-card p-6 bg-gradient-to-r from-[#16161a] to-[#1f1f28] border border-amber-500/30">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 class="text-lg font-black text-amber-500 flex items-center gap-2">
+                            <i data-lucide="calculator" class="w-5 h-5"></i> Calculadora Interactiva % 1RM
+                        </h2>
+                        <p class="text-xs text-zinc-400 mt-1">Mueve la barrita para saber cuántos kilos debes cargar en tu entrenamiento según tu test de fuerza.</p>
+                    </div>
+                    <!-- Crear nuevo ejercicio propio -->
+                    <button type="button" onclick="app.crearNuevoEjercicio()" class="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 flex items-center gap-2 transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Crear Nuevo Ejercicio
+                    </button>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- Selector de Ejercicio -->
+                    <div class="md:col-span-4 space-y-2">
+                        <label class="block text-xs uppercase font-bold text-zinc-400">Selecciona Ejercicio</label>
+                        <select id="calc-ejercicio-select" onchange="app.actualizarCalculadoraSlider()" class="w-full px-4 py-2.5 font-bold text-white text-sm">
+                            <!-- Opciones cargadas dinámicamente -->
+                        </select>
+                        <p class="text-[11px] text-zinc-500 flex justify-between" id="calc-1rm-info">1RM Registrado: <strong class="text-amber-400">-- kg</strong></p>
+                    </div>
+
+                    <!-- Barrita Deslizante (Slider) -->
+                    <div class="md:col-span-5 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs uppercase font-bold text-zinc-400">Porcentaje de Carga</label>
+                            <span id="calc-pct-display" class="px-2.5 py-0.5 bg-amber-500 text-black text-xs font-black rounded-full">80%</span>
+                        </div>
+                        <input type="range" id="calc-pct-slider" min="30" max="100" value="80" step="1" oninput="app.actualizarCalculadoraSlider()" class="w-full">
+                        
+                        <!-- Botones de Porcentaje Rápido -->
+                        <div class="flex justify-between gap-1">
+                            <button type="button" onclick="app.setCalcPct(60)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">60%</button>
+                            <button type="button" onclick="app.setCalcPct(70)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">70%</button>
+                            <button type="button" onclick="app.setCalcPct(75)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">75%</button>
+                            <button type="button" onclick="app.setCalcPct(80)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">80%</button>
+                            <button type="button" onclick="app.setCalcPct(85)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">85%</button>
+                            <button type="button" onclick="app.setCalcPct(90)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">90%</button>
+                            <button type="button" onclick="app.setCalcPct(95)" class="px-2 py-1 text-[10px] font-bold bg-[#1f1f23] hover:bg-zinc-700 rounded text-zinc-300">95%</button>
+                        </div>
+                    </div>
+
+                    <!-- Resultado Kilos Objetivo -->
+                    <div class="md:col-span-3 bg-[#0b0b0c] p-4 rounded-xl border border-zinc-800 text-center flex flex-col items-center justify-center">
+                        <span class="text-[10px] uppercase font-bold text-zinc-500">Peso Objetivo</span>
+                        <h3 id="calc-kilos-result" class="text-3xl font-black text-amber-500 mt-1">0.0 kg</h3>
+                        <span class="text-[10px] text-zinc-500 mt-1" id="calc-kilos-subtext">Basado en 1RM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 1RM Base Config -->
+                <div class="solid-card p-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-base font-bold text-amber-500 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base Registrados</h2>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos teóricos registrados para cada ejercicio de tu catálogo.</p>
+                    <div id="rm-config-list" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Formulario Gimnasio -->
                 <div class="solid-card p-6 lg:col-span-2">
-                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Sesión de Fuerza</h2>
+                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Entrenamiento de Fuerza</h2>
                     <form id="form-gym" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -248,19 +326,19 @@
                             </div>
                             <div>
                                 <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre Sesión</label>
-                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna" required class="w-full px-4 py-2">
+                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Explosiva Pierna" required class="w-full px-4 py-2">
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
                                 <label class="text-xs uppercase font-bold text-zinc-500">Ejercicios de la Sesión</label>
-                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700">+ Añadir Ejercicio</button>
+                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700 flex items-center gap-1">+ Añadir Ejercicio</button>
                             </div>
                             <div id="gym-ejercicios-container" class="space-y-4"></div>
                         </div>
 
-                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Sesión de Gimnasio</button>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Entrenamiento de Gimnasio</button>
                     </form>
                 </div>
             </div>
@@ -276,7 +354,7 @@
             <div class="solid-card p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-amber-500 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Registro de Tests</h2>
+                        <h2 class="text-lg font-bold text-amber-500 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Registro de Tests Mensuales</h2>
                     </div>
                     <div class="flex bg-[#0b0b0c] p-1 rounded-lg border border-zinc-800">
                         <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black">Test Fuerza (1RM)</button>
@@ -291,16 +369,18 @@
                             <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Ejercicio</label>
-                            <input type="text" id="test-gym-ejercicio" placeholder="Ej: Sentadilla Profunda" required class="w-full px-4 py-2">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Ejercicio de tu Catálogo</label>
+                            <select id="test-gym-ejercicio" class="w-full px-4 py-2 font-bold text-white">
+                                <!-- Cargado dinámicamente -->
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Peso (kg)</label>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Peso Utilizado (kg)</label>
                             <input type="number" step="0.5" id="test-gym-peso" required class="w-full px-4 py-2">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Repeticiones al Fallo</label>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Repeticiones al Fallo Sin Descanso</label>
                         <input type="number" id="test-gym-reps" required class="w-full px-4 py-2">
                         <p class="text-[11px] text-zinc-500 mt-1.5 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Estimación Epley: Peso × (1 + 0.0333 × Reps)</p>
                     </div>
@@ -333,7 +413,7 @@
             </div>
         </section>
 
-        <!-- TAB 5: COMPETICIONES Y FORMULARIO DINÁMICO -->
+        <!-- TAB 5: COMPETICIONES -->
         <section id="tab-competiciones" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="solid-card p-6 flex flex-col justify-between">
@@ -342,13 +422,10 @@
                         <div id="comp-pb-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
-                <!-- Gráfico de Competición con filtro independiente -->
                 <div class="solid-card p-6 lg:col-span-2">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-bold text-base text-white flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-400"></i> Evolución en Competiciones</h3>
-                        <select id="comp-chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23]">
-                            <!-- Opciones cargadas dinámicamente según lo registrado -->
-                        </select>
+                        <select id="comp-chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23]"></select>
                     </div>
                     <div class="h-64 w-full"><canvas id="compChart"></canvas></div>
                 </div>
@@ -358,7 +435,6 @@
                 <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="flag" class="w-5 h-5"></i> Registrar Competición Oficial</h2>
                 <form id="form-competicion" class="space-y-5">
                     
-                    <!-- Fila 1: Básicos -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
@@ -389,7 +465,7 @@
                                     <option value="5000m">5000m</option>
                                     <option value="10000m">10000m</option>
                                     <option value="Maraton">Maratón / Medio Maratón</option>
-                                    <option value="Marcha">Marcha (Varias distancias)</option>
+                                    <option value="Marcha">Marcha</option>
                                 </optgroup>
                                 <optgroup label="Saltos">
                                     <option value="Longitud">Salto de Longitud</option>
@@ -408,19 +484,14 @@
                                     <option value="Heptatlon">Heptatlón</option>
                                     <option value="Pentatlon">Pentatlón</option>
                                 </optgroup>
-                                <optgroup label="Relevos">
-                                    <option value="4x100m">4x100m</option>
-                                    <option value="4x400m">4x400m</option>
-                                </optgroup>
                             </select>
                         </div>
                     </div>
 
-                    <!-- Puesto, Marca Principal y Viento -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Final / Puntuación Total</label>
-                            <input type="text" id="comp-resultado" placeholder="Ej: 10.50, 8.20, 8500..." required class="w-full px-4 py-2 font-bold text-amber-500">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Final Principal</label>
+                            <input type="text" id="comp-resultado" placeholder="Ej: 10.50, 8.20..." required class="w-full px-4 py-2 font-bold text-amber-500">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Puesto / Ronda</label>
@@ -428,11 +499,10 @@
                         </div>
                         <div id="container-viento" class="hidden">
                             <label class="block text-xs uppercase font-bold text-cyan-500 mb-1.5">Viento (m/s)</label>
-                            <input type="text" id="comp-viento" placeholder="Ej: +1.5" class="w-full px-4 py-2 border-cyan-900/50 focus:border-cyan-500">
+                            <input type="text" id="comp-viento" placeholder="Ej: +1.5" class="w-full px-4 py-2 border-cyan-900/50">
                         </div>
                     </div>
 
-                    <!-- Condicional: INTENTOS -->
                     <div id="container-intentos" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
                         <label class="block text-xs uppercase font-bold text-zinc-500 mb-3"><i data-lucide="list-ordered" class="w-4 h-4 inline mb-0.5"></i> Desglose de Intentos (1 al 6)</label>
                         <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
@@ -445,13 +515,11 @@
                         </div>
                     </div>
 
-                    <!-- Condicional: PROGRESIÓN -->
                     <div id="container-progresion" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
                         <label class="block text-xs uppercase font-bold text-zinc-500 mb-2"><i data-lucide="trending-up" class="w-4 h-4 inline mb-0.5"></i> Progresión de Saltos</label>
                         <input type="text" id="comp-progresion" placeholder="Ej: 1.80 (O), 1.85 (XO), 1.90 (XXX)" class="w-full px-4 py-2 text-sm">
                     </div>
 
-                    <!-- Condicional: COMBINADAS -->
                     <div id="container-combinadas" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
                         <label class="block text-xs uppercase font-bold text-amber-500 mb-3"><i data-lucide="layout-grid" class="w-4 h-4 inline mb-0.5"></i> Marcas Parciales de la Combinada</label>
                         <div id="inputs-combinadas-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3"></div>
@@ -493,7 +561,14 @@
         class AthleticsApp {
             constructor() {
                 this.currentUser = null;
-                this.data = { especifico: [], gym: [], tests: [], competiciones: [], rmBase: {} };
+                this.data = { 
+                    especifico: [], 
+                    gym: [], 
+                    tests: [], 
+                    competiciones: [], 
+                    rmBase: {},
+                    ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar']
+                };
                 this.mainChartInstance = null;
                 this.compChartInstance = null;
                 this.activeTestType = 'gimnasio';
@@ -596,6 +671,7 @@
                 });
                 
                 if(tabId === 'dashboard' || tabId === 'competiciones') setTimeout(() => this.renderCharts(), 50);
+                if(tabId === 'gimnasio') this.actualizarCalculadoraSlider();
             }
 
             setTestType(type) {
@@ -611,6 +687,73 @@
                     document.getElementById('btn-tipo-gym').className = "px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white";
                     document.getElementById('btn-tipo-lanz').className = "px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black";
                 }
+            }
+
+            // GESTIÓN DE CATÁLOGO Y CALCULADORA DE PORCENTAJES (% 1RM)
+            async crearNuevoEjercicio() {
+                const nombre = prompt("Nombre del nuevo ejercicio de fuerza (ej: Dominadas Lastradas):");
+                if (nombre && nombre.trim() !== '') {
+                    const limpio = nombre.trim();
+                    if (!this.data.ejerciciosCatalogo.includes(limpio)) {
+                        this.data.ejerciciosCatalogo.push(limpio);
+                        await this.saveToCloud();
+                        this.renderCatalogoDropdowns();
+                        this.renderRMConfig();
+                        this.showToast(`Ejercicio "${limpio}" añadido al catálogo`);
+                    } else {
+                        alert("Ese ejercicio ya existe en tu catálogo.");
+                    }
+                }
+            }
+
+            setCalcPct(pct) {
+                document.getElementById('calc-pct-slider').value = pct;
+                this.actualizarCalculadoraSlider();
+            }
+
+            actualizarCalculadoraSlider() {
+                const ejSelect = document.getElementById('calc-ejercicio-select');
+                const slider = document.getElementById('calc-pct-slider');
+                const pctDisplay = document.getElementById('calc-pct-display');
+                const resultKg = document.getElementById('calc-kilos-result');
+                const info1rm = document.getElementById('calc-1rm-info');
+                const subtext = document.getElementById('calc-kilos-subtext');
+
+                if(!ejSelect || !slider) return;
+
+                const ejNombre = ejSelect.value;
+                const pct = parseInt(slider.value);
+                pctDisplay.textContent = `${pct}%`;
+
+                const rm = this.data.rmBase[ejNombre];
+                if (rm !== undefined && rm > 0) {
+                    info1rm.innerHTML = `1RM Registrado: <strong class="text-amber-400">${rm} kg</strong>`;
+                    const kilos = ((rm * pct) / 100).toFixed(1);
+                    resultKg.textContent = `${kilos} kg`;
+                    subtext.textContent = `${pct}% de tu 1RM (${rm} kg)`;
+                } else {
+                    info1rm.innerHTML = `1RM Registrado: <strong class="text-zinc-500">Sin test (-- kg)</strong>`;
+                    resultKg.textContent = `-- kg`;
+                    subtext.textContent = `Registra un test para calcular`;
+                }
+            }
+
+            renderCatalogoDropdowns() {
+                const optionsHTML = this.data.ejerciciosCatalogo.map(ej => `<option value="${ej}">${ej}</option>`).join('');
+                
+                const calcSelect = document.getElementById('calc-ejercicio-select');
+                if(calcSelect) calcSelect.innerHTML = optionsHTML;
+
+                const testSelect = document.getElementById('test-gym-ejercicio');
+                if(testSelect) testSelect.innerHTML = optionsHTML;
+
+                document.querySelectorAll('.gym-ej-nombre').forEach(sel => {
+                    const current = sel.value;
+                    sel.innerHTML = optionsHTML;
+                    if(this.data.ejerciciosCatalogo.includes(current)) sel.value = current;
+                });
+
+                this.actualizarCalculadoraSlider();
             }
 
             updateCompeticionForm() {
@@ -635,7 +778,7 @@
                     container.innerHTML = pruebas.map(p => `
                         <div>
                             <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1 truncate">${p}</label>
-                            <input type="text" data-prueba="${p}" class="input-combinada w-full px-2 py-1.5 text-sm bg-[#0b0b0c] border border-zinc-700 rounded-md focus:border-amber-500">
+                            <input type="text" data-prueba="${p}" class="input-combinada w-full px-2 py-1.5 text-sm bg-[#0b0b0c] border border-zinc-700 rounded-md">
                         </div>
                     `).join('');
                 }
@@ -645,9 +788,14 @@
                 const container = document.getElementById('gym-ejercicios-container');
                 const div = document.createElement('div');
                 div.className = "bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 space-y-3";
+                
+                const optionsHTML = this.data.ejerciciosCatalogo.map(ej => `<option value="${ej}">${ej}</option>`).join('');
+
                 div.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <input type="text" class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3 border border-zinc-700 rounded bg-[#0b0b0c]" placeholder="Ej: Sentadilla...">
+                        <select class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3 border border-zinc-700 rounded bg-[#0b0b0c]">
+                            ${optionsHTML}
+                        </select>
                         <button type="button" onclick="this.closest('.bg-\\[\\#1f1f23\\]').remove()" class="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 bg-[#2a1215] rounded border border-[#4a1c1f] flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Quitar</button>
                     </div>
                     <div>
@@ -686,7 +834,14 @@
                     const qs = await getDocs(q);
                     if (!qs.empty) {
                         const d = qs.docs[0].data();
-                        this.data = { especifico: d.especifico||[], gym: d.gym||[], tests: d.tests||[], competiciones: d.competiciones||[], rmBase: d.rmBase||{} };
+                        this.data = { 
+                            especifico: d.especifico||[], 
+                            gym: d.gym||[], 
+                            tests: d.tests||[], 
+                            competiciones: d.competiciones||[], 
+                            rmBase: d.rmBase||{},
+                            ejerciciosCatalogo: d.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar']
+                        };
                     }
                 } catch(e) {}
             }
@@ -740,7 +895,7 @@
                 document.getElementById('form-gym').reset();
                 document.getElementById('gym-ejercicios-container').innerHTML = '';
                 this.agregarEjercicioGym();
-                this.showToast("Sesión de fuerza guardada");
+                this.showToast("Entrenamiento de fuerza guardado");
                 this.renderAll();
             }
 
@@ -757,7 +912,7 @@
                 });
                 await this.saveToCloud();
                 document.getElementById('form-test-gym').reset();
-                this.showToast(`Test de 1RM guardado: ${rmEstimado} kg`);
+                this.showToast(`Test guardado: 1RM de ${ejercicio} = ${rmEstimado} kg`);
                 this.renderAll();
             }
 
@@ -847,7 +1002,14 @@
                     try {
                         const parsed = JSON.parse(e.target.result);
                         if(parsed && typeof parsed === 'object') {
-                            this.data = { especifico: parsed.especifico||[], gym: parsed.gym||[], tests: parsed.tests||[], competiciones: parsed.competiciones||[], rmBase: parsed.rmBase||{} };
+                            this.data = { 
+                                especifico: parsed.especifico||[], 
+                                gym: parsed.gym||[], 
+                                tests: parsed.tests||[], 
+                                competiciones: parsed.competiciones||[], 
+                                rmBase: parsed.rmBase||{},
+                                ejerciciosCatalogo: parsed.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust']
+                            };
                             await this.saveToCloud();
                             this.renderAll();
                             this.showToast("Datos importados");
@@ -867,6 +1029,7 @@
                 this.data.tests.forEach(t => { if(t.tipo === 'lanzamientos') { if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) pbs[t.subtipo] = t.resultado; } });
                 document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
 
+                this.renderCatalogoDropdowns();
                 this.renderEspecificoList();
                 this.renderGymList();
                 this.renderRMConfig();
@@ -929,13 +1092,12 @@
 
             renderRMConfig() {
                 const c = document.getElementById('rm-config-list');
-                const ejs = ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust'];
-                c.innerHTML = ejs.map(ej => `
+                c.innerHTML = this.data.ejerciciosCatalogo.map(ej => `
                     <div class="bg-[#1f1f23] p-3 rounded-lg flex justify-between items-center border border-zinc-800">
-                        <span class="text-sm font-semibold text-zinc-300">${ej}</span>
-                        <div class="flex gap-4 items-center">
-                            <span class="text-base text-amber-500 font-black">${this.data.rmBase[ej] ? this.data.rmBase[ej]+' kg' : '--'}</span>
-                            <button onclick="app.editarRM('${ej}')" class="text-[11px] font-bold bg-zinc-800 px-3 py-1.5 rounded flex items-center gap-1 hover:bg-zinc-700 transition">
+                        <span class="text-sm font-semibold text-zinc-300 truncate max-w-[150px]">${ej}</span>
+                        <div class="flex gap-3 items-center">
+                            <span class="text-sm text-amber-500 font-black">${this.data.rmBase[ej] ? this.data.rmBase[ej]+' kg' : '--'}</span>
+                            <button onclick="app.editarRM('${ej}')" class="text-[10px] font-bold bg-zinc-800 px-2.5 py-1 rounded flex items-center gap-1 hover:bg-zinc-700 transition">
                                 <i data-lucide="edit-3" class="w-3 h-3"></i> Editar
                             </button>
                         </div>
@@ -1037,7 +1199,6 @@
                 Chart.defaults.color = '#71717a';
                 Chart.defaults.font.family = 'Inter';
                 
-                // 1. Gráfico de Tests
                 const ctxMain = document.getElementById('mainChart');
                 if(ctxMain) {
                     const sel = document.getElementById('chart-filter-disc')?.value || 'Jabalina';
@@ -1075,7 +1236,6 @@
                     });
                 }
 
-                // 2. Gráfico de Competición con FILTRO INDEPENDIENTE
                 const ctxComp = document.getElementById('compChart');
                 if(ctxComp) {
                     const compSelect = document.getElementById('comp-chart-filter-disc');
