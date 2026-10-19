@@ -3,114 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATLETISMO PRO - Tracker de Entrenamiento</title>
-    <!-- Tailwind CSS (Play CDN oficial) -->
+    <title>ATLETISMO PRO</title>
+    <!-- Tailwind CSS (CDN Oficial) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #08080a; color: #f4f4f5; }
-        .glass-header { background: rgba(18, 18, 20, 0.85); backdrop-filter: blur(12px); border-b: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-card { background: #121216; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1rem; }
-        .tab-btn { background-color: #1a1a20; color: #a1a1aa; border: 1px solid rgba(255, 255, 255, 0.05); }
-        .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); }
-        input, select, textarea { background-color: #18181c !important; border: 1px solid #27272a !important; color: #ffffff !important; }
-        input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #08080a; }
-        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0b0b0c; /* Fondo súper oscuro */
+            color: #f4f4f5; 
+        }
+        
+        /* Estilos exactos de las tarjetas de la captura */
+        .solid-card { 
+            background-color: #16161a; 
+            border: 1px solid #27272a; 
+            border-radius: 1rem; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-bg {
+            background-color: #121215;
+            border-bottom: 1px solid #27272a;
+        }
+
+        /* Botones de navegación (Cápsulas) */
+        .tab-btn { 
+            background-color: #1f1f23; 
+            color: #a1a1aa; 
+            border: 1px solid #27272a; 
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-btn:hover {
+            background-color: #27272a;
+            color: #e4e4e7;
+        }
+        .tab-btn.active { 
+            background-color: #f59e0b; /* Amarillo/Ámbar de la captura */
+            color: #000000; 
+            font-weight: 700; 
+            border-color: #f59e0b;
+        }
+
+        /* Inputs y formularios */
+        input, select, textarea { 
+            background-color: #0b0b0c !important; 
+            border: 1px solid #27272a !important; 
+            color: #ffffff !important; 
+            border-radius: 0.5rem !important;
+        }
+        input:focus, select:focus, textarea:focus { 
+            border-color: #f59e0b !important; 
+            outline: none !important; 
+            box-shadow: 0 0 0 1px #f59e0b !important;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0b0c; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: #16161a;
+            border-left: 4px solid #f59e0b;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            font-size: 0.875rem;
+            animation: slideIn 0.3s ease forwards, fadeOut 0.3s 2.7s ease forwards;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- MODAL DE LOGIN / REGISTRO FIREBASE -->
-    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden">
-        <div class="glass-card p-8 w-full max-w-md mx-4 shadow-2xl">
+    <!-- MODAL DE LOGIN (Mismo estilo oscuro) -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 hidden">
+        <div class="solid-card p-8 w-full max-w-md mx-4">
             <div class="text-center mb-6">
-                <span class="text-3xl font-black tracking-wider text-amber-400">ATHLETICS<span class="text-white">PRO</span></span>
-                <p class="text-xs text-zinc-400 mt-1">Sincronización Cloud Multidispositivo</p>
+                <div class="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-amber-500/20 mb-3">⚡</div>
+                <span class="text-3xl font-black tracking-wider">ATLETISMO <span class="text-amber-500">PRO</span></span>
             </div>
-            <div id="auth-error" class="hidden mb-4 p-3 bg-red-950/50 border border-red-800 text-red-300 text-xs rounded-xl"></div>
+            <div id="auth-error" class="hidden mb-4 p-3 bg-red-900/30 border border-red-800 text-red-300 text-xs rounded-lg text-center"></div>
             <form id="auth-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Correo Electrónico</label>
-                    <input type="email" id="auth-email" required class="w-full px-4 py-2.5 rounded-xl text-sm">
+                    <label class="block text-xs uppercase font-semibold text-zinc-500 mb-1">Correo Electrónico</label>
+                    <input type="email" id="auth-email" required class="w-full px-4 py-2.5">
                 </div>
                 <div>
-                    <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Contraseña</label>
-                    <input type="password" id="auth-password" required class="w-full px-4 py-2.5 rounded-xl text-sm">
+                    <label class="block text-xs uppercase font-semibold text-zinc-500 mb-1">Contraseña</label>
+                    <input type="password" id="auth-password" required class="w-full px-4 py-2.5">
                 </div>
                 <div class="flex gap-3 pt-2">
-                    <button type="submit" id="btn-login" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
-                    <button type="button" id="btn-register" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2.5 rounded-xl text-sm transition border border-zinc-700">Registrarse</button>
+                    <button type="submit" id="btn-login" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Iniciar Sesión</button>
+                    <button type="button" id="btn-register" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2.5 rounded-lg text-sm transition border border-zinc-700">Registrarse</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- CABECERA -->
-    <header class="glass-header sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- CABECERA EXACTA A LA IMAGEN -->
+    <header class="header-bg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-amber-500/20">⚡</div>
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-black text-xl shadow-md">⚡</div>
                 <div>
-                    <h1 class="font-extrabold tracking-wider text-base sm:text-lg">ATLETISMO <span class="text-amber-400">PRO</span></h1>
+                    <h1 class="font-extrabold tracking-wide text-lg leading-tight">ATLETISMO <span class="text-amber-500">PRO</span></h1>
                     <p class="text-[11px] text-zinc-400" id="user-email-display">Conectando cuenta...</p>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="app.exportJSON()" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700">Exportar JSON</button>
-                <button onclick="app.logout()" class="px-3.5 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-xs font-semibold text-red-300 transition border border-red-900/50">Salir</button>
+            <div class="flex items-center gap-3">
+                <button onclick="app.exportJSON()" class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 transition border border-zinc-700">Exportar JSON</button>
+                <button onclick="app.logout()" class="px-4 py-2 rounded-md bg-[#2a1215] hover:bg-[#3f1619] text-xs font-semibold text-red-400 transition border border-[#4a1c1f]">Salir</button>
             </div>
         </div>
     </header>
 
-    <!-- BARRA DE NAVEGACIÓN TIPO CÁPSULA -->
-    <nav class="bg-zinc-950/80 border-b border-zinc-900 overflow-x-auto py-3">
-        <div class="max-w-7xl mx-auto px-4 flex gap-2">
-            <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="dashboard">📊 Dashboard</button>
-            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="especifico">🏃‍♂️ Trabajo Específico</button>
-            <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="gimnasio">🏋️‍♂️ Gimnasio & 1RM</button>
-            <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="tests">🎯 Tests Mensuales</button>
-            <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="competiciones">🏆 Competiciones & PBs</button>
+    <!-- NAVEGACIÓN (BOTONES CÁPSULA) -->
+    <nav class="py-4 border-b border-zinc-800/50">
+        <div class="max-w-7xl mx-auto px-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="dashboard"><span>📊</span> Dashboard</button>
+            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="especifico"><span>🏃‍♂️</span> Trabajo Específico</button>
+            <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="gimnasio"><span>🏋️‍♂️</span> Gimnasio & 1RM</button>
+            <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests"><span>🎯</span> Tests Mensuales</button>
+            <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones"><span>🏆</span> Competiciones & PBs</button>
         </div>
     </nav>
 
     <!-- CONTENEDOR PRINCIPAL -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- TAB 1: DASHBOARD -->
+        <!-- TAB 1: DASHBOARD EXACTO -->
         <section id="tab-dashboard" class="space-y-6 tab-content">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Sesiones Atletismo</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-esp">0</h3>
+            <!-- 4 Tarjetas de Estadísticas -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="solid-card p-6">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">SESIONES ATLETISMO</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-esp">0</h3>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Entrenos Gimnasio</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-gym">0</h3>
+                <div class="solid-card p-6">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">ENTRENOS GIMNASIO</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-gym">0</h3>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Tests Realizados</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-test">0</h3>
+                <div class="solid-card p-6">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">TESTS REALIZADOS</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-test">0</h3>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Competiciones</p>
-                    <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-comp">0</h3>
+                <div class="solid-card p-6">
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">COMPETICIONES</p>
+                    <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-comp">0</h3>
                 </div>
             </div>
 
+            <!-- Gráficas y PB -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h3 class="font-bold text-base mb-4 flex items-center gap-2">📈 Evolución y Rendimiento en Lanzamientos</h3>
-                    <div class="h-72"><canvas id="mainChart"></canvas></div>
+                <div class="solid-card p-6 lg:col-span-2">
+                    <h3 class="font-bold text-base mb-6 flex items-center gap-2 text-white">📈 Evolución y Rendimiento en Lanzamientos</h3>
+                    <div class="h-72 w-full"><canvas id="mainChart"></canvas></div>
                 </div>
-                <div class="glass-card p-6 flex flex-col">
-                    <h3 class="font-bold text-base mb-4">🏆 Mejores Marcas Personales (PB)</h3>
-                    <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-1">
-                        <p class="text-xs text-zinc-500 italic">No hay récords registrados todavía.</p>
+                <div class="solid-card p-6 flex flex-col">
+                    <h3 class="font-bold text-base mb-6 flex items-center gap-2 text-white">🏆 Mejores Marcas Personales (PB)</h3>
+                    <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
+                        <p class="text-sm text-zinc-500 italic">No hay récords registrados todavía.</p>
                     </div>
                 </div>
             </div>
@@ -118,17 +193,17 @@
 
         <!-- TAB 2: TRABAJO ESPECÍFICO -->
         <section id="tab-especifico" class="space-y-6 tab-content hidden">
-            <div class="glass-card p-6">
-                <h2 class="text-lg font-bold mb-4 text-amber-400">📝 Registrar Sesión de Atletismo (Trabajo Libre)</h2>
-                <form id="form-especifico" class="space-y-4">
+            <div class="solid-card p-6">
+                <h2 class="text-lg font-bold mb-5 text-amber-500">📝 Registrar Sesión de Atletismo</h2>
+                <form id="form-especifico" class="space-y-5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                            <input type="date" id="esp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="esp-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Disciplina / Prueba</label>
-                            <select id="esp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina / Prueba</label>
+                            <select id="esp-disciplina" required class="w-full px-4 py-2">
                                 <optgroup label="Sprints / Velocidad">
                                     <option value="60m">60m Lisos</option>
                                     <option value="100m" selected>100m Lisos</option>
@@ -148,21 +223,6 @@
                                     <option value="3000m obstaculos">3000m Obstáculos</option>
                                     <option value="5000m">5000m</option>
                                     <option value="10000m">10000m</option>
-                                    <option value="Medio Maraton">Medio Maratón</option>
-                                    <option value="Maraton">Maratón</option>
-                                </optgroup>
-                                <optgroup label="Marcha Atlética">
-                                    <option value="3000m marcha">3000m Marcha</option>
-                                    <option value="5000m marcha">5000m Marcha</option>
-                                    <option value="10km marcha">10km Marcha</option>
-                                    <option value="20km marcha">20km Marcha</option>
-                                    <option value="35km marcha">35km Marcha</option>
-                                    <option value="50km marcha">50km Marcha</option>
-                                </optgroup>
-                                <optgroup label="Relevos">
-                                    <option value="4x100m">Relevo 4x100m</option>
-                                    <option value="4x400m">Relevo 4x400m</option>
-                                    <option value="4x400m mixto">Relevo 4x400m Mixto</option>
                                 </optgroup>
                                 <optgroup label="Saltos">
                                     <option value="Longitud">Salto de Longitud</option>
@@ -176,136 +236,125 @@
                                     <option value="Disco">Lanzamiento de Disco</option>
                                     <option value="Martillo">Lanzamiento de Martillo</option>
                                 </optgroup>
-                                <optgroup label="Pruebas Combinadas">
-                                    <option value="Pentatlon">Pentatlón</option>
-                                    <option value="Heptatlon">Heptatlón</option>
-                                    <option value="Decatlon">Decatlón</option>
-                                </optgroup>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Sensación / RPE (1-10)</label>
-                            <input type="number" id="esp-rpe" min="1" max="10" value="8" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">RPE (1-10)</label>
+                            <input type="number" id="esp-rpe" min="1" max="10" value="8" required class="w-full px-4 py-2">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Bloques y Estructura del Entrenamiento (Libre)</label>
-                        <textarea id="esp-contenido" rows="4" placeholder="Ej: Calentamiento técnica, 5x60m lanzados con tacos..." required class="w-full px-4 py-2 rounded-xl text-sm"></textarea>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Estructura del Entrenamiento</label>
+                        <textarea id="esp-contenido" rows="3" placeholder="Ej: Calentamiento, 5x60m lanzados..." required class="w-full px-4 py-2"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Notas / Observaciones Técnicas</label>
-                        <input type="text" id="esp-notas" placeholder="Ej: Buenas sensaciones en aceleración..." class="w-full px-4 py-2 rounded-xl text-sm">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Notas Técnicas</label>
+                        <input type="text" id="esp-notas" placeholder="Observaciones..." class="w-full px-4 py-2">
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar Sesión Específica</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar Sesión Específica</button>
                 </form>
             </div>
 
-            <div class="glass-card p-6">
-                <h3 class="font-bold text-base mb-4">📋 Historial de Entrenamientos Específicos</h3>
-                <div id="lista-especifico" class="space-y-3">
-                    <p class="text-sm text-zinc-500">No hay entrenamientos guardados.</p>
-                </div>
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white">📋 Historial de Entrenamientos Específicos</h3>
+                <div id="lista-especifico" class="space-y-3"></div>
             </div>
         </section>
 
         <!-- TAB 3: GIMNASIO FLEXIBLE -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6">
-                    <h2 class="text-base font-bold mb-3 text-amber-400">⚙️ Referencias 1RM Base</h2>
-                    <p class="text-xs text-zinc-400 mb-4">Máximos teóricos registrados. Si no has hecho un test, no se pone nada ficticio.</p>
-                    <div id="rm-config-list" class="space-y-3"></div>
+                <div class="solid-card p-6">
+                    <h2 class="text-base font-bold mb-3 text-amber-500">⚙️ Referencias 1RM Base</h2>
+                    <p class="text-[11px] text-zinc-400 mb-4 leading-relaxed">Máximos teóricos para calcular porcentajes.</p>
+                    <div id="rm-config-list" class="space-y-2"></div>
                 </div>
 
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h2 class="text-base font-bold mb-4 text-amber-400">🏋️‍♂️ Registrar Sesión de Fuerza (Multi-ejercicio)</h2>
+                <div class="solid-card p-6 lg:col-span-2">
+                    <h2 class="text-base font-bold mb-5 text-amber-500">🏋️‍♂️ Registrar Sesión de Fuerza</h2>
                     <form id="form-gym" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
+                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2">
                             </div>
                             <div>
-                                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre de la Sesión</label>
-                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna + Hip Thrust" required class="w-full px-4 py-2 rounded-xl text-sm">
+                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre de la Sesión</label>
+                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna" required class="w-full px-4 py-2">
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <label class="text-xs uppercase font-semibold text-zinc-400">Ejercicios de la Sesión (Series y Kilos Libres)</label>
-                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold rounded-lg border border-zinc-700">+ Añadir Ejercicio</button>
+                                <label class="text-xs uppercase font-bold text-zinc-500">Ejercicios de la Sesión</label>
+                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-400 text-xs font-bold rounded border border-zinc-700">+ Añadir Ejercicio</button>
                             </div>
                             <div id="gym-ejercicios-container" class="space-y-4"></div>
                         </div>
 
-                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition">Guardar Sesión de Gimnasio</button>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Sesión de Gimnasio</button>
                     </form>
                 </div>
             </div>
 
-            <div class="glass-card p-6">
-                <h3 class="font-bold text-base mb-4">📚 Historial de Entrenamientos de Fuerza</h3>
-                <div id="lista-gym" class="space-y-4">
-                    <p class="text-sm text-zinc-500">No hay entrenamientos de gimnasio registrados.</p>
-                </div>
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white">📚 Historial de Entrenamientos de Fuerza</h3>
+                <div id="lista-gym" class="space-y-4"></div>
             </div>
         </section>
 
         <!-- TAB 4: TESTS MENSUALES -->
         <section id="tab-tests" class="space-y-6 tab-content hidden">
-            <div class="glass-card p-6">
+            <div class="solid-card p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-amber-400">🎯 Registro de Tests Mensuales</h2>
-                        <p class="text-xs text-zinc-400">Elige el tipo de test mensual que deseas registrar.</p>
+                        <h2 class="text-lg font-bold text-amber-500">🎯 Registro de Tests Mensuales</h2>
                     </div>
-                    <div class="flex gap-2">
-                        <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-4 py-2 rounded-xl text-xs font-bold transition bg-amber-500 text-black">Test Fuerza Gimnasio</button>
-                        <button type="button" onclick="app.setTestType('lanzamientos')" id="btn-tipo-lanz" class="px-4 py-2 rounded-xl text-xs font-bold transition bg-zinc-800 text-zinc-300 border border-zinc-700">Test 10 Lanzamientos</button>
+                    <div class="flex bg-[#0b0b0c] p-1 rounded-lg border border-zinc-800">
+                        <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-4 py-1.5 rounded text-xs font-bold transition bg-amber-500 text-black">Gimnasio</button>
+                        <button type="button" onclick="app.setTestType('lanzamientos')" id="btn-tipo-lanz" class="px-4 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white">10 Lanzamientos</button>
                     </div>
                 </div>
 
-                <form id="form-test-gym" class="space-y-4">
+                <form id="form-test-gym" class="space-y-5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha del Test</label>
-                            <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha del Test</label>
+                            <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Ejercicio</label>
-                            <select id="test-gym-ejercicio" class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Ejercicio</label>
+                            <select id="test-gym-ejercicio" class="w-full px-4 py-2">
                                 <option value="Sentadilla Profunda">Sentadilla Profunda</option>
                                 <option value="Press Banca">Press Banca</option>
                                 <option value="Peso Muerto">Peso Muerto</option>
-                                <option value="Power Clean">Power Clean (Cargada)</option>
+                                <option value="Power Clean">Power Clean</option>
                                 <option value="Hip Thrust">Hip Thrust</option>
-                                <option value="Sentadilla Búlgara">Sentadilla Búlgara</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Peso Utilizado (kg)</label>
-                            <input type="number" step="0.5" id="test-gym-peso" placeholder="Ej: 80" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Peso (kg)</label>
+                            <input type="number" step="0.5" id="test-gym-peso" required class="w-full px-4 py-2">
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Repeticiones Máximas (Al fallo sin descanso)</label>
-                        <input type="number" id="test-gym-reps" placeholder="Ej: 8" required class="w-full px-4 py-2 rounded-xl text-sm">
-                        <p class="text-[11px] text-zinc-500 mt-1">Calcula tu 1RM estimado con la fórmula de Epley: Peso × (1 + 0.0333 × Reps).</p>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Repeticiones Máximas (Al fallo)</label>
+                        <input type="number" id="test-gym-reps" required class="w-full px-4 py-2">
+                        <p class="text-[11px] text-zinc-500 mt-1.5">Estimación Epley: Peso × (1 + 0.0333 × Reps).</p>
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar y Actualizar 1RM</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar y Actualizar 1RM</button>
                 </form>
 
-                <form id="form-test-lanz" class="space-y-4 hidden">
+                <form id="form-test-lanz" class="space-y-5 hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha del Test</label>
-                            <input type="date" id="test-lanz-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="test-lanz-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Tipo de Lanzamiento</label>
-                            <select id="test-lanz-tipo" class="w-full px-4 py-2 rounded-xl text-sm">
-                                <option value="Balón Medicinal de Espaldas">Balón Medicinal de Espaldas</option>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Tipo</label>
+                            <select id="test-lanz-tipo" class="w-full px-4 py-2">
+                                <option value="Balón Medicinal Espaldas">Balón Medicinal Espaldas</option>
                                 <option value="Lanzamiento de Peso">Lanzamiento de Peso</option>
                                 <option value="Lanzamiento de Jabalina">Lanzamiento de Jabalina</option>
                             </select>
@@ -313,119 +362,94 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-2">Introduce las 10 marcas consecutivas (en metros):</label>
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2">Las 10 marcas (metros):</label>
                         <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="intentos-lanz-container"></div>
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar Test de 10 Lanzamientos</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar Test de 10 Lanzamientos</button>
                 </form>
             </div>
 
-            <div class="glass-card p-6">
-                <h3 class="font-bold text-base mb-4">📊 Historial y Evolución de Tests</h3>
-                <div id="lista-tests" class="space-y-4">
-                    <p class="text-sm text-zinc-500">No hay tests registrados.</p>
-                </div>
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white">📊 Historial de Tests</h3>
+                <div id="lista-tests" class="space-y-3"></div>
             </div>
         </section>
 
         <!-- TAB 5: COMPETICIONES -->
         <section id="tab-competiciones" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6 flex flex-col justify-between">
+                <div class="solid-card p-6 flex flex-col justify-between">
                     <div>
-                        <h3 class="font-bold text-base mb-4 text-amber-400">🏆 Récords Personales (PB)</h3>
-                        <div id="comp-pb-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
-                            <p class="text-xs text-zinc-500 italic">Sin marcas en competición.</p>
-                        </div>
+                        <h3 class="font-bold text-base mb-4 text-amber-500">🏆 Récords Personales (PB)</h3>
+                        <div id="comp-pb-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h3 class="font-bold text-base mb-4">📈 Evolución de Marcas en Competición</h3>
-                    <div class="h-64"><canvas id="compChart"></canvas></div>
+                <div class="solid-card p-6 lg:col-span-2">
+                    <h3 class="font-bold text-base mb-4 text-white">📈 Evolución de Marcas</h3>
+                    <div class="h-64 w-full"><canvas id="compChart"></canvas></div>
                 </div>
             </div>
 
-            <div class="glass-card p-6">
-                <h2 class="text-lg font-bold mb-4 text-amber-400">🏅 Registrar Competición / Control Oficial</h2>
-                <form id="form-competicion" class="space-y-4">
+            <div class="solid-card p-6">
+                <h2 class="text-lg font-bold mb-5 text-amber-500">🏅 Registrar Competición</h2>
+                <form id="form-competicion" class="space-y-5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                            <input type="date" id="comp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="comp-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre del Campeonato</label>
-                            <input type="text" id="comp-nombre" placeholder="Ej: Campeonato Autonómico" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre Campeonato</label>
+                            <input type="text" id="comp-nombre" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Lugar</label>
-                            <input type="text" id="comp-lugar" placeholder="Ej: Pista Municipal" class="w-full px-4 py-2 rounded-xl text-sm">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Disciplina</label>
-                            <select id="comp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina</label>
+                            <select id="comp-disciplina" required class="w-full px-4 py-2">
                                 <option value="100m">100m Lisos</option>
-                                <option value="200m">200m Lisos</option>
-                                <option value="400m">400m Lisos</option>
                                 <option value="110m vallas">110m Vallas</option>
                                 <option value="Longitud">Salto de Longitud</option>
-                                <option value="Altura">Salto de Altura</option>
                                 <option value="Jabalina">Lanzamiento de Jabalina</option>
                                 <option value="Peso">Lanzamiento de Peso</option>
-                                <option value="Disco">Lanzamiento de Disco</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Puesto</label>
-                            <input type="text" id="comp-puesto" placeholder="Ej: 1º / Final A" class="w-full px-4 py-2 rounded-xl text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Viento (si aplica)</label>
-                            <input type="text" id="comp-viento" placeholder="Ej: +1.2 m/s" class="w-full px-4 py-2 rounded-xl text-sm">
-                        </div>
                     </div>
-
+                    
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-2">Desglose de Intentos (Opcional - Hasta 6)</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2" id="comp-intentos-container">
-                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
-                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
-                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
-                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
-                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
-                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2">Desglose de Intentos (Hasta 6)</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-1.5 text-center text-sm">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Marca Principal</label>
-                            <input type="text" id="comp-resultado" placeholder="Ej: 58.40m o 10.85s" required class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Principal</label>
+                            <input type="text" id="comp-resultado" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Notas</label>
-                            <input type="text" id="comp-notas" placeholder="Ej: Marca de temporada" class="w-full px-4 py-2 rounded-xl text-sm">
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Puesto / Notas</label>
+                            <input type="text" id="comp-notas" class="w-full px-4 py-2">
                         </div>
                     </div>
 
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Registrar Competición</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Registrar Competición</button>
                 </form>
             </div>
 
-            <div class="glass-card p-6">
-                <h3 class="font-bold text-base mb-4">📋 Historial de Competiciones</h3>
-                <div id="lista-competiciones" class="space-y-3">
-                    <p class="text-sm text-zinc-500">No hay competiciones registradas.</p>
-                </div>
+            <div class="solid-card p-6">
+                <h3 class="font-bold text-base mb-4 text-white">📋 Historial de Competiciones</h3>
+                <div id="lista-competiciones" class="space-y-3"></div>
             </div>
         </section>
 
     </main>
 
-    <!-- FIREBASE SDKs & JS LOGIC -->
+    <!-- FIREBASE & LOGICA JS -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -451,29 +475,32 @@
                 this.mainChartInstance = null;
                 this.compChartInstance = null;
                 this.activeTestType = 'gimnasio';
-                this.initApp();
-            }
-
-            initApp() {
+                
+                // Set default dates
                 const today = new Date().toISOString().split('T')[0];
                 ['esp-fecha', 'gym-fecha', 'test-gym-fecha', 'test-lanz-fecha', 'comp-fecha'].forEach(id => {
                     const el = document.getElementById(id);
                     if(el) el.value = today;
                 });
 
+                this.initApp();
+            }
+
+            initApp() {
+                // Setup lanzamientos inputs
                 const lanzContainer = document.getElementById('intentos-lanz-container');
                 if(lanzContainer) {
                     lanzContainer.innerHTML = '';
                     for(let i=1; i<=10; i++) {
                         lanzContainer.innerHTML += `
                             <div>
-                                <label class="block text-[10px] text-zinc-400 mb-1">Intento ${i}</label>
-                                <input type="number" step="0.01" placeholder="0.00" class="test-lanz-val w-full px-3 py-2 rounded-xl text-xs text-center">
+                                <input type="number" step="0.01" placeholder="Int ${i}" class="test-lanz-val w-full px-2 py-2 text-sm text-center">
                             </div>
                         `;
                     }
                 }
 
+                // Auth
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         this.currentUser = user;
@@ -487,20 +514,16 @@
                     }
                 });
 
+                // Events
                 document.getElementById('auth-form').addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    const email = document.getElementById('auth-email').value;
-                    const pass = document.getElementById('auth-password').value;
-                    try { await signInWithEmailAndPassword(auth, email, pass); } 
-                    catch(err) { this.showAuthError(err.message); }
+                    try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
+                    catch(err) { this.showAuthError("Error: Credenciales incorrectas."); }
                 });
 
                 document.getElementById('btn-register').addEventListener('click', async () => {
-                    const email = document.getElementById('auth-email').value;
-                    const pass = document.getElementById('auth-password').value;
-                    if(!email || !pass) return this.showAuthError("Introduce correo y contraseña.");
-                    try { await createUserWithEmailAndPassword(auth, email, pass); } 
-                    catch(err) { this.showAuthError(err.message); }
+                    try { await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
+                    catch(err) { this.showAuthError("Error al registrar."); }
                 });
 
                 document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
@@ -510,6 +533,16 @@
                 document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
 
                 this.agregarEjercicioGym();
+            }
+
+            // Sistema de Notificaciones (Toasts)
+            showToast(message) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'toast';
+                toast.innerHTML = `<strong>Éxito:</strong> ${message}`;
+                container.appendChild(toast);
+                setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
             }
 
             showAuthError(msg) {
@@ -526,15 +559,12 @@
 
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     if(btn.dataset.target === tabId) {
-                        btn.className = "tab-btn active px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap";
+                        btn.className = "tab-btn active px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
                     } else {
-                        btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap";
+                        btn.className = "tab-btn px-5 py-2 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
                     }
                 });
-
-                if(tabId === 'dashboard' || tabId === 'competiciones') {
-                    setTimeout(() => this.renderCharts(), 50);
-                }
+                if(tabId === 'dashboard' || tabId === 'competiciones') setTimeout(() => this.renderCharts(), 50);
             }
 
             setTestType(type) {
@@ -542,45 +572,41 @@
                 if(type === 'gimnasio') {
                     document.getElementById('form-test-gym').classList.remove('hidden');
                     document.getElementById('form-test-lanz').classList.add('hidden');
-                    document.getElementById('btn-tipo-gym').className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-amber-500 text-black";
-                    document.getElementById('btn-tipo-lanz').className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-zinc-800 text-zinc-300 border border-zinc-700";
+                    document.getElementById('btn-tipo-gym').className = "px-4 py-1.5 rounded text-xs font-bold transition bg-amber-500 text-black";
+                    document.getElementById('btn-tipo-lanz').className = "px-4 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white";
                 } else {
                     document.getElementById('form-test-gym').classList.add('hidden');
                     document.getElementById('form-test-lanz').classList.remove('hidden');
-                    document.getElementById('btn-tipo-gym').className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-zinc-800 text-zinc-300 border border-zinc-700";
-                    document.getElementById('btn-tipo-lanz').className = "px-4 py-2 rounded-xl text-xs font-bold transition bg-amber-500 text-black";
+                    document.getElementById('btn-tipo-gym').className = "px-4 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white";
+                    document.getElementById('btn-tipo-lanz').className = "px-4 py-1.5 rounded text-xs font-bold transition bg-amber-500 text-black";
                 }
             }
 
             agregarEjercicioGym() {
                 const container = document.getElementById('gym-ejercicios-container');
                 const div = document.createElement('div');
-                div.className = "bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 space-y-3 relative";
+                div.className = "bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 space-y-3";
                 div.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <select class="gym-ej-nombre px-3 py-1.5 rounded-lg text-xs font-bold border w-2/3">
+                        <select class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3">
                             <option value="Sentadilla Profunda">Sentadilla Profunda</option>
                             <option value="Press Banca">Press Banca</option>
                             <option value="Peso Muerto">Peso Muerto</option>
-                            <option value="Power Clean">Power Clean (Cargada)</option>
+                            <option value="Power Clean">Power Clean</option>
                             <option value="Hip Thrust">Hip Thrust</option>
-                            <option value="Sentadilla Búlgara">Sentadilla Búlgara</option>
-                            <option value="Press Militar">Press Militar</option>
-                            <option value="Peso Muerto Rumano">Peso Muerto Rumano</option>
-                            <option value="Dominadas / Jalón">Dominadas / Jalón</option>
+                            <option value="Dominadas">Dominadas</option>
                         </select>
-                        <button type="button" onclick="this.closest('.bg-zinc-900\\/80').remove()" class="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
+                        <button type="button" onclick="this.closest('.bg-\\[\\#1f1f23\\]').remove()" class="text-xs text-red-400 hover:text-red-300 px-2 py-1 bg-[#2a1215] rounded border border-[#4a1c1f]">Quitar</button>
                     </div>
                     <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[11px] uppercase font-semibold text-zinc-400">Series (Kilos y Repeticiones)</span>
-                            <button type="button" onclick="app.agregarSerieGym(this)" class="text-[11px] text-amber-400 font-bold hover:underline">+ Añadir Serie</button>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] uppercase font-bold text-zinc-500">Series (Kilos / Reps)</span>
+                            <button type="button" onclick="app.agregarSerieGym(this)" class="text-[10px] text-amber-500 font-bold uppercase">+ Serie</button>
                         </div>
                         <div class="gym-series-list space-y-2">
                             <div class="flex items-center gap-2 serie-row">
-                                <span class="text-xs text-zinc-500 w-12">Serie 1</span>
-                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs w-1/3" required>
-                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs w-1/3" required>
+                                <input type="number" step="0.5" placeholder="Kg" class="serie-kg px-3 py-1 text-sm w-1/2" required>
+                                <input type="number" placeholder="Reps" class="serie-reps px-3 py-1 text-sm w-1/2" required>
                                 <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                             </div>
                         </div>
@@ -591,13 +617,11 @@
 
             agregarSerieGym(btn) {
                 const seriesList = btn.closest('div.space-y-3').querySelector('.gym-series-list');
-                const numSeries = seriesList.children.length + 1;
                 const row = document.createElement('div');
                 row.className = "flex items-center gap-2 serie-row";
                 row.innerHTML = `
-                    <span class="text-xs text-zinc-500 w-12">Serie ${numSeries}</span>
-                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs w-1/3" required>
-                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs w-1/3" required>
+                    <input type="number" step="0.5" placeholder="Kg" class="serie-kg px-3 py-1 text-sm w-1/2" required>
+                    <input type="number" placeholder="Reps" class="serie-reps px-3 py-1 text-sm w-1/2" required>
                     <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                 `;
                 seriesList.appendChild(row);
@@ -606,44 +630,37 @@
             async loadUserData() {
                 try {
                     const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
-                    const querySnapshot = await getDocs(q);
-                    if (!querySnapshot.empty) {
-                        const docData = querySnapshot.docs[0].data();
-                        this.data = {
-                            especifico: docData.especifico || [],
-                            gym: docData.gym || [],
-                            tests: docData.tests || [],
-                            competiciones: docData.competiciones || [],
-                            rmBase: docData.rmBase || {}
-                        };
+                    const qs = await getDocs(q);
+                    if (!qs.empty) {
+                        const d = qs.docs[0].data();
+                        this.data = { especifico: d.especifico||[], gym: d.gym||[], tests: d.tests||[], competiciones: d.competiciones||[], rmBase: d.rmBase||{} };
                     }
-                } catch(e) { console.error("Error cargando datos:", e); }
+                } catch(e) {}
             }
 
             async saveToCloud() {
                 if(!this.currentUser) return;
                 try {
                     const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
-                    const querySnapshot = await getDocs(q);
+                    const qs = await getDocs(q);
                     const payload = { userId: this.currentUser.uid, ...this.data };
-                    if(querySnapshot.empty) { await addDoc(collection(db, "atletismo_users"), payload); } 
-                    else { await setDoc(doc(db, "atletismo_users", querySnapshot.docs[0].id), payload); }
-                } catch(e) { console.error("Error guardando:", e); }
+                    if(qs.empty) await addDoc(collection(db, "atletismo_users"), payload);
+                    else await setDoc(doc(db, "atletismo_users", qs.docs[0].id), payload);
+                } catch(e) {}
             }
 
             async saveEspecifico() {
-                const item = {
+                this.data.especifico.unshift({
                     id: Date.now().toString(),
                     fecha: document.getElementById('esp-fecha').value,
                     disciplina: document.getElementById('esp-disciplina').value,
                     rpe: document.getElementById('esp-rpe').value,
                     contenido: document.getElementById('esp-contenido').value,
                     notas: document.getElementById('esp-notas').value
-                };
-                this.data.especifico.unshift(item);
+                });
                 await this.saveToCloud();
                 document.getElementById('form-especifico').reset();
-                document.getElementById('esp-fecha').value = new Date().toISOString().split('T')[0];
+                this.showToast("Sesión específica guardada");
                 this.renderAll();
             }
 
@@ -652,32 +669,25 @@
                 const ejercicios = [];
                 ejerciciosDivs.forEach(div => {
                     const ejNombre = div.querySelector('.gym-ej-nombre').value;
-                    const seriesRows = div.querySelectorAll('.serie-row');
                     const series = [];
-                    seriesRows.forEach(row => {
-                        series.push({
-                            kg: parseFloat(row.querySelector('.serie-kg').value) || 0,
-                            reps: parseInt(row.querySelector('.serie-reps').value) || 0
-                        });
+                    div.querySelectorAll('.serie-row').forEach(row => {
+                        series.push({ kg: parseFloat(row.querySelector('.serie-kg').value)||0, reps: parseInt(row.querySelector('.serie-reps').value)||0 });
                     });
                     if(series.length > 0) ejercicios.push({ ejercicio: ejNombre, series });
                 });
+                if(ejercicios.length === 0) return alert("Añade al menos un ejercicio.");
 
-                if(ejercicios.length === 0) return alert("Añade al menos un ejercicio con sus series.");
-
-                const item = {
+                this.data.gym.unshift({
                     id: Date.now().toString(),
                     fecha: document.getElementById('gym-fecha').value,
                     nombre: document.getElementById('gym-nombre').value,
                     ejercicios
-                };
-
-                this.data.gym.unshift(item);
+                });
                 await this.saveToCloud();
                 document.getElementById('form-gym').reset();
-                document.getElementById('gym-fecha').value = new Date().toISOString().split('T')[0];
                 document.getElementById('gym-ejercicios-container').innerHTML = '';
                 this.agregarEjercicioGym();
+                this.showToast("Sesión de gimnasio guardada");
                 this.renderAll();
             }
 
@@ -687,98 +697,72 @@
                 const reps = parseInt(document.getElementById('test-gym-reps').value);
                 const rmEstimado = Math.round(peso * (1 + 0.0333 * reps));
 
-                const item = {
-                    id: Date.now().toString(),
-                    tipo: 'gimnasio',
-                    fecha: document.getElementById('test-gym-fecha').value,
-                    ejercicio,
-                    peso,
-                    reps,
-                    resultado: rmEstimado
-                };
-
                 this.data.rmBase[ejercicio] = rmEstimado;
-                this.data.tests.unshift(item);
+                this.data.tests.unshift({
+                    id: Date.now().toString(),
+                    tipo: 'gimnasio', fecha: document.getElementById('test-gym-fecha').value,
+                    ejercicio, peso, reps, resultado: rmEstimado
+                });
                 await this.saveToCloud();
                 document.getElementById('form-test-gym').reset();
-                document.getElementById('test-gym-fecha').value = new Date().toISOString().split('T')[0];
+                this.showToast(`Test guardado. 1RM Estimado: ${rmEstimado} kg`);
                 this.renderAll();
-                alert(`¡Test guardado! 1RM estimado: ${rmEstimado} kg`);
             }
 
             async saveTestLanzamiento() {
                 const tipo = document.getElementById('test-lanz-tipo').value;
-                const inputs = document.querySelectorAll('.test-lanz-val');
                 const intentos = [];
-                inputs.forEach(inp => {
-                    const val = parseFloat(inp.value);
-                    if(!isNaN(val)) intentos.push(val);
+                document.querySelectorAll('.test-lanz-val').forEach(inp => {
+                    if(!isNaN(parseFloat(inp.value))) intentos.push(parseFloat(inp.value));
                 });
-
                 if(intentos.length === 0) return alert("Introduce al menos una marca.");
 
-                const mejorMarca = Math.max(...intentos);
-                const suma = intentos.reduce((a, b) => a + b, 0);
-                const promedio = (suma / intentos.length).toFixed(2);
+                const max = Math.max(...intentos);
+                const prom = (intentos.reduce((a,b)=>a+b,0)/intentos.length).toFixed(2);
 
-                const item = {
+                this.data.tests.unshift({
                     id: Date.now().toString(),
-                    tipo: 'lanzamientos',
-                    fecha: document.getElementById('test-lanz-fecha').value,
-                    subtipo: tipo,
-                    intentos,
-                    resultado: mejorMarca,
-                    promedio: parseFloat(promedio)
-                };
-
-                this.data.tests.unshift(item);
+                    tipo: 'lanzamientos', fecha: document.getElementById('test-lanz-fecha').value,
+                    subtipo: tipo, intentos, resultado: max, promedio: parseFloat(prom)
+                });
                 await this.saveToCloud();
                 document.getElementById('form-test-lanz').reset();
-                document.getElementById('test-lanz-fecha').value = new Date().toISOString().split('T')[0];
+                this.showToast(`Test guardado. Mejor: ${max}m`);
                 this.renderAll();
-                alert(`¡Test guardado! Mejor marca: ${mejorMarca} m | Promedio: ${promedio} m`);
             }
 
             async saveCompeticion() {
-                const intentosInputs = document.querySelectorAll('.comp-int');
                 const intentos = [];
-                intentosInputs.forEach(inp => { if(inp.value.trim() !== '') intentos.push(inp.value.trim()); });
+                document.querySelectorAll('.comp-int').forEach(inp => { if(inp.value.trim() !== '') intentos.push(inp.value.trim()); });
 
-                const item = {
+                this.data.competiciones.unshift({
                     id: Date.now().toString(),
                     fecha: document.getElementById('comp-fecha').value,
                     nombre: document.getElementById('comp-nombre').value,
-                    lugar: document.getElementById('comp-lugar').value,
                     disciplina: document.getElementById('comp-disciplina').value,
-                    puesto: document.getElementById('comp-puesto').value,
-                    viento: document.getElementById('comp-viento').value,
                     resultado: document.getElementById('comp-resultado').value.trim(),
-                    intentos,
-                    notas: document.getElementById('comp-notas').value
-                };
-
-                this.data.competiciones.unshift(item);
+                    notas: document.getElementById('comp-notas').value,
+                    intentos
+                });
                 await this.saveToCloud();
                 document.getElementById('form-competicion').reset();
-                document.getElementById('comp-fecha').value = new Date().toISOString().split('T')[0];
-                intentosInputs.forEach(i => i.value = '');
+                this.showToast("Competición registrada");
                 this.renderAll();
             }
 
             async deleteItem(type, id) {
-                if(confirm("¿Seguro que deseas eliminar este registro?")) {
+                if(confirm("¿Eliminar registro?")) {
                     this.data[type] = this.data[type].filter(x => x.id !== id);
                     await this.saveToCloud();
+                    this.showToast("Registro eliminado");
                     this.renderAll();
                 }
             }
 
             exportJSON() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data, null, 2));
-                const dlAnchorElem = document.createElement('a');
-                dlAnchorElem.setAttribute("href", dataStr);
-                dlAnchorElem.setAttribute("download", `atletismo_backup_${new Date().toISOString().split('T')[0]}.json`);
-                dlAnchorElem.click();
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+                const a = document.createElement('a');
+                a.href = dataStr; a.download = `backup_atletismo.json`; a.click();
             }
 
             renderAll() {
@@ -793,58 +777,42 @@
                 this.renderTestsList();
                 this.renderCompeticionesList();
                 this.renderPBSummary();
-                this.renderCharts();
+                if(!document.getElementById('tab-dashboard').classList.contains('hidden')) this.renderCharts();
             }
 
             renderEspecificoList() {
-                const container = document.getElementById('lista-especifico');
-                if(this.data.especifico.length === 0) {
-                    container.innerHTML = `<p class="text-sm text-zinc-500">No hay entrenamientos guardados.</p>`;
-                    return;
-                }
-                container.innerHTML = this.data.especifico.map(item => `
-                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center gap-3">
+                const c = document.getElementById('lista-especifico');
+                if(!this.data.especifico.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.especifico.map(item => `
+                    <div class="bg-[#1f1f23] p-4 rounded-lg flex justify-between items-start border border-zinc-800">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${item.disciplina}</span>
-                                <span class="text-xs text-zinc-400">${item.fecha}</span>
-                                <span class="text-xs text-zinc-400">RPE: ${item.rpe}/10</span>
+                            <div class="flex gap-2 items-center mb-1">
+                                <span class="text-xs font-bold text-amber-500">${item.disciplina}</span>
+                                <span class="text-xs text-zinc-500">${item.fecha}</span>
                             </div>
-                            <p class="text-sm mt-2 whitespace-pre-line text-zinc-200">${item.contenido}</p>
-                            ${item.notas ? `<p class="text-xs text-zinc-400 italic mt-1">💡 ${item.notas}</p>` : ''}
+                            <p class="text-sm text-zinc-300 whitespace-pre-line">${item.contenido}</p>
                         </div>
-                        <button onclick="app.deleteItem('especifico', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1.5 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
+                        <button onclick="app.deleteItem('especifico', '${item.id}')" class="text-xs text-red-500 hover:text-red-400">Eliminar</button>
                     </div>
                 `).join('');
             }
 
             renderGymList() {
-                const container = document.getElementById('lista-gym');
-                if(this.data.gym.length === 0) {
-                    container.innerHTML = `<p class="text-sm text-zinc-500">No hay entrenamientos de gimnasio registrados.</p>`;
-                    return;
-                }
-                container.innerHTML = this.data.gym.map(item => `
-                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 space-y-3">
-                        <div class="flex justify-between items-center">
+                const c = document.getElementById('lista-gym');
+                if(!this.data.gym.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.gym.map(item => `
+                    <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800">
+                        <div class="flex justify-between items-center mb-3">
                             <div>
-                                <h4 class="font-bold text-sm text-amber-400">${item.nombre}</h4>
-                                <span class="text-xs text-zinc-400">${item.fecha}</span>
+                                <h4 class="font-bold text-sm text-white">${item.nombre}</h4>
+                                <span class="text-[10px] text-zinc-500">${item.fecha}</span>
                             </div>
-                            <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
+                            <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-500 hover:text-red-400">Eliminar</button>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800">
+                        <div class="grid grid-cols-2 gap-2">
                             ${item.ejercicios.map(ej => `
-                                <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800">
-                                    <span class="text-xs font-bold text-zinc-200">${ej.ejercicio}</span>
-                                    <div class="mt-1 space-y-1">
-                                        ${ej.series.map((s, idx) => `
-                                            <div class="text-xs text-zinc-400 flex justify-between">
-                                                <span>Serie ${idx+1}:</span>
-                                                <span class="font-semibold text-zinc-300">${s.kg} kg × ${s.reps} reps</span>
-                                            </div>
-                                        `).join('')}
-                                    </div>
+                                <div class="bg-[#121215] p-2 rounded border border-zinc-800">
+                                    <span class="text-xs font-bold text-amber-500 block mb-1">${ej.ejercicio}</span>${ej.series.map(s => `<div class="text-[11px] text-zinc-400 flex justify-between"><span>${s.kg}kg</span><span>${s.reps}reps</span></div>`).join('')}
                                 </div>
                             `).join('')}
                         </div>
@@ -853,164 +821,92 @@
             }
 
             renderRMConfig() {
-                const container = document.getElementById('rm-config-list');
-                const ejerciciosBase = ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara'];
-                
-                container.innerHTML = ejerciciosBase.map(ej => {
-                    const rm = this.data.rmBase[ej];
-                    const displayRM = rm !== undefined ? `${rm} kg` : '-- kg';
-                    return `
-                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 flex justify-between items-center">
-                            <div>
-                                <h5 class="text-xs font-bold text-zinc-200">${ej}</h5>
-                                <span class="text-xs text-amber-400 font-extrabold">1RM Actual: ${displayRM}</span>
-                            </div>
-                            <button onclick="app.editarRM('${ej}')" class="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-xs text-zinc-300 rounded-lg border border-zinc-700">Editar</button>
+                const c = document.getElementById('rm-config-list');
+                const ejs = ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust'];
+                c.innerHTML = ejs.map(ej => `
+                    <div class="bg-[#1f1f23] p-2.5 rounded flex justify-between items-center border border-zinc-800">
+                        <span class="text-xs font-bold text-zinc-300">${ej}</span>
+                        <div class="flex gap-3 items-center">
+                            <span class="text-sm text-amber-500 font-black">${this.data.rmBase[ej] ? this.data.rmBase[ej]+' kg' : '--'}</span>
+                            <button onclick="app.editarRM('${ej}')" class="text-[10px] bg-zinc-800 px-2 py-1 rounded">Editar</button>
                         </div>
-                    `;
-                }).join('');
+                    </div>
+                `).join('');
             }
-
-            async editarRM(ejercicio) {
-                const nuevoVal = prompt(`Introduce tu nuevo 1RM base para "${ejercicio}" (en kg):`, this.data.rmBase[ejercicio] || '');
-                if(nuevoVal !== null && !isNaN(parseFloat(nuevoVal))) {
-                    this.data.rmBase[ejercicio] = parseFloat(nuevoVal);
-                    await this.saveToCloud();
-                    this.renderAll();
-                }
+            async editarRM(ej) {
+                const v = prompt(`Nuevo 1RM para ${ej} (kg):`, this.data.rmBase[ej]||'');
+                if(v && !isNaN(parseFloat(v))) { this.data.rmBase[ej] = parseFloat(v); await this.saveToCloud(); this.renderAll(); }
             }
 
             renderTestsList() {
-                const container = document.getElementById('lista-tests');
-                if(this.data.tests.length === 0) {
-                    container.innerHTML = `<p class="text-sm text-zinc-500">No hay tests registrados.</p>`;
-                    return;
-                }
-                container.innerHTML = this.data.tests.map(item => {
-                    if(item.tipo === 'gimnasio') {
-                        return `
-                            <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">TEST GIMNASIO</span>
-                                        <span class="text-xs text-zinc-400">${item.fecha}</span>
-                                    </div>
-                                    <h4 class="text-sm font-bold mt-1 text-zinc-200">${item.ejercicio}</h4>
-                                    <p class="text-xs text-zinc-400 mt-0.5">Carga: ${item.peso} kg × ${item.reps} reps | <strong class="text-amber-400">1RM Estimado (Epley): ${item.resultado} kg</strong></p>
-                                </div>
-                                <button onclick="app.deleteItem('tests', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
-                            </div>
-                        `;
-                    } else {
-                        return `
-                            <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">TEST 10 LANZAMIENTOS</span>
-                                        <span class="text-xs text-zinc-400">${item.fecha}</span>
-                                    </div>
-                                    <h4 class="text-sm font-bold mt-1 text-zinc-200">${item.subtipo}</h4>
-                                    <p class="text-xs text-zinc-400 mt-0.5">Mejor Marca: <strong class="text-amber-400">${item.resultado} m</strong> | Promedio: ${item.promedio} m</p>
-                                    <p class="text-[11px] text-zinc-500 mt-1">Intentos: ${item.intentos.join(', ')}</p>
-                                </div>
-                                <button onclick="app.deleteItem('tests', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
-                            </div>
-                        `;
-                    }
-                }).join('');
+                const c = document.getElementById('lista-tests');
+                if(!this.data.tests.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.tests.map(item => `
+                    <div class="bg-[#1f1f23] p-3 rounded-lg border border-zinc-800 flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] text-zinc-500">${item.fecha} - ${item.tipo === 'gimnasio'?'Fuerza':'Lanzamientos'}</span>
+                            <h4 class="text-sm font-bold text-white">${item.tipo === 'gimnasio'?item.ejercicio:item.subtipo}</h4>
+                            <p class="text-xs text-amber-500 font-bold mt-0.5">${item.tipo === 'gimnasio'?`1RM Estimado: ${item.resultado} kg`:`Mejor: ${item.resultado}m`}</p>
+                        </div>
+                        <button onclick="app.deleteItem('tests', '${item.id}')" class="text-xs text-red-500">Eliminar</button>
+                    </div>
+                `).join('');
             }
 
             renderCompeticionesList() {
-                const container = document.getElementById('lista-competiciones');
-                if(this.data.competiciones.length === 0) {
-                    container.innerHTML = `<p class="text-sm text-zinc-500">No hay competiciones registradas.</p>`;
-                    return;
-                }
-                container.innerHTML = this.data.competiciones.map(item => `
-                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center gap-3">
+                const c = document.getElementById('lista-competiciones');
+                if(!this.data.competiciones.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
+                c.innerHTML = this.data.competiciones.map(item => `
+                    <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 flex justify-between items-start">
                         <div>
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${item.disciplina}</span>
-                                <span class="text-xs text-zinc-400">${item.fecha}</span>
-                                ${item.puesto ? `<span class="text-xs text-zinc-300 font-semibold">Puesto: ${item.puesto}</span>` : ''}
-                            </div>
-                            <h4 class="text-sm font-bold mt-1 text-zinc-200">${item.nombre} (${item.lugar || 'Oficial'})</h4>
-                            <p class="text-xs text-amber-400 font-bold mt-0.5">Resultado Principal: ${item.resultado} ${item.viento ? `(Viento: ${item.viento})` : ''}</p>
-                            ${item.intentos && item.intentos.length > 0 ? `<p class="text-[11px] text-zinc-400 mt-1">Intentos: ${item.intentos.join(' | ')}</p>` : ''}
-                            ${item.notas ? `<p class="text-xs text-zinc-400 italic mt-1">${item.notas}</p>` : ''}
+                            <span class="text-xs font-bold text-amber-500">${item.disciplina}</span> <span class="text-[10px] text-zinc-500">${item.fecha}</span>
+                            <h4 class="text-sm font-bold text-white">${item.nombre}</h4>
+                            <p class="text-sm font-black text-amber-400 mt-1">${item.resultado}</p>
+                            ${item.intentos?.length ? `<p class="text-[10px] text-zinc-500 mt-1">Int: ${item.intentos.join(' | ')}</p>`:''}
                         </div>
-                        <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
+                        <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-500">Eliminar</button>
                     </div>
                 `).join('');
             }
 
             renderPBSummary() {
-                const container = document.getElementById('pb-summary-list');
-                const compContainer = document.getElementById('comp-pb-list');
-                
                 const pbs = {};
-                this.data.competiciones.forEach(c => {
-                    if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) {
-                        pbs[c.disciplina] = c.resultado;
-                    }
-                });
-
-                this.data.tests.forEach(t => {
-                    if(t.tipo === 'lanzamientos') {
-                        if(!pbs[t.subtipo] || t.resultado > pbs[t.subtipo]) {
-                            pbs[t.subtipo] = t.resultado + " m";
-                        }
-                    }
-                });
-
+                this.data.competiciones.forEach(c => { if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) pbs[c.disciplina] = c.resultado; });
+                this.data.tests.forEach(t => { if(t.tipo === 'lanzamientos') { if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) pbs[t.subtipo] = t.resultado + "m"; } });
+                
+                const c1 = document.getElementById('pb-summary-list'), c2 = document.getElementById('comp-pb-list');
                 const keys = Object.keys(pbs);
-                if(keys.length === 0) {
-                    const msg = `<p class="text-xs text-zinc-500 italic">No hay récords registrados todavía.</p>`;
-                    if(container) container.innerHTML = msg;
-                    if(compContainer) compContainer.innerHTML = msg;
-                    return;
-                }
-
-                const html = keys.map(k => `
-                    <div class="flex justify-between items-center bg-zinc-950/60 px-3 py-2 rounded-xl border border-zinc-800">
-                        <span class="text-xs font-semibold text-zinc-300">${k}</span>
-                        <span class="text-xs font-extrabold text-amber-400">${pbs[k]}</span>
-                    </div>
-                `).join('');
-
-                if(container) container.innerHTML = html;
-                if(compContainer) compContainer.innerHTML = html;
+                if(!keys.length) return [c1,c2].forEach(c => { if(c) c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;});
+                
+                const html = keys.map(k => `<div class="flex justify-between py-2 border-b border-zinc-800 last:border-0"><span class="text-sm text-zinc-400">${k}</span><span class="text-sm font-bold text-amber-500">${pbs[k]}</span></div>`).join('');
+                if(c1) c1.innerHTML = html; if(c2) c2.innerHTML = html;
             }
 
             renderCharts() {
+                Chart.defaults.color = '#71717a';
+                Chart.defaults.font.family = 'Inter';
+                
                 const ctxMain = document.getElementById('mainChart');
                 if(ctxMain) {
                     const lanzTests = this.data.tests.filter(t => t.tipo === 'lanzamientos').reverse();
-                    const labels = lanzTests.map(t => t.fecha);
-                    const dataVals = lanzTests.map(t => t.resultado);
-
                     if(this.mainChartInstance) this.mainChartInstance.destroy();
                     this.mainChartInstance = new Chart(ctxMain, {
                         type: 'line',
                         data: {
-                            labels: labels.length > 0 ? labels : ['Sin datos'],
+                            labels: lanzTests.length ? lanzTests.map(t=>t.fecha) : ['Sin datos'],
                             datasets: [{
-                                label: 'Mejor Marca Lanzamientos (m)',
-                                data: dataVals.length > 0 ? dataVals : [0],
-                                borderColor: '#eab308',
-                                backgroundColor: 'rgba(234, 179, 8, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.3
+                                label: 'Mejor Marca (m)',
+                                data: lanzTests.length ? lanzTests.map(t=>t.resultado) : [0],
+                                borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                                borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#f59e0b',
+                                pointBorderWidth: 2, pointRadius: 4, fill: true, tension: 0.3
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { labels: { color: '#a1a1aa', font: { family: 'Outfit' } } } },
+                            responsive: true, maintainAspectRatio: false,
                             scales: {
-                                x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                                y: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                                x: { grid: { color: '#27272a', drawBorder: false } },
+                                y: { grid: { color: '#27272a', drawBorder: false } }
                             }
                         }
                     });
@@ -1019,30 +915,22 @@
                 const ctxComp = document.getElementById('compChart');
                 if(ctxComp) {
                     const comps = [...this.data.competiciones].reverse();
-                    const labelsComp = comps.map(c => `${c.fecha} (${c.disciplina})`);
-                    const dataCompVals = comps.map(c => parseFloat(c.resultado) || 0);
-
                     if(this.compChartInstance) this.compChartInstance.destroy();
                     this.compChartInstance = new Chart(ctxComp, {
                         type: 'bar',
                         data: {
-                            labels: labelsComp.length > 0 ? labelsComp : ['Sin competiciones'],
+                            labels: comps.length ? comps.map(c=>c.disciplina) : ['Sin datos'],
                             datasets: [{
-                                label: 'Resultado Competición',
-                                data: dataCompVals.length > 0 ? dataCompVals : [0],
-                                backgroundColor: 'rgba(234, 179, 8, 0.7)',
-                                borderColor: '#eab308',
-                                borderWidth: 1,
-                                borderRadius: 6
+                                label: 'Resultado',
+                                data: comps.length ? comps.map(c=>parseFloat(c.resultado)||0) : [0],
+                                backgroundColor: '#f59e0b', borderRadius: 4
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { labels: { color: '#a1a1aa', font: { family: 'Outfit' } } } },
+                            responsive: true, maintainAspectRatio: false,
                             scales: {
-                                x: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-                                y: { ticks: { color: '#a1a1aa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                                x: { grid: { display: false } },
+                                y: { grid: { color: '#27272a', drawBorder: false } }
                             }
                         }
                     });
