@@ -4,68 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Athletics Pro - Tracker</title>
-    <!-- Tailwind CSS (CDN Oficial) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Lucide Icons (Sustituye a los Emojis para un look profesional) -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #0b0b0c; /* Fondo mate oscuro base */
-            color: #f4f4f5; 
-        }
-        
-        /* Tarjetas Sólidas idénticas a la captura */
-        .solid-card { 
-            background-color: #16161a; 
-            border: 1px solid #27272a; 
-            border-radius: 1rem; 
-        }
-
-        .header-bg {
-            background-color: #121215;
-            border-bottom: 1px solid #27272a;
-        }
-
-        /* Botones de navegación (Cápsulas) */
-        .tab-btn { 
-            background-color: #1f1f23; 
-            color: #a1a1aa; 
-            border: 1px solid #27272a; 
-            transition: all 0.2s ease;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0b0c; color: #f4f4f5; }
+        .solid-card { background-color: #16161a; border: 1px solid #27272a; border-radius: 1rem; }
+        .header-bg { background-color: #121215; border-bottom: 1px solid #27272a; }
+        .tab-btn { background-color: #1f1f23; color: #a1a1aa; border: 1px solid #27272a; transition: all 0.2s ease; }
         .tab-btn:hover { background-color: #27272a; color: #e4e4e7; }
-        .tab-btn.active { 
-            background-color: #f59e0b; 
-            color: #000000; 
-            font-weight: 700; 
-            border-color: #f59e0b;
-        }
-
-        /* Inputs y Selects oscuros limpios */
-        input, select, textarea { 
-            background-color: #0b0b0c !important; 
-            border: 1px solid #27272a !important; 
-            color: #ffffff !important; 
-            border-radius: 0.5rem !important;
-        }
-        input:focus, select:focus, textarea:focus { 
-            border-color: #f59e0b !important; 
-            outline: none !important; 
-            box-shadow: 0 0 0 1px #f59e0b !important;
-        }
-
-        /* Scrollbar oscura */
+        .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; border-color: #f59e0b; }
+        input, select, textarea { background-color: #0b0b0c !important; border: 1px solid #27272a !important; color: #ffffff !important; border-radius: 0.5rem !important; }
+        input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; box-shadow: 0 0 0 1px #f59e0b !important; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #0b0b0c; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
-
-        /* Toast Notifications */
+        
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
         .toast {
             background-color: #16161a; border-left: 4px solid #f59e0b; color: #fff;
@@ -142,7 +102,7 @@
         </div>
     </header>
 
-    <!-- NAVEGACIÓN EN CÁPSULAS (Con Iconos Lucide) -->
+    <!-- NAVEGACIÓN EN CÁPSULAS -->
     <nav class="py-4 border-b border-zinc-800/50 bg-[#0b0b0c]">
         <div class="max-w-[1400px] mx-auto px-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
             <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="dashboard">
@@ -155,7 +115,7 @@
                 <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio (% 1RM)
             </button>
             <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests">
-                <i data-lucide="target" class="w-4 h-4"></i> Test Mensual (10 Lanz. / Fuerza)
+                <i data-lucide="target" class="w-4 h-4"></i> Test Mensual
             </button>
             <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones">
                 <i data-lucide="award" class="w-4 h-4"></i> Competiciones & PBs
@@ -166,12 +126,11 @@
     <!-- CONTENEDOR PRINCIPAL -->
     <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
 
-        <!-- BARRA DE ACCIONES RÁPIDAS (Estilo Captura) -->
         <div class="solid-card px-5 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-2.5 text-sm">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span class="font-bold text-white">Sincronizado</span>
-                <span class="text-zinc-500">en tiempo real con la nube de Firebase.</span>
+                <span class="text-zinc-500">en tiempo real con Firebase.</span>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="app.exportJSON()" class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-2 transition">
@@ -186,44 +145,34 @@
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="space-y-6 tab-content">
-            <!-- 4 Tarjetas Métricas EXACTAS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 <div class="solid-card p-6 relative overflow-hidden group">
                     <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">TOTAL SESIONES</p>
                     <h3 class="text-4xl font-extrabold mt-3 text-white" id="stat-esp">0</h3>
-                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform">
-                        <i data-lucide="calendar" class="w-10 h-10"></i>
-                    </div>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="calendar" class="w-10 h-10"></i></div>
                 </div>
                 <div class="solid-card p-6 relative overflow-hidden group">
-                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">LANZAMIENTOS REALIZADOS</p>
+                    <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">TESTS REALIZADOS</p>
                     <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-lanz-count">0</h3>
-                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform">
-                        <i data-lucide="flame" class="w-10 h-10"></i>
-                    </div>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="flame" class="w-10 h-10"></i></div>
                 </div>
                 <div class="solid-card p-6 relative overflow-hidden group">
                     <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">COMPETICIONES</p>
                     <h3 class="text-4xl font-extrabold mt-3 text-white" id="stat-comp">0</h3>
-                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform">
-                        <i data-lucide="flag" class="w-10 h-10"></i>
-                    </div>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="flag" class="w-10 h-10"></i></div>
                 </div>
                 <div class="solid-card p-6 relative overflow-hidden group">
                     <p class="text-[11px] uppercase tracking-widest text-zinc-400 font-bold">MEJORES MARCAS (PB)</p>
                     <h3 class="text-4xl font-extrabold mt-3 text-amber-500" id="stat-pb-count">0</h3>
-                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform">
-                        <i data-lucide="trophy" class="w-10 h-10"></i>
-                    </div>
+                    <div class="absolute right-5 bottom-4 opacity-[0.15] text-zinc-500 group-hover:scale-110 transition-transform"><i data-lucide="trophy" class="w-10 h-10"></i></div>
                 </div>
             </div>
 
-            <!-- Gráficas y PB -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="solid-card p-6 lg:col-span-2">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-base flex items-center gap-2 text-white">
-                            <i data-lucide="trending-up" class="w-5 h-5 text-blue-400"></i> Progreso de Test de 10 Lanzamientos
+                            <i data-lucide="trending-up" class="w-5 h-5 text-blue-400"></i> Progreso de Tests
                         </h3>
                         <select id="chart-filter-disc" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23]">
                             <option value="Jabalina">Jabalina</option>
@@ -236,11 +185,9 @@
                 
                 <div class="solid-card p-6 flex flex-col">
                     <h3 class="font-bold text-base mb-6 flex items-center gap-2 text-white">
-                        <i data-lucide="medal" class="w-5 h-5 text-amber-500"></i> Mejores Marcas Personales (PB)
+                        <i data-lucide="medal" class="w-5 h-5 text-amber-500"></i> Récords (PB)
                     </h3>
-                    <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-2">
-                        <p class="text-sm text-zinc-500 italic">No hay récords registrados todavía.</p>
-                    </div>
+                    <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </section>
@@ -248,9 +195,7 @@
         <!-- TAB 2: TRABAJO ESPECÍFICO -->
         <section id="tab-especifico" class="space-y-6 tab-content hidden">
             <div class="solid-card p-6">
-                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2">
-                    <i data-lucide="pen-line" class="w-5 h-5"></i> Registrar Sesión Específica
-                </h2>
+                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="pen-line" class="w-5 h-5"></i> Registrar Sesión Específica</h2>
                 <form id="form-especifico" class="space-y-5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -258,31 +203,8 @@
                             <input type="date" id="esp-fecha" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina / Prueba</label>
-                            <select id="esp-disciplina" required class="w-full px-4 py-2">
-                                <optgroup label="Sprints">
-                                    <option value="60m">60m</option>
-                                    <option value="100m" selected>100m</option>
-                                    <option value="200m">200m</option>
-                                    <option value="400m">400m</option>
-                                </optgroup>
-                                <optgroup label="Vallas">
-                                    <option value="60m vallas">60m Vallas</option>
-                                    <option value="100m vallas">100m Vallas</option>
-                                    <option value="110m vallas">110m Vallas</option>
-                                </optgroup>
-                                <optgroup label="Lanzamientos">
-                                    <option value="Jabalina">Jabalina</option>
-                                    <option value="Peso">Peso</option>
-                                    <option value="Disco">Disco</option>
-                                </optgroup>
-                                <optgroup label="Saltos">
-                                    <option value="Longitud">Longitud</option>
-                                    <option value="Triple Salto">Triple</option>
-                                    <option value="Altura">Altura</option>
-                                    <option value="Pertiga">Pértiga</option>
-                                </optgroup>
-                            </select>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina / Enfoque</label>
+                            <input type="text" id="esp-disciplina" placeholder="Ej: Velocidad, Saltos, Fondo..." required class="w-full px-4 py-2">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">RPE / Sensaciones (1-10)</label>
@@ -291,20 +213,18 @@
                     </div>
                     <div>
                         <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Estructura del Entrenamiento</label>
-                        <textarea id="esp-contenido" rows="3" placeholder="Ej: Calentamiento, 5x60m lanzados con tacos..." required class="w-full px-4 py-2"></textarea>
+                        <textarea id="esp-contenido" rows="3" placeholder="Ej: Calentamiento, 5x60m lanzados..." required class="w-full px-4 py-2"></textarea>
                     </div>
                     <div>
                         <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Notas Técnicas</label>
                         <input type="text" id="esp-notas" placeholder="Ej: Viento a favor..." class="w-full px-4 py-2">
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition shadow-lg shadow-amber-500/20">Guardar Sesión</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar Sesión</button>
                 </form>
             </div>
 
             <div class="solid-card p-6">
-                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2">
-                    <i data-lucide="history" class="w-5 h-5 text-zinc-400"></i> Historial Específico
-                </h3>
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="history" class="w-5 h-5 text-zinc-400"></i> Historial Específico</h3>
                 <div id="lista-especifico" class="space-y-3"></div>
             </div>
         </section>
@@ -312,20 +232,14 @@
         <!-- TAB 3: GIMNASIO & 1RM -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 1RM Base Config -->
                 <div class="solid-card p-6">
-                    <h2 class="text-base font-bold mb-3 text-amber-500 flex items-center gap-2">
-                        <i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base
-                    </h2>
-                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos registrados. `--` si no hay tests.</p>
+                    <h2 class="text-base font-bold mb-3 text-amber-500 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base</h2>
+                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos registrados.</p>
                     <div id="rm-config-list" class="space-y-2"></div>
                 </div>
 
-                <!-- Gimnasio Form -->
                 <div class="solid-card p-6 lg:col-span-2">
-                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Sesión de Fuerza
-                    </h2>
+                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Sesión de Fuerza</h2>
                     <form id="form-gym" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
@@ -341,22 +255,18 @@
                         <div class="space-y-4">
                             <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
                                 <label class="text-xs uppercase font-bold text-zinc-500">Ejercicios de la Sesión</label>
-                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700 flex items-center gap-1">
-                                    <i data-lucide="plus" class="w-3 h-3"></i> Añadir Ejercicio
-                                </button>
+                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700">+ Añadir Ejercicio</button>
                             </div>
                             <div id="gym-ejercicios-container" class="space-y-4"></div>
                         </div>
 
-                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition shadow-lg shadow-amber-500/20">Guardar Sesión de Gimnasio</button>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Sesión de Gimnasio</button>
                     </form>
                 </div>
             </div>
 
             <div class="solid-card p-6">
-                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2">
-                    <i data-lucide="book-open" class="w-5 h-5 text-zinc-400"></i> Historial de Gimnasio
-                </h3>
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-zinc-400"></i> Historial de Gimnasio</h3>
                 <div id="lista-gym" class="space-y-3"></div>
             </div>
         </section>
@@ -366,9 +276,7 @@
             <div class="solid-card p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
-                        <h2 class="text-lg font-bold text-amber-500 flex items-center gap-2">
-                            <i data-lucide="clipboard-check" class="w-5 h-5"></i> Registro de Tests
-                        </h2>
+                        <h2 class="text-lg font-bold text-amber-500 flex items-center gap-2"><i data-lucide="clipboard-check" class="w-5 h-5"></i> Registro de Tests</h2>
                     </div>
                     <div class="flex bg-[#0b0b0c] p-1 rounded-lg border border-zinc-800">
                         <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black">Test Fuerza (1RM)</button>
@@ -376,7 +284,6 @@
                     </div>
                 </div>
 
-                <!-- TEST FUERZA EPLEY -->
                 <form id="form-test-gym" class="space-y-5">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
@@ -385,13 +292,7 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Ejercicio</label>
-                            <select id="test-gym-ejercicio" class="w-full px-4 py-2">
-                                <option value="Sentadilla Profunda">Sentadilla Profunda</option>
-                                <option value="Press Banca">Press Banca</option>
-                                <option value="Peso Muerto">Peso Muerto</option>
-                                <option value="Power Clean">Power Clean</option>
-                                <option value="Hip Thrust">Hip Thrust</option>
-                            </select>
+                            <input type="text" id="test-gym-ejercicio" placeholder="Ej: Sentadilla Profunda" required class="w-full px-4 py-2">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Peso (kg)</label>
@@ -406,7 +307,6 @@
                     <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Guardar y Actualizar 1RM Base</button>
                 </form>
 
-                <!-- TEST LANZAMIENTOS -->
                 <form id="form-test-lanz" class="space-y-5 hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -415,11 +315,7 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina</label>
-                            <select id="test-lanz-tipo" class="w-full px-4 py-2">
-                                <option value="Balón Medicinal de Espaldas">Balón Medicinal de Espaldas</option>
-                                <option value="Lanzamiento de Jabalina">Lanzamiento de Jabalina</option>
-                                <option value="Lanzamiento de Peso">Lanzamiento de Peso</option>
-                            </select>
+                            <input type="text" id="test-lanz-tipo" placeholder="Ej: Jabalina, Balón Med..." required class="w-full px-4 py-2">
                         </div>
                     </div>
 
@@ -432,37 +328,31 @@
             </div>
 
             <div class="solid-card p-6">
-                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2">
-                    <i data-lucide="list" class="w-5 h-5 text-zinc-400"></i> Historial de Tests
-                </h3>
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="list" class="w-5 h-5 text-zinc-400"></i> Historial de Tests</h3>
                 <div id="lista-tests" class="space-y-3"></div>
             </div>
         </section>
 
-        <!-- TAB 5: COMPETICIONES -->
+        <!-- TAB 5: COMPETICIONES Y FORMULARIO DINÁMICO -->
         <section id="tab-competiciones" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="solid-card p-6 flex flex-col justify-between">
                     <div>
-                        <h3 class="font-bold text-base mb-4 text-amber-500 flex items-center gap-2">
-                            <i data-lucide="medal" class="w-5 h-5"></i> Récords Personales (PB)
-                        </h3>
+                        <h3 class="font-bold text-base mb-4 text-amber-500 flex items-center gap-2"><i data-lucide="medal" class="w-5 h-5"></i> Récords Personales (PB)</h3>
                         <div id="comp-pb-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
                     </div>
                 </div>
                 <div class="solid-card p-6 lg:col-span-2">
-                    <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-400"></i> Evolución de Marcas Oficiales
-                    </h3>
+                    <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-400"></i> Evolución de Marcas Oficiales</h3>
                     <div class="h-64 w-full"><canvas id="compChart"></canvas></div>
                 </div>
             </div>
 
             <div class="solid-card p-6">
-                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2">
-                    <i data-lucide="flag" class="w-5 h-5"></i> Registrar Competición Oficial
-                </h2>
+                <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="flag" class="w-5 h-5"></i> Registrar Competición Oficial</h2>
                 <form id="form-competicion" class="space-y-5">
+                    
+                    <!-- Fila 1: Básicos -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
@@ -470,51 +360,106 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Campeonato</label>
-                            <input type="text" id="comp-nombre" placeholder="Ej: Cto. Autonómico" required class="w-full px-4 py-2">
+                            <input type="text" id="comp-nombre" placeholder="Ej: Cto. Nacional" required class="w-full px-4 py-2">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina</label>
-                            <select id="comp-disciplina" required class="w-full px-4 py-2">
-                                <option value="100m">100m Lisos</option>
-                                <option value="110m vallas">110m Vallas</option>
-                                <option value="Longitud">Salto de Longitud</option>
-                                <option value="Jabalina">Lanzamiento de Jabalina</option>
-                                <option value="Peso">Lanzamiento de Peso</option>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Disciplina (Selecciona una)</label>
+                            <select id="comp-disciplina" required class="w-full px-4 py-2 font-medium">
+                                <optgroup label="Sprints y Vallas">
+                                    <option value="60m">60m</option>
+                                    <option value="100m" selected>100m</option>
+                                    <option value="200m">200m</option>
+                                    <option value="400m">400m</option>
+                                    <option value="60m vallas">60m Vallas</option>
+                                    <option value="100m vallas">100m Vallas</option>
+                                    <option value="110m vallas">110m Vallas</option>
+                                    <option value="400m vallas">400m Vallas</option>
+                                </optgroup>
+                                <optgroup label="Mediofondo, Fondo y Marcha">
+                                    <option value="800m">800m</option>
+                                    <option value="1500m">1500m</option>
+                                    <option value="3000m">3000m</option>
+                                    <option value="3000m obstaculos">3000m Obstáculos</option>
+                                    <option value="5000m">5000m</option>
+                                    <option value="10000m">10000m</option>
+                                    <option value="Maraton">Maratón / Medio Maratón</option>
+                                    <option value="Marcha">Marcha (Varias distancias)</option>
+                                </optgroup>
+                                <optgroup label="Saltos">
+                                    <option value="Longitud">Salto de Longitud</option>
+                                    <option value="Triple Salto">Triple Salto</option>
+                                    <option value="Altura">Salto de Altura</option>
+                                    <option value="Pertiga">Salto con Pértiga</option>
+                                </optgroup>
+                                <optgroup label="Lanzamientos">
+                                    <option value="Peso">Lanzamiento de Peso</option>
+                                    <option value="Disco">Lanzamiento de Disco</option>
+                                    <option value="Jabalina">Lanzamiento de Jabalina</option>
+                                    <option value="Martillo">Lanzamiento de Martillo</option>
+                                </optgroup>
+                                <optgroup label="Pruebas Combinadas">
+                                    <option value="Decatlon">Decatlón</option>
+                                    <option value="Heptatlon">Heptatlón</option>
+                                    <option value="Pentatlon">Pentatlón</option>
+                                </optgroup>
+                                <optgroup label="Relevos">
+                                    <option value="4x100m">4x100m</option>
+                                    <option value="4x400m">4x400m</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
-                    
-                    <div>
-                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2">Intentos Individuales (Opcional - Hasta 6)</label>
+
+                    <!-- Puesto, Marca Principal y Viento (Condicional) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Final / Puntuación Total</label>
+                            <input type="text" id="comp-resultado" placeholder="Ej: 10.50, 8.20, 8500..." required class="w-full px-4 py-2 font-bold text-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Puesto / Ronda</label>
+                            <input type="text" id="comp-notas" placeholder="Ej: 1º (Final)" class="w-full px-4 py-2">
+                        </div>
+                        <div id="container-viento" class="hidden">
+                            <label class="block text-xs uppercase font-bold text-cyan-500 mb-1.5">Viento (m/s)</label>
+                            <input type="text" id="comp-viento" placeholder="Ej: +1.5" class="w-full px-4 py-2 border-cyan-900/50 focus:border-cyan-500">
+                        </div>
+                    </div>
+
+                    <!-- Condicional: INTENTOS (Lanzamientos, Longitud, Triple) -->
+                    <div id="container-intentos" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-3"><i data-lucide="list-ordered" class="w-4 h-4 inline mb-0.5"></i> Desglose de Intentos (1 al 6)</label>
                         <div class="grid grid-cols-2 sm:grid-cols-6 gap-2">
-                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-1.5 text-center text-sm">
-                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-1.5 text-center text-sm">
-                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-1.5 text-center text-sm">
-                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-1.5 text-center text-sm">
-                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-1.5 text-center text-sm">
-                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-1.5 text-center text-sm">
+                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-2 text-center text-sm">
+                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-2 text-center text-sm">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Marca Final Principal</label>
-                            <input type="text" id="comp-resultado" required class="w-full px-4 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Puesto / Notas</label>
-                            <input type="text" id="comp-notas" placeholder="Ej: 1er puesto, Viento +1.2" class="w-full px-4 py-2">
+                    <!-- Condicional: PROGRESIÓN (Altura, Pértiga) -->
+                    <div id="container-progresion" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-zinc-500 mb-2"><i data-lucide="trending-up" class="w-4 h-4 inline mb-0.5"></i> Progresión de Saltos</label>
+                        <input type="text" id="comp-progresion" placeholder="Ej: 1.80 (O), 1.85 (XO), 1.90 (XXX)" class="w-full px-4 py-2 text-sm">
+                        <p class="text-[10px] text-zinc-500 mt-1">Anota las alturas superadas y nulos según la hoja oficial.</p>
+                    </div>
+
+                    <!-- Condicional: PRUEBAS COMBINADAS -->
+                    <div id="container-combinadas" class="hidden bg-[#121215] p-4 rounded-lg border border-zinc-800">
+                        <label class="block text-xs uppercase font-bold text-amber-500 mb-3"><i data-lucide="layout-grid" class="w-4 h-4 inline mb-0.5"></i> Marcas Parciales de la Combinada</label>
+                        <div id="inputs-combinadas-grid" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                            <!-- Generado dinámicamente -->
                         </div>
                     </div>
 
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Registrar Competición</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-lg text-sm transition">Registrar Competición Oficial</button>
                 </form>
             </div>
 
             <div class="solid-card p-6">
-                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2">
-                    <i data-lucide="archive" class="w-5 h-5 text-zinc-400"></i> Historial de Competiciones
-                </h3>
+                <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="archive" class="w-5 h-5 text-zinc-400"></i> Historial de Competiciones</h3>
                 <div id="lista-competiciones" class="space-y-3"></div>
             </div>
         </section>
@@ -527,7 +472,6 @@
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Inicializar Iconos Vectoriales
         lucide.createIcons();
 
         const firebaseConfig = {
@@ -552,7 +496,6 @@
                 this.activeTestType = 'gimnasio';
                 this.deferredPrompt = null;
                 
-                // Fechas por defecto
                 const today = new Date().toISOString().split('T')[0];
                 ['esp-fecha', 'gym-fecha', 'test-gym-fecha', 'test-lanz-fecha', 'comp-fecha'].forEach(id => {
                     const el = document.getElementById(id);
@@ -563,20 +506,17 @@
             }
 
             initApp() {
-                // Generar Cajas de Lanzamientos
+                // Setup tests
                 const lanzContainer = document.getElementById('intentos-lanz-container');
                 if(lanzContainer) {
                     lanzContainer.innerHTML = '';
-                    for(let i=1; i<=10; i++) {
-                        lanzContainer.innerHTML += `
-                            <div>
-                                <input type="number" step="0.01" placeholder="Int ${i}" class="test-lanz-val w-full px-2 py-2 text-sm text-center">
-                            </div>
-                        `;
-                    }
+                    for(let i=1; i<=10; i++) lanzContainer.innerHTML += `<div><input type="number" step="0.01" placeholder="Int ${i}" class="test-lanz-val w-full px-2 py-2 text-sm text-center"></div>`;
                 }
 
-                // PWA
+                // Listener Formulario Competición Dinámico
+                document.getElementById('comp-disciplina').addEventListener('change', () => this.updateCompeticionForm());
+                this.updateCompeticionForm(); // Inicializar
+
                 window.addEventListener('beforeinstallprompt', (e) => {
                     e.preventDefault();
                     this.deferredPrompt = e;
@@ -584,7 +524,6 @@
                     document.getElementById('btn-install-pwa').classList.add('flex');
                 });
 
-                // Firebase Auth Listener
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         this.currentUser = user;
@@ -598,7 +537,6 @@
                     }
                 });
 
-                // Listeners Formularios Auth
                 document.getElementById('auth-form').addEventListener('submit', async (e) => {
                     e.preventDefault();
                     try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
@@ -610,7 +548,6 @@
                     catch(err) { this.showAuthError("Error al registrar cuenta."); }
                 });
 
-                // Listeners Formularios App
                 document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
                 document.getElementById('form-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveGym(); });
                 document.getElementById('form-test-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
@@ -675,21 +612,43 @@
                 }
             }
 
-            // GESTIÓN GYM MULTI-EJERCICIO
+            // --- LÓGICA FORMULARIO COMPETICIONES DINÁMICO ---
+            updateCompeticionForm() {
+                const disc = document.getElementById('comp-disciplina').value;
+                
+                const conViento = ['100m', '200m', '100m vallas', '110m vallas', 'Longitud', 'Triple Salto'];
+                const conIntentos = ['Longitud', 'Triple Salto', 'Peso', 'Disco', 'Jabalina', 'Martillo'];
+                const conProgresion = ['Altura', 'Pertiga'];
+                const esCombinada = ['Decatlon', 'Heptatlon', 'Pentatlon'];
+
+                document.getElementById('container-viento').classList.toggle('hidden', !conViento.includes(disc));
+                document.getElementById('container-intentos').classList.toggle('hidden', !conIntentos.includes(disc));
+                document.getElementById('container-progresion').classList.toggle('hidden', !conProgresion.includes(disc));
+                document.getElementById('container-combinadas').classList.toggle('hidden', !esCombinada.includes(disc));
+
+                if(esCombinada.includes(disc)) {
+                    const container = document.getElementById('inputs-combinadas-grid');
+                    let pruebas = [];
+                    if(disc === 'Decatlon') pruebas = ['100m', 'Longitud', 'Peso', 'Altura', '400m', '110m vallas', 'Disco', 'Pértiga', 'Jabalina', '1500m'];
+                    else if(disc === 'Heptatlon') pruebas = ['100m vallas', 'Altura', 'Peso', '200m', 'Longitud', 'Jabalina', '800m'];
+                    else if(disc === 'Pentatlon') pruebas = ['60m vallas', 'Altura', 'Peso', 'Longitud', '800m'];
+
+                    container.innerHTML = pruebas.map(p => `
+                        <div>
+                            <label class="block text-[10px] uppercase font-bold text-zinc-400 mb-1 truncate">${p}</label>
+                            <input type="text" data-prueba="${p}" class="input-combinada w-full px-2 py-1.5 text-sm bg-[#0b0b0c] border border-zinc-700 rounded-md focus:border-amber-500">
+                        </div>
+                    `).join('');
+                }
+            }
+
             agregarEjercicioGym() {
                 const container = document.getElementById('gym-ejercicios-container');
                 const div = document.createElement('div');
                 div.className = "bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 space-y-3";
                 div.innerHTML = `
                     <div class="flex items-center justify-between">
-                        <select class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3">
-                            <option value="Sentadilla Profunda">Sentadilla Profunda</option>
-                            <option value="Press Banca">Press Banca</option>
-                            <option value="Peso Muerto">Peso Muerto</option>
-                            <option value="Power Clean">Power Clean</option>
-                            <option value="Hip Thrust">Hip Thrust</option>
-                            <option value="Dominadas">Dominadas</option>
-                        </select>
+                        <input type="text" class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3 border border-zinc-700 rounded bg-[#0b0b0c]" placeholder="Ej: Sentadilla...">
                         <button type="button" onclick="this.closest('.bg-\\[\\#1f1f23\\]').remove()" class="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 bg-[#2a1215] rounded border border-[#4a1c1f] flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Quitar</button>
                     </div>
                     <div>
@@ -699,8 +658,8 @@
                         </div>
                         <div class="gym-series-list space-y-2">
                             <div class="flex items-center gap-2 serie-row">
-                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2" required>
-                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2" required>
+                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
                                 <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                             </div>
                         </div>
@@ -715,14 +674,13 @@
                 const row = document.createElement('div');
                 row.className = "flex items-center gap-2 serie-row";
                 row.innerHTML = `
-                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2" required>
-                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2" required>
+                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
+                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
                     <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                 `;
                 seriesList.appendChild(row);
             }
 
-            // FIRESTORE
             async loadUserData() {
                 try {
                     const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
@@ -795,8 +753,7 @@
 
                 this.data.rmBase[ejercicio] = rmEstimado;
                 this.data.tests.unshift({
-                    id: Date.now().toString(),
-                    tipo: 'gimnasio', fecha: document.getElementById('test-gym-fecha').value,
+                    id: Date.now().toString(), tipo: 'gimnasio', fecha: document.getElementById('test-gym-fecha').value,
                     ejercicio, peso, reps, resultado: rmEstimado
                 });
                 await this.saveToCloud();
@@ -817,8 +774,7 @@
                 const prom = (intentos.reduce((a,b)=>a+b,0)/intentos.length).toFixed(2);
 
                 this.data.tests.unshift({
-                    id: Date.now().toString(),
-                    tipo: 'lanzamientos', fecha: document.getElementById('test-lanz-fecha').value,
+                    id: Date.now().toString(), tipo: 'lanzamientos', fecha: document.getElementById('test-lanz-fecha').value,
                     subtipo: tipo, intentos, resultado: max, promedio: parseFloat(prom)
                 });
                 await this.saveToCloud();
@@ -829,21 +785,42 @@
             }
 
             async saveCompeticion() {
-                const intentos = [];
-                document.querySelectorAll('.comp-int').forEach(inp => { if(inp.value.trim() !== '') intentos.push(inp.value.trim()); });
+                const disc = document.getElementById('comp-disciplina').value;
+                const datosExtra = {};
+
+                if (!document.getElementById('container-viento').classList.contains('hidden')) {
+                    datosExtra.viento = document.getElementById('comp-viento').value.trim();
+                }
+                if (!document.getElementById('container-intentos').classList.contains('hidden')) {
+                    const ints = [];
+                    document.querySelectorAll('.comp-int').forEach(inp => { if(inp.value.trim() !== '') ints.push(inp.value.trim()); });
+                    datosExtra.intentos = ints;
+                }
+                if (!document.getElementById('container-progresion').classList.contains('hidden')) {
+                    datosExtra.progresion = document.getElementById('comp-progresion').value.trim();
+                }
+                if (!document.getElementById('container-combinadas').classList.contains('hidden')) {
+                    const parciales = {};
+                    document.querySelectorAll('.input-combinada').forEach(inp => {
+                        if(inp.value.trim() !== '') parciales[inp.dataset.prueba] = inp.value.trim();
+                    });
+                    datosExtra.combinadas = parciales;
+                }
 
                 this.data.competiciones.unshift({
                     id: Date.now().toString(),
                     fecha: document.getElementById('comp-fecha').value,
                     nombre: document.getElementById('comp-nombre').value,
-                    disciplina: document.getElementById('comp-disciplina').value,
+                    disciplina: disc,
                     resultado: document.getElementById('comp-resultado').value.trim(),
                     notas: document.getElementById('comp-notas').value,
-                    intentos
+                    ...datosExtra
                 });
+
                 await this.saveToCloud();
                 document.getElementById('form-competicion').reset();
-                document.querySelectorAll('.comp-int').forEach(i => i.value = '');
+                document.querySelectorAll('.comp-int, .input-combinada, #comp-viento, #comp-progresion').forEach(i => i.value = '');
+                this.updateCompeticionForm();
                 this.showToast("Competición registrada");
                 this.renderAll();
             }
@@ -881,10 +858,9 @@
                 reader.readAsText(file);
             }
 
-            // RENDER VISUAL
             renderAll() {
                 document.getElementById('stat-esp').textContent = this.data.especifico.length;
-                document.getElementById('stat-lanz-count').textContent = this.data.tests.filter(t=>t.tipo === 'lanzamientos').length;
+                document.getElementById('stat-lanz-count').textContent = this.data.tests.length;
                 document.getElementById('stat-comp').textContent = this.data.competiciones.length;
 
                 const pbs = {};
@@ -901,7 +877,7 @@
                 if(!document.getElementById('tab-dashboard').classList.contains('hidden')) this.renderCharts();
                 if(!document.getElementById('tab-competiciones').classList.contains('hidden')) this.renderCharts();
                 
-                lucide.createIcons(); // Recargar iconos tras renderizar listas
+                lucide.createIcons();
             }
 
             renderEspecificoList() {
@@ -911,7 +887,7 @@
                     <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800/60 flex justify-between items-start">
                         <div>
                             <div class="flex gap-2 items-center mb-1.5">
-                                <span class="text-xs font-bold text-amber-500">${item.disciplina}</span>
+                                <span class="text-xs font-bold text-amber-500 uppercase">${item.disciplina}</span>
                                 <span class="text-xs text-zinc-500 border-l border-zinc-700 pl-2">${item.fecha}</span>
                             </div>
                             <p class="text-sm text-zinc-300 whitespace-pre-line">${item.contenido}</p>
@@ -934,7 +910,7 @@
                             </div>
                             <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             ${item.ejercicios.map(ej => `
                                 <div class="bg-[#121215] p-3 rounded-lg border border-zinc-800">
                                     <span class="text-xs font-bold text-amber-500 block mb-2">${ej.ejercicio}</span>
@@ -995,17 +971,52 @@
                 if(!this.data.competiciones.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
                 c.innerHTML = this.data.competiciones.map(item => `
                     <div class="bg-[#1f1f23] p-5 rounded-lg border border-zinc-800 flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="text-xs font-bold text-amber-500">${item.disciplina}</span> 
+                        <div class="w-full">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="text-xs font-bold text-amber-500 uppercase">${item.disciplina}</span> 
                                 <span class="text-[11px] text-zinc-500 border-l border-zinc-700 pl-2">${item.fecha}</span>
+                                ${item.viento ? `<span class="text-[10px] font-bold text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded ml-2 border border-cyan-900/50">Viento: ${item.viento} m/s</span>` : ''}
                             </div>
-                            <h4 class="text-base font-bold text-white leading-none">${item.nombre}</h4>
-                            <p class="text-xl font-black text-amber-400 mt-2">${item.resultado}</p>
-                            ${item.notas ? `<p class="text-[11px] text-zinc-400 mt-1">${item.notas}</p>` : ''}
-                            ${item.intentos?.length ? `<p class="text-[10px] text-zinc-500 mt-2 bg-[#121215] p-2 rounded">Intentos: ${item.intentos.join(' | ')}</p>`:''}
+                            
+                            <div class="flex justify-between items-start w-full">
+                                <div>
+                                    <h4 class="text-base font-bold text-white leading-none">${item.nombre}</h4>
+                                    <p class="text-2xl font-black text-amber-400 mt-2">${item.resultado}</p>
+                                    ${item.notas ? `<p class="text-xs text-zinc-400 mt-1 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> ${item.notas}</p>` : ''}
+                                </div>
+                                <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-500 p-2 hover:bg-red-500/10 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+
+                            ${item.intentos && item.intentos.length > 0 ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Intentos:</span>
+                                    <div class="flex flex-wrap gap-2 text-sm text-zinc-300">
+                                        ${item.intentos.map((int, i) => `<span><span class="text-zinc-600 text-[10px]">#${i+1}</span> ${int}</span>`).join('<span class="text-zinc-700">|</span>')}
+                                    </div>
+                                </div>
+                            ` : ''}
+
+                            ${item.progresion ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Progresión:</span>
+                                    <p class="text-sm text-zinc-300 font-medium">${item.progresion}</p>
+                                </div>
+                            ` : ''}
+
+                            ${item.combinadas ? `
+                                <div class="mt-3 bg-[#121215] p-2.5 rounded border border-zinc-800">
+                                    <span class="text-[10px] uppercase font-bold text-zinc-500 block mb-1">Parciales Combinada:</span>
+                                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2">
+                                        ${Object.entries(item.combinadas).map(([k,v]) => `
+                                            <div class="bg-[#1a1a1f] p-1.5 rounded text-center">
+                                                <div class="text-[9px] text-zinc-500 uppercase font-bold truncate">${k}</div>
+                                                <div class="text-xs text-amber-500 font-black">${v}</div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
-                        <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                 `).join('');
             }
@@ -1017,7 +1028,7 @@
                 
                 const html = keys.map(k => `
                     <div class="flex justify-between items-center py-2.5 border-b border-zinc-800 last:border-0">
-                        <span class="text-sm font-medium text-zinc-300">${k}</span>
+                        <span class="text-sm font-medium text-zinc-300 uppercase">${k}</span>
                         <span class="text-base font-black text-amber-500">${pbs[k]}</span>
                     </div>
                 `).join('');
