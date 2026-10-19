@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker de Atletismo & Gimnasio Pro</title>
-    <!-- Tailwind CSS CDN oficial -->
+    <title>ATLETISMO PRO - Tracker de Entrenamiento</title>
+    <!-- Tailwind CSS (Play CDN oficial) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #0b0b0c; color: #f4f4f5; }
-        .glass { background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-card { background: rgba(30, 30, 35, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.06); }
-        input, select, textarea { background-color: #121215 !important; border-color: #27272a !important; color: white !important; }
-        input:focus, select:focus, textarea:focus { border-color: #eab308 !important; outline: none !important; }
+        body { font-family: 'Outfit', sans-serif; background-color: #08080a; color: #f4f4f5; }
+        .glass-header { background: rgba(18, 18, 20, 0.85); backdrop-filter: blur(12px); border-b: 1px solid rgba(255, 255, 255, 0.08); }
+        .glass-card { background: #121216; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 1rem; }
+        .tab-btn { background-color: #1a1a20; color: #a1a1aa; border: 1px solid rgba(255, 255, 255, 0.05); }
+        .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25); }
+        input, select, textarea { background-color: #18181c !important; border: 1px solid #27272a !important; color: #ffffff !important; }
+        input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0b0c; }
+        ::-webkit-scrollbar-track { background: #08080a; }
         ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
     </style>
 </head>
-<body class="min-h-screen text-zinc-100 flex flex-col">
+<body class="min-h-screen flex flex-col">
 
-    <!-- LOGIN OVERLAY -->
+    <!-- MODAL DE LOGIN / REGISTRO FIREBASE -->
     <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md hidden">
-        <div class="glass p-8 rounded-2xl w-full max-w-md mx-4 shadow-2xl border border-zinc-800">
+        <div class="glass-card p-8 w-full max-w-md mx-4 shadow-2xl">
             <div class="text-center mb-6">
                 <span class="text-3xl font-black tracking-wider text-amber-400">ATHLETICS<span class="text-white">PRO</span></span>
                 <p class="text-xs text-zinc-400 mt-1">Sincronización Cloud Multidispositivo</p>
@@ -34,78 +36,78 @@
             <form id="auth-form" class="space-y-4">
                 <div>
                     <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Correo Electrónico</label>
-                    <input type="email" id="auth-email" required class="w-full px-4 py-2.5 rounded-xl border text-sm transition">
+                    <input type="email" id="auth-email" required class="w-full px-4 py-2.5 rounded-xl text-sm">
                 </div>
                 <div>
                     <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Contraseña</label>
-                    <input type="password" id="auth-password" required class="w-full px-4 py-2.5 rounded-xl border text-sm transition">
+                    <input type="password" id="auth-password" required class="w-full px-4 py-2.5 rounded-xl text-sm">
                 </div>
                 <div class="flex gap-3 pt-2">
-                    <button type="submit" id="btn-login" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Iniciar Sesión</button>
+                    <button type="submit" id="btn-login" class="flex-1 bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition">Iniciar Sesión</button>
                     <button type="button" id="btn-register" class="flex-1 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold py-2.5 rounded-xl text-sm transition border border-zinc-700">Registrarse</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- HEADER -->
-    <header class="glass sticky top-0 z-40 border-b border-zinc-800">
+    <!-- CABECERA -->
+    <header class="glass-header sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-black font-black text-lg shadow-lg shadow-amber-500/20">⚡</div>
+                <div class="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-black font-black text-xl shadow-lg shadow-amber-500/20">⚡</div>
                 <div>
-                    <h1 class="font-extrabold tracking-wider text-sm sm:text-base">ATLETISMO <span class="text-amber-400">PRO</span></h1>
-                    <p class="text-[10px] text-zinc-400" id="user-email-display">Cargando usuario...</p>
+                    <h1 class="font-extrabold tracking-wider text-base sm:text-lg">ATLETISMO <span class="text-amber-400">PRO</span></h1>
+                    <p class="text-[11px] text-zinc-400" id="user-email-display">Conectando cuenta...</p>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="app.exportJSON()" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-medium text-zinc-300 transition border border-zinc-700">Exportar JSON</button>
-                <button onclick="app.logout()" class="px-3 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-xs font-medium text-red-300 transition border border-red-900/50">Salir</button>
+                <button onclick="app.exportJSON()" class="px-3.5 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition border border-zinc-700">Exportar JSON</button>
+                <button onclick="app.logout()" class="px-3.5 py-1.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-xs font-semibold text-red-300 transition border border-red-900/50">Salir</button>
             </div>
         </div>
     </header>
 
-    <!-- NAVEGACIÓN -->
-    <nav class="bg-zinc-900/90 border-b border-zinc-800 overflow-x-auto">
-        <div class="max-w-7xl mx-auto px-4 flex gap-2 py-2">
-            <button onclick="app.switchTab('dashboard')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-amber-500 text-black shadow-md shadow-amber-500/10" data-target="dashboard">📊 Dashboard</button>
-            <button onclick="app.switchTab('especifico')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-zinc-800 text-zinc-300 hover:bg-zinc-700" data-target="especifico">🏃‍♂️ Trabajo Específico</button>
-            <button onclick="app.switchTab('gimnasio')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-zinc-800 text-zinc-300 hover:bg-zinc-700" data-target="gimnasio">🏋️‍♂️ Gimnasio & 1RM</button>
-            <button onclick="app.switchTab('tests')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-zinc-800 text-zinc-300 hover:bg-zinc-700" data-target="tests">🎯 Tests Mensuales</button>
-            <button onclick="app.switchTab('competiciones')" class="tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-zinc-800 text-zinc-300 hover:bg-zinc-700" data-target="competiciones">🏆 Competiciones & PBs</button>
+    <!-- BARRA DE NAVEGACIÓN TIPO CÁPSULA -->
+    <nav class="bg-zinc-950/80 border-b border-zinc-900 overflow-x-auto py-3">
+        <div class="max-w-7xl mx-auto px-4 flex gap-2">
+            <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="dashboard">📊 Dashboard</button>
+            <button onclick="app.switchTab('especifico')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="especifico">🏃‍♂️ Trabajo Específico</button>
+            <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="gimnasio">🏋️‍♂️ Gimnasio & 1RM</button>
+            <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="tests">🎯 Tests Mensuales</button>
+            <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap" data-target="competiciones">🏆 Competiciones & PBs</button>
         </div>
     </nav>
 
-    <!-- CONTENIDO -->
+    <!-- CONTENEDOR PRINCIPAL -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="space-y-6 tab-content">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-card p-5 rounded-2xl border border-zinc-800/80">
+                <div class="glass-card p-5">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Sesiones Atletismo</p>
                     <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-esp">0</h3>
                 </div>
-                <div class="glass-card p-5 rounded-2xl border border-zinc-800/80">
+                <div class="glass-card p-5">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Entrenos Gimnasio</p>
                     <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-gym">0</h3>
                 </div>
-                <div class="glass-card p-5 rounded-2xl border border-zinc-800/80">
+                <div class="glass-card p-5">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Tests Realizados</p>
                     <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-test">0</h3>
                 </div>
-                <div class="glass-card p-5 rounded-2xl border border-zinc-800/80">
+                <div class="glass-card p-5">
                     <p class="text-xs uppercase tracking-wider text-zinc-400 font-semibold">Competiciones</p>
                     <h3 class="text-3xl font-extrabold mt-2 text-amber-400" id="stat-comp">0</h3>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6 rounded-2xl lg:col-span-2 border border-zinc-800/80">
+                <div class="glass-card p-6 lg:col-span-2">
                     <h3 class="font-bold text-base mb-4 flex items-center gap-2">📈 Evolución y Rendimiento en Lanzamientos</h3>
                     <div class="h-72"><canvas id="mainChart"></canvas></div>
                 </div>
-                <div class="glass-card p-6 rounded-2xl border border-zinc-800/80 flex flex-col">
+                <div class="glass-card p-6 flex flex-col">
                     <h3 class="font-bold text-base mb-4">🏆 Mejores Marcas Personales (PB)</h3>
                     <div id="pb-summary-list" class="space-y-3 flex-1 overflow-y-auto pr-1">
                         <p class="text-xs text-zinc-500 italic">No hay récords registrados todavía.</p>
@@ -114,19 +116,19 @@
             </div>
         </section>
 
-        <!-- TAB 2: TRABAJO ESPECÍFICO CON TODAS LAS PRUEBAS DE ATLETISMO -->
+        <!-- TAB 2: TRABAJO ESPECÍFICO -->
         <section id="tab-especifico" class="space-y-6 tab-content hidden">
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h2 class="text-lg font-bold mb-4 text-amber-400">📝 Registrar Sesión de Atletismo (Trabajo Libre)</h2>
                 <form id="form-especifico" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                            <input type="date" id="esp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="date" id="esp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Disciplina / Prueba</label>
-                            <select id="esp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <select id="esp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm">
                                 <optgroup label="Sprints / Velocidad">
                                     <option value="60m">60m Lisos</option>
                                     <option value="100m" selected>100m Lisos</option>
@@ -183,22 +185,22 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Sensación / RPE (1-10)</label>
-                            <input type="number" id="esp-rpe" min="1" max="10" value="8" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="number" id="esp-rpe" min="1" max="10" value="8" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Bloques y Estructura del Entrenamiento (Libre)</label>
-                        <textarea id="esp-contenido" rows="4" placeholder="Ej: Calentamiento técnica, 5x60m lanzados con tacos, 3x (bloques de aceleración)..." required class="w-full px-4 py-2 rounded-xl text-sm border"></textarea>
+                        <textarea id="esp-contenido" rows="4" placeholder="Ej: Calentamiento técnica, 5x60m lanzados con tacos..." required class="w-full px-4 py-2 rounded-xl text-sm"></textarea>
                     </div>
                     <div>
                         <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Notas / Observaciones Técnicas</label>
-                        <input type="text" id="esp-notas" placeholder="Ej: Muy buenas sensaciones en salida, viento favorable..." class="w-full px-4 py-2 rounded-xl text-sm border">
+                        <input type="text" id="esp-notas" placeholder="Ej: Buenas sensaciones en aceleración..." class="w-full px-4 py-2 rounded-xl text-sm">
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Guardar Sesión Específica</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar Sesión Específica</button>
                 </form>
             </div>
 
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h3 class="font-bold text-base mb-4">📋 Historial de Entrenamientos Específicos</h3>
                 <div id="lista-especifico" class="space-y-3">
                     <p class="text-sm text-zinc-500">No hay entrenamientos guardados.</p>
@@ -206,49 +208,43 @@
             </div>
         </section>
 
-        <!-- TAB 3: GIMNASIO FLEXIBLE MULTI-EJERCICIO -->
+        <!-- TAB 3: GIMNASIO FLEXIBLE -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Configuración 1RM Base limpia (Sin valores ficticios) -->
-                <div class="glass p-6 rounded-2xl border border-zinc-800">
+                <div class="glass-card p-6">
                     <h2 class="text-base font-bold mb-3 text-amber-400">⚙️ Referencias 1RM Base</h2>
-                    <p class="text-xs text-zinc-400 mb-4">Muestra tus máximos teóricos registrados. Si no has hecho ningún test, no se pone nada ficticio.</p>
-                    <div id="rm-config-list" class="space-y-3">
-                        <!-- Generado dinámicamente por JS -->
-                    </div>
+                    <p class="text-xs text-zinc-400 mb-4">Máximos teóricos registrados. Si no has hecho un test, no se pone nada ficticio.</p>
+                    <div id="rm-config-list" class="space-y-3"></div>
                 </div>
 
-                <!-- Formulario Gimnasio con múltiples ejercicios y series libres -->
-                <div class="glass p-6 rounded-2xl lg:col-span-2 border border-zinc-800">
+                <div class="glass-card p-6 lg:col-span-2">
                     <h2 class="text-base font-bold mb-4 text-amber-400">🏋️‍♂️ Registrar Sesión de Fuerza (Multi-ejercicio)</h2>
                     <form id="form-gym" class="space-y-5">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
                             </div>
                             <div>
-                                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre de la Sesión / Bloque</label>
-                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna + Hip Thrust" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                                <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre de la Sesión</label>
+                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Pierna + Hip Thrust" required class="w-full px-4 py-2 rounded-xl text-sm">
                             </div>
                         </div>
 
                         <div class="space-y-4">
                             <div class="flex items-center justify-between">
-                                <label class="text-xs uppercase font-semibold text-zinc-400">Ejercicios de la Sesión (Series y Repeticiones Libres)</label>
-                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold rounded-lg border border-zinc-700 transition">+ Añadir Ejercicio</button>
+                                <label class="text-xs uppercase font-semibold text-zinc-400">Ejercicios de la Sesión (Series y Kilos Libres)</label>
+                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold rounded-lg border border-zinc-700">+ Añadir Ejercicio</button>
                             </div>
-                            <div id="gym-ejercicios-container" class="space-y-4">
-                                <!-- Filas de ejercicios -->
-                            </div>
+                            <div id="gym-ejercicios-container" class="space-y-4"></div>
                         </div>
 
-                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Guardar Sesión de Gimnasio</button>
+                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-xl text-sm transition">Guardar Sesión de Gimnasio</button>
                     </form>
                 </div>
             </div>
 
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h3 class="font-bold text-base mb-4">📚 Historial de Entrenamientos de Fuerza</h3>
                 <div id="lista-gym" class="space-y-4">
                     <p class="text-sm text-zinc-500">No hay entrenamientos de gimnasio registrados.</p>
@@ -258,11 +254,11 @@
 
         <!-- TAB 4: TESTS MENSUALES -->
         <section id="tab-tests" class="space-y-6 tab-content hidden">
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
                         <h2 class="text-lg font-bold text-amber-400">🎯 Registro de Tests Mensuales</h2>
-                        <p class="text-xs text-zinc-400">Elige el tipo de test mensual que deseas registrar y evaluar.</p>
+                        <p class="text-xs text-zinc-400">Elige el tipo de test mensual que deseas registrar.</p>
                     </div>
                     <div class="flex gap-2">
                         <button type="button" onclick="app.setTestType('gimnasio')" id="btn-tipo-gym" class="px-4 py-2 rounded-xl text-xs font-bold transition bg-amber-500 text-black">Test Fuerza Gimnasio</button>
@@ -270,16 +266,15 @@
                     </div>
                 </div>
 
-                <!-- TEST GIMNASIO (Epley) -->
                 <form id="form-test-gym" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha del Test</label>
-                            <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="date" id="test-gym-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Ejercicio</label>
-                            <select id="test-gym-ejercicio" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <select id="test-gym-ejercicio" class="w-full px-4 py-2 rounded-xl text-sm">
                                 <option value="Sentadilla Profunda">Sentadilla Profunda</option>
                                 <option value="Press Banca">Press Banca</option>
                                 <option value="Peso Muerto">Peso Muerto</option>
@@ -290,27 +285,26 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Peso Utilizado (kg)</label>
-                            <input type="number" step="0.5" id="test-gym-peso" placeholder="Ej: 80" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="number" step="0.5" id="test-gym-peso" placeholder="Ej: 80" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Repeticiones Máximas (Al fallo sin descanso)</label>
-                        <input type="number" id="test-gym-reps" placeholder="Ej: 8" required class="w-full px-4 py-2 rounded-xl text-sm border">
-                        <p class="text-[11px] text-zinc-500 mt-1">Calcula tu 1RM estimado: Peso × (1 + 0.0333 × Reps).</p>
+                        <input type="number" id="test-gym-reps" placeholder="Ej: 8" required class="w-full px-4 py-2 rounded-xl text-sm">
+                        <p class="text-[11px] text-zinc-500 mt-1">Calcula tu 1RM estimado con la fórmula de Epley: Peso × (1 + 0.0333 × Reps).</p>
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Guardar y Actualizar 1RM</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar y Actualizar 1RM</button>
                 </form>
 
-                <!-- TEST LANZAMIENTOS (10 Intentos) -->
                 <form id="form-test-lanz" class="space-y-4 hidden">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha del Test</label>
-                            <input type="date" id="test-lanz-fecha" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="date" id="test-lanz-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Tipo de Lanzamiento</label>
-                            <select id="test-lanz-tipo" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <select id="test-lanz-tipo" class="w-full px-4 py-2 rounded-xl text-sm">
                                 <option value="Balón Medicinal de Espaldas">Balón Medicinal de Espaldas</option>
                                 <option value="Lanzamiento de Peso">Lanzamiento de Peso</option>
                                 <option value="Lanzamiento de Jabalina">Lanzamiento de Jabalina</option>
@@ -320,15 +314,13 @@
 
                     <div>
                         <label class="block text-xs uppercase font-semibold text-zinc-400 mb-2">Introduce las 10 marcas consecutivas (en metros):</label>
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="intentos-lanz-container">
-                            <!-- 10 inputs dinámicos -->
-                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="intentos-lanz-container"></div>
                     </div>
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Guardar Test de 10 Lanzamientos</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Guardar Test de 10 Lanzamientos</button>
                 </form>
             </div>
 
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h3 class="font-bold text-base mb-4">📊 Historial y Evolución de Tests</h3>
                 <div id="lista-tests" class="space-y-4">
                     <p class="text-sm text-zinc-500">No hay tests registrados.</p>
@@ -336,10 +328,10 @@
             </div>
         </section>
 
-        <!-- TAB 5: COMPETICIONES Y GRÁFICOS AVANZADOS -->
+        <!-- TAB 5: COMPETICIONES -->
         <section id="tab-competiciones" class="space-y-6 tab-content hidden">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass p-6 rounded-2xl border border-zinc-800 flex flex-col justify-between">
+                <div class="glass-card p-6 flex flex-col justify-between">
                     <div>
                         <h3 class="font-bold text-base mb-4 text-amber-400">🏆 Récords Personales (PB)</h3>
                         <div id="comp-pb-list" class="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -347,34 +339,34 @@
                         </div>
                     </div>
                 </div>
-                <div class="glass p-6 rounded-2xl lg:col-span-2 border border-zinc-800">
+                <div class="glass-card p-6 lg:col-span-2">
                     <h3 class="font-bold text-base mb-4">📈 Evolución de Marcas en Competición</h3>
                     <div class="h-64"><canvas id="compChart"></canvas></div>
                 </div>
             </div>
 
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h2 class="text-lg font-bold mb-4 text-amber-400">🏅 Registrar Competición / Control Oficial</h2>
                 <form id="form-competicion" class="space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Fecha</label>
-                            <input type="date" id="comp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="date" id="comp-fecha" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre del Campeonato / Control</label>
-                            <input type="text" id="comp-nombre" placeholder="Ej: Campeonato Autonómico Absoluto" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Nombre del Campeonato</label>
+                            <input type="text" id="comp-nombre" placeholder="Ej: Campeonato Autonómico" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Lugar</label>
-                            <input type="text" id="comp-lugar" placeholder="Ej: Pista Municipal" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="text" id="comp-lugar" placeholder="Ej: Pista Municipal" class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Disciplina</label>
-                            <select id="comp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <select id="comp-disciplina" required class="w-full px-4 py-2 rounded-xl text-sm">
                                 <option value="100m">100m Lisos</option>
                                 <option value="200m">200m Lisos</option>
                                 <option value="400m">400m Lisos</option>
@@ -387,43 +379,43 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Puesto / Posición</label>
-                            <input type="text" id="comp-puesto" placeholder="Ej: 1º / Final A" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Puesto</label>
+                            <input type="text" id="comp-puesto" placeholder="Ej: 1º / Final A" class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
                             <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Viento (si aplica)</label>
-                            <input type="text" id="comp-viento" placeholder="Ej: +1.2 m/s" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <input type="text" id="comp-viento" placeholder="Ej: +1.2 m/s" class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-2">Desglose de Intentos / Series (Opcional - Hasta 6)</label>
+                        <label class="block text-xs uppercase font-semibold text-zinc-400 mb-2">Desglose de Intentos (Opcional - Hasta 6)</label>
                         <div class="grid grid-cols-2 sm:grid-cols-6 gap-2" id="comp-intentos-container">
-                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
-                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
-                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
-                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
-                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
-                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-1.5 rounded-lg text-xs border text-center">
+                            <input type="text" placeholder="Int 1" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                            <input type="text" placeholder="Int 2" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                            <input type="text" placeholder="Int 3" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                            <input type="text" placeholder="Int 4" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                            <input type="text" placeholder="Int 5" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
+                            <input type="text" placeholder="Int 6" class="comp-int px-3 py-1.5 rounded-lg text-xs text-center">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Marca / Resultado Principal</label>
-                            <input type="text" id="comp-resultado" placeholder="Ej: 58.40m o 10.85s" required class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Marca Principal</label>
+                            <input type="text" id="comp-resultado" placeholder="Ej: 58.40m o 10.85s" required class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Notas de Competición</label>
-                            <input type="text" id="comp-notas" placeholder="Ej: Sensaciones excelentes" class="w-full px-4 py-2 rounded-xl text-sm border">
+                            <label class="block text-xs uppercase font-semibold text-zinc-400 mb-1">Notas</label>
+                            <input type="text" id="comp-notas" placeholder="Ej: Marca de temporada" class="w-full px-4 py-2 rounded-xl text-sm">
                         </div>
                     </div>
 
-                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition shadow-lg shadow-amber-500/20">Registrar Competición</button>
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-2.5 rounded-xl text-sm transition">Registrar Competición</button>
                 </form>
             </div>
 
-            <div class="glass p-6 rounded-2xl border border-zinc-800">
+            <div class="glass-card p-6">
                 <h3 class="font-bold text-base mb-4">📋 Historial de Competiciones</h3>
                 <div id="lista-competiciones" class="space-y-3">
                     <p class="text-sm text-zinc-500">No hay competiciones registradas.</p>
@@ -433,27 +425,11 @@
 
     </main>
 
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE SDKs & JS LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getAuth, 
-            signInWithEmailAndPassword, 
-            createUserWithEmailAndPassword, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            getDocs, 
-            deleteDoc, 
-            doc, 
-            setDoc, 
-            query, 
-            where 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCZO4i0vQbMxdY3DMmfnbnoNOmTBDCiE0U",
@@ -471,13 +447,7 @@
         class AthleticsApp {
             constructor() {
                 this.currentUser = null;
-                this.data = {
-                    especifico: [],
-                    gym: [],
-                    tests: [],
-                    competiciones: [],
-                    rmBase: {} // Vacío por defecto
-                };
+                this.data = { especifico: [], gym: [], tests: [], competiciones: [], rmBase: {} };
                 this.mainChartInstance = null;
                 this.compChartInstance = null;
                 this.activeTestType = 'gimnasio';
@@ -498,7 +468,7 @@
                         lanzContainer.innerHTML += `
                             <div>
                                 <label class="block text-[10px] text-zinc-400 mb-1">Intento ${i}</label>
-                                <input type="number" step="0.01" placeholder="0.00" class="test-lanz-val w-full px-3 py-2 rounded-xl text-xs border text-center">
+                                <input type="number" step="0.01" placeholder="0.00" class="test-lanz-val w-full px-3 py-2 rounded-xl text-xs text-center">
                             </div>
                         `;
                     }
@@ -521,51 +491,23 @@
                     e.preventDefault();
                     const email = document.getElementById('auth-email').value;
                     const pass = document.getElementById('auth-password').value;
-                    try {
-                        await signInWithEmailAndPassword(auth, email, pass);
-                    } catch(err) {
-                        this.showAuthError(err.message);
-                    }
+                    try { await signInWithEmailAndPassword(auth, email, pass); } 
+                    catch(err) { this.showAuthError(err.message); }
                 });
 
                 document.getElementById('btn-register').addEventListener('click', async () => {
                     const email = document.getElementById('auth-email').value;
                     const pass = document.getElementById('auth-password').value;
-                    if(!email || !pass) {
-                        this.showAuthError("Introduce correo y contraseña para registrarte.");
-                        return;
-                    }
-                    try {
-                        await createUserWithEmailAndPassword(auth, email, pass);
-                    } catch(err) {
-                        this.showAuthError(err.message);
-                    }
+                    if(!email || !pass) return this.showAuthError("Introduce correo y contraseña.");
+                    try { await createUserWithEmailAndPassword(auth, email, pass); } 
+                    catch(err) { this.showAuthError(err.message); }
                 });
 
-                document.getElementById('form-especifico').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveEspecifico();
-                });
-
-                document.getElementById('form-gym').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveGym();
-                });
-
-                document.getElementById('form-test-gym').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveTestGym();
-                });
-
-                document.getElementById('form-test-lanz').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveTestLanzamiento();
-                });
-
-                document.getElementById('form-competicion').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.saveCompeticion();
-                });
+                document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
+                document.getElementById('form-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveGym(); });
+                document.getElementById('form-test-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
+                document.getElementById('form-test-lanz').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
+                document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
 
                 this.agregarEjercicioGym();
             }
@@ -576,9 +518,7 @@
                 errEl.classList.remove('hidden');
             }
 
-            logout() {
-                signOut(auth);
-            }
+            logout() { signOut(auth); }
 
             switchTab(tabId) {
                 document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -586,9 +526,9 @@
 
                 document.querySelectorAll('.tab-btn').forEach(btn => {
                     if(btn.dataset.target === tabId) {
-                        btn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-amber-500 text-black shadow-md shadow-amber-500/10";
+                        btn.className = "tab-btn active px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap";
                     } else {
-                        btn.className = "tab-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition whitespace-nowrap bg-zinc-800 text-zinc-300 hover:bg-zinc-700";
+                        btn.className = "tab-btn px-5 py-2.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap";
                     }
                 });
 
@@ -615,7 +555,7 @@
             agregarEjercicioGym() {
                 const container = document.getElementById('gym-ejercicios-container');
                 const div = document.createElement('div');
-                div.className = "glass-card p-4 rounded-xl border border-zinc-800 space-y-3 relative";
+                div.className = "bg-zinc-900/80 p-4 rounded-xl border border-zinc-800 space-y-3 relative";
                 div.innerHTML = `
                     <div class="flex items-center justify-between">
                         <select class="gym-ej-nombre px-3 py-1.5 rounded-lg text-xs font-bold border w-2/3">
@@ -628,9 +568,8 @@
                             <option value="Press Militar">Press Militar</option>
                             <option value="Peso Muerto Rumano">Peso Muerto Rumano</option>
                             <option value="Dominadas / Jalón">Dominadas / Jalón</option>
-                            <option value="Prensa de Piernas">Prensa de Piernas</option>
                         </select>
-                        <button type="button" onclick="this.closest('.glass-card').remove()" class="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar Ejercicio</button>
+                        <button type="button" onclick="this.closest('.bg-zinc-900\\/80').remove()" class="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
                     </div>
                     <div>
                         <div class="flex items-center justify-between mb-1">
@@ -640,8 +579,8 @@
                         <div class="gym-series-list space-y-2">
                             <div class="flex items-center gap-2 serie-row">
                                 <span class="text-xs text-zinc-500 w-12">Serie 1</span>
-                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs border w-1/3" required>
-                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs border w-1/3" required>
+                                <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs w-1/3" required>
+                                <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs w-1/3" required>
                                 <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                             </div>
                         </div>
@@ -657,8 +596,8 @@
                 row.className = "flex items-center gap-2 serie-row";
                 row.innerHTML = `
                     <span class="text-xs text-zinc-500 w-12">Serie ${numSeries}</span>
-                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs border w-1/3" required>
-                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs border w-1/3" required>
+                    <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1 rounded-lg text-xs w-1/3" required>
+                    <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1 rounded-lg text-xs w-1/3" required>
                     <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
                 `;
                 seriesList.appendChild(row);
@@ -678,9 +617,7 @@
                             rmBase: docData.rmBase || {}
                         };
                     }
-                } catch(e) {
-                    console.error("Error cargando datos:", e);
-                }
+                } catch(e) { console.error("Error cargando datos:", e); }
             }
 
             async saveToCloud() {
@@ -689,15 +626,9 @@
                     const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
                     const querySnapshot = await getDocs(q);
                     const payload = { userId: this.currentUser.uid, ...this.data };
-                    if(querySnapshot.empty) {
-                        await addDoc(collection(db, "atletismo_users"), payload);
-                    } else {
-                        const docId = querySnapshot.docs[0].id;
-                        await setDoc(doc(db, "atletismo_users", docId), payload);
-                    }
-                } catch(e) {
-                    console.error("Error guardando en nube:", e);
-                }
+                    if(querySnapshot.empty) { await addDoc(collection(db, "atletismo_users"), payload); } 
+                    else { await setDoc(doc(db, "atletismo_users", querySnapshot.docs[0].id), payload); }
+                } catch(e) { console.error("Error guardando:", e); }
             }
 
             async saveEspecifico() {
@@ -729,15 +660,10 @@
                             reps: parseInt(row.querySelector('.serie-reps').value) || 0
                         });
                     });
-                    if(series.length > 0) {
-                        ejercicios.push({ ejercicio: ejNombre, series });
-                    }
+                    if(series.length > 0) ejercicios.push({ ejercicio: ejNombre, series });
                 });
 
-                if(ejercicios.length === 0) {
-                    alert("Añade al menos un ejercicio con sus series.");
-                    return;
-                }
+                if(ejercicios.length === 0) return alert("Añade al menos un ejercicio con sus series.");
 
                 const item = {
                     id: Date.now().toString(),
@@ -759,7 +685,6 @@
                 const ejercicio = document.getElementById('test-gym-ejercicio').value;
                 const peso = parseFloat(document.getElementById('test-gym-peso').value);
                 const reps = parseInt(document.getElementById('test-gym-reps').value);
-                
                 const rmEstimado = Math.round(peso * (1 + 0.0333 * reps));
 
                 const item = {
@@ -790,10 +715,7 @@
                     if(!isNaN(val)) intentos.push(val);
                 });
 
-                if(intentos.length === 0) {
-                    alert("Introduce al menos una marca válida.");
-                    return;
-                }
+                if(intentos.length === 0) return alert("Introduce al menos una marca.");
 
                 const mejorMarca = Math.max(...intentos);
                 const suma = intentos.reduce((a, b) => a + b, 0);
@@ -820,9 +742,7 @@
             async saveCompeticion() {
                 const intentosInputs = document.querySelectorAll('.comp-int');
                 const intentos = [];
-                intentosInputs.forEach(inp => {
-                    if(inp.value.trim() !== '') intentos.push(inp.value.trim());
-                });
+                intentosInputs.forEach(inp => { if(inp.value.trim() !== '') intentos.push(inp.value.trim()); });
 
                 const item = {
                     id: Date.now().toString(),
@@ -883,17 +803,17 @@
                     return;
                 }
                 container.innerHTML = this.data.especifico.map(item => `
-                    <div class="glass-card p-4 rounded-xl border border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center gap-3">
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-400 border border-amber-500/30">${item.disciplina}</span>
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${item.disciplina}</span>
                                 <span class="text-xs text-zinc-400">${item.fecha}</span>
                                 <span class="text-xs text-zinc-400">RPE: ${item.rpe}/10</span>
                             </div>
                             <p class="text-sm mt-2 whitespace-pre-line text-zinc-200">${item.contenido}</p>
                             ${item.notas ? `<p class="text-xs text-zinc-400 italic mt-1">💡 ${item.notas}</p>` : ''}
                         </div>
-                        <button onclick="app.deleteItem('especifico', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1.5 bg-red-950/40 rounded-lg border border-red-900/40 self-end sm:self-center">Eliminar</button>
+                        <button onclick="app.deleteItem('especifico', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1.5 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
                     </div>
                 `).join('');
             }
@@ -905,7 +825,7 @@
                     return;
                 }
                 container.innerHTML = this.data.gym.map(item => `
-                    <div class="glass-card p-4 rounded-xl border border-zinc-800 space-y-3">
+                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 space-y-3">
                         <div class="flex justify-between items-center">
                             <div>
                                 <h4 class="font-bold text-sm text-amber-400">${item.nombre}</h4>
@@ -913,9 +833,9 @@
                             </div>
                             <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800/80">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-zinc-800">
                             ${item.ejercicios.map(ej => `
-                                <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
+                                <div class="bg-zinc-950/60 p-3 rounded-xl border border-zinc-800">
                                     <span class="text-xs font-bold text-zinc-200">${ej.ejercicio}</span>
                                     <div class="mt-1 space-y-1">
                                         ${ej.series.map((s, idx) => `
@@ -940,7 +860,7 @@
                     const rm = this.data.rmBase[ej];
                     const displayRM = rm !== undefined ? `${rm} kg` : '-- kg';
                     return `
-                        <div class="glass-card p-3 rounded-xl border border-zinc-800 flex justify-between items-center">
+                        <div class="bg-zinc-900/60 p-3 rounded-xl border border-zinc-800 flex justify-between items-center">
                             <div>
                                 <h5 class="text-xs font-bold text-zinc-200">${ej}</h5>
                                 <span class="text-xs text-amber-400 font-extrabold">1RM Actual: ${displayRM}</span>
@@ -969,7 +889,7 @@
                 container.innerHTML = this.data.tests.map(item => {
                     if(item.tipo === 'gimnasio') {
                         return `
-                            <div class="glass-card p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
+                            <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">TEST GIMNASIO</span>
@@ -983,7 +903,7 @@
                         `;
                     } else {
                         return `
-                            <div class="glass-card p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
+                            <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center">
                                 <div>
                                     <div class="flex items-center gap-2">
                                         <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">TEST 10 LANZAMIENTOS</span>
@@ -1007,7 +927,7 @@
                     return;
                 }
                 container.innerHTML = this.data.competiciones.map(item => `
-                    <div class="glass-card p-4 rounded-xl border border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div class="bg-zinc-900/60 p-4 rounded-xl border border-zinc-800 flex justify-between items-center gap-3">
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${item.disciplina}</span>
@@ -1019,7 +939,7 @@
                             ${item.intentos && item.intentos.length > 0 ? `<p class="text-[11px] text-zinc-400 mt-1">Intentos: ${item.intentos.join(' | ')}</p>` : ''}
                             ${item.notas ? `<p class="text-xs text-zinc-400 italic mt-1">${item.notas}</p>` : ''}
                         </div>
-                        <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40 self-end sm:self-center">Eliminar</button>
+                        <button onclick="app.deleteItem('competiciones', '${item.id}')" class="text-xs text-red-400 hover:text-red-300 font-semibold px-3 py-1 bg-red-950/40 rounded-lg border border-red-900/40">Eliminar</button>
                     </div>
                 `).join('');
             }
@@ -1052,7 +972,7 @@
                 }
 
                 const html = keys.map(k => `
-                    <div class="flex justify-between items-center bg-zinc-900/60 px-3 py-2 rounded-xl border border-zinc-800">
+                    <div class="flex justify-between items-center bg-zinc-950/60 px-3 py-2 rounded-xl border border-zinc-800">
                         <span class="text-xs font-semibold text-zinc-300">${k}</span>
                         <span class="text-xs font-extrabold text-amber-400">${pbs[k]}</span>
                     </div>
