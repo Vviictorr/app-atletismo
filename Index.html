@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Athletics Pro - Tracker</title>
+    <title>Athletics Pro - Tracker & Arcade</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
@@ -13,16 +13,17 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0b0b0c; color: #f4f4f5; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0b0c; color: #f4f4f5; user-select: none; }
         .solid-card { background-color: #16161a; border: 1px solid #27272a; border-radius: 1rem; }
         .header-bg { background-color: #121215; border-bottom: 1px solid #27272a; }
         .tab-btn { background-color: #1f1f23; color: #a1a1aa; border: 1px solid #27272a; transition: all 0.2s ease; }
         .tab-btn:hover { background-color: #27272a; color: #e4e4e7; }
         .tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; border-color: #f59e0b; }
+        
         input, select, textarea { background-color: #0b0b0c !important; border: 1px solid #27272a !important; color: #ffffff !important; border-radius: 0.5rem !important; }
         input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; box-shadow: 0 0 0 1px #f59e0b !important; }
         
-        /* Slider personalizado */
+        /* Range slider estilizado */
         input[type=range] {
             -webkit-appearance: none;
             background: #27272a !important;
@@ -54,18 +55,41 @@
         }
         @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
+
+        /* Botones de control del juego arcade */
+        .arcade-btn {
+            background: linear-gradient(180deg, #27272a 0%, #18181b 100%);
+            border: 2px solid #3f3f46;
+            box-shadow: 0 4px 0 #09090b, inset 0 1px 0 rgba(255,255,255,0.1);
+            transition: all 0.08s ease;
+        }
+        .arcade-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #09090b;
+        }
+        .arcade-btn-amber {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            border: 2px solid #fbbf24;
+            color: #000;
+            box-shadow: 0 4px 0 #78350f, inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .arcade-btn-amber:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #78350f;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- MODAL DE LOGIN FIREBASE -->
-    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 hidden">
+    <!-- MODAL DE AUTENTICACIÓN FIREBASE -->
+    <div id="auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
         <div class="solid-card p-8 w-full max-w-md mx-4 shadow-2xl">
             <div class="text-center mb-6">
-                <div class="w-14 h-14 mx-auto rounded-xl bg-amber-500 flex items-center justify-center text-black mb-3">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500 flex items-center justify-center text-black mb-3 shadow-lg shadow-amber-500/20">
                     <i data-lucide="zap" class="w-8 h-8 fill-current"></i>
                 </div>
-                <span class="text-3xl font-black tracking-wider">ATHLETICS <span class="text-amber-500">PRO</span></span>
+                <h2 class="text-3xl font-black tracking-wider">ATHLETICS <span class="text-amber-500">PRO</span></h2>
+                <p class="text-xs text-zinc-400 mt-1">Sincronización en la Nube & Entrenamiento</p>
             </div>
             <div id="auth-error" class="hidden mb-4 p-3 bg-red-900/30 border border-red-800 text-red-300 text-xs rounded-lg text-center"></div>
             <form id="auth-form" class="space-y-4">
@@ -98,8 +122,8 @@
                 <div>
                     <h1 class="font-black tracking-tight text-xl leading-none mb-1">Athletics <span class="text-amber-500">Pro</span></h1>
                     <div class="flex items-center gap-1.5">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span class="text-[11px] text-zinc-400 font-medium">Sincronizado en la Nube</span>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[11px] text-zinc-400 font-medium">Auto-sincronizado en la Nube</span>
                     </div>
                 </div>
             </div>
@@ -121,7 +145,7 @@
         </div>
     </header>
 
-    <!-- NAVEGACIÓN EN CÁPSULAS -->
+    <!-- NAVEGACIÓN EN CÁPSULAS (6 TABS) -->
     <nav class="py-4 border-b border-zinc-800/50 bg-[#0b0b0c]">
         <div class="max-w-[1400px] mx-auto px-4 flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
             <button onclick="app.switchTab('dashboard')" class="tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="dashboard">
@@ -139,28 +163,14 @@
             <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones">
                 <i data-lucide="award" class="w-4 h-4"></i> Competiciones & PBs
             </button>
+            <button onclick="app.switchTab('arcade')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2 border-amber-500/40 text-amber-400" data-target="arcade">
+                <i data-lucide="gamepad-2" class="w-4 h-4 text-amber-400"></i> Arcade Athletics 🕹️
+            </button>
         </div>
     </nav>
 
     <!-- CONTENEDOR PRINCIPAL -->
     <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-
-        <div class="solid-card px-5 py-3.5 flex items-center justify-between">
-            <div class="flex items-center gap-2.5 text-sm">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="font-bold text-white">Sincronizado</span>
-                <span class="text-zinc-500">en tiempo real con Firebase.</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <button onclick="app.exportJSON()" class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-2 transition">
-                    <i data-lucide="download" class="w-3.5 h-3.5 text-blue-400"></i> Exportar JSON
-                </button>
-                <label class="px-4 py-2 rounded-md bg-[#1f1f23] hover:bg-[#27272a] text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-2 transition cursor-pointer">
-                    <i data-lucide="upload" class="w-3.5 h-3.5 text-rose-400"></i> Importar JSON
-                    <input type="file" id="import-file" accept=".json" class="hidden" onchange="app.importJSON(event)">
-                </label>
-            </div>
-        </div>
 
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="space-y-6 tab-content">
@@ -188,7 +198,7 @@
                 </div>
             </div>
 
-            <!-- PANEL DOBLE DEL ATLETA (COMMAND CENTER) -->
+            <!-- PANEL DOBLE DEL ATLETA -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- 1. Distribución de Cargas de Trabajo -->
                 <div class="solid-card p-6 lg:col-span-5 flex flex-col justify-between">
@@ -271,7 +281,6 @@
 
         <!-- TAB 3: GIMNASIO & CALCULADORA PORCENTAJES 1RM -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
-            
             <!-- CALCULADORA RÁPIDA CON BARRITA (SLIDER) DE PORCENTAJE -->
             <div class="solid-card p-6 bg-gradient-to-r from-[#16161a] to-[#1f1f28] border border-amber-500/30">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
@@ -362,9 +371,8 @@
             </div>
         </section>
 
-        <!-- TAB 4: TESTS MENSUALES (CON GRÁFICO DE EVOLUCIÓN DINÁMICO) -->
+        <!-- TAB 4: TESTS MENSUALES -->
         <section id="tab-tests" class="space-y-6 tab-content hidden">
-            
             <!-- GRÁFICO DINÁMICO DE TEST MENSUAL -->
             <div class="solid-card p-6">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -380,7 +388,6 @@
                 <div class="h-64 w-full"><canvas id="testChart"></canvas></div>
             </div>
 
-            <!-- FORMULARIO DE REGISTRO DE TEST -->
             <div class="solid-card p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div>
@@ -462,7 +469,6 @@
             <div class="solid-card p-6">
                 <h2 class="text-lg font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="flag" class="w-5 h-5"></i> Registrar Competición Oficial</h2>
                 <form id="form-competicion" class="space-y-5">
-                    
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
@@ -563,9 +569,113 @@
             </div>
         </section>
 
+        <!-- TAB 6: ARCADE ATHLETICS (MINI-JUEGO DE ATLETISMO 2D) -->
+        <section id="tab-arcade" class="space-y-6 tab-content hidden">
+            
+            <!-- MARCADOR SUPERIOR & RÉCORDS ARCADE -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="solid-card p-4 border border-amber-500/30 flex items-center gap-4 bg-gradient-to-r from-[#16161a] to-[#1e1c15]">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-2xl">🏃</div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-zinc-400">PB 100m Vallas</span>
+                        <h4 id="arcade-pb-vallas" class="text-xl font-black text-amber-400">-- s</h4>
+                    </div>
+                </div>
+                <div class="solid-card p-4 border border-amber-500/30 flex items-center gap-4 bg-gradient-to-r from-[#16161a] to-[#1e1c15]">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-2xl">☄️</div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-zinc-400">PB Jabalina</span>
+                        <h4 id="arcade-pb-jabalina" class="text-xl font-black text-amber-400">-- m</h4>
+                    </div>
+                </div>
+                <div class="solid-card p-4 border border-amber-500/30 flex items-center gap-4 bg-gradient-to-r from-[#16161a] to-[#1e1c15]">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-2xl">👟</div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-zinc-400">PB Longitud</span>
+                        <h4 id="arcade-pb-longitud" class="text-xl font-black text-amber-400">-- m</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTENEDOR DEL JUEGO -->
+            <div class="solid-card p-4 sm:p-6 bg-[#121215] border border-zinc-800 relative">
+                
+                <!-- SELECTOR DE MODO Y CONTROLES DEL JUEGO -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-zinc-800 pb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-zinc-400 uppercase">Modo de Juego:</span>
+                        <div class="flex bg-[#0b0b0c] p-1 rounded-lg border border-zinc-800">
+                            <button type="button" onclick="arcade.selectMode('vallas')" id="mode-btn-vallas" class="px-3 py-1.5 rounded text-xs font-bold transition bg-amber-500 text-black">🏃 100m Vallas</button>
+                            <button type="button" onclick="arcade.selectMode('jabalina')" id="mode-btn-jabalina" class="px-3 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white">☄️ Jabalina</button>
+                            <button type="button" onclick="arcade.selectMode('longitud')" id="mode-btn-longitud" class="px-3 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white">👟 Longitud</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="arcade.toggleMute()" id="arcade-audio-btn" class="px-3 py-1.5 rounded-lg bg-[#1f1f23] hover:bg-zinc-700 text-xs font-semibold text-zinc-300 border border-zinc-700 flex items-center gap-1.5">
+                            <i data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i> Sonido: ON
+                        </button>
+                        <button type="button" onclick="arcade.resetGame()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition flex items-center gap-1.5">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CANVAS PRINCIPAL DE JUEGO -->
+                <div class="relative w-full aspect-[16/9] max-h-[460px] bg-black rounded-xl overflow-hidden border border-zinc-800 shadow-2xl">
+                    <canvas id="arcadeCanvas" class="w-full h-full block"></canvas>
+                    
+                    <!-- HUD OVERLAY EN PANTALLA -->
+                    <div class="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none">
+                        <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-zinc-800">
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 block" id="hud-label-primary">Velocidad</span>
+                            <span class="text-2xl font-black text-amber-400" id="hud-val-primary">0.0 km/h</span>
+                        </div>
+                        <div class="bg-black/80 backdrop-blur px-4 py-2 rounded-lg border border-zinc-800 text-right">
+                            <span class="text-[10px] uppercase font-bold text-zinc-400 block" id="hud-label-secondary">Tiempo / Marcador</span>
+                            <span class="text-2xl font-black text-white" id="hud-val-secondary">00:00.00</span>
+                        </div>
+                    </div>
+
+                    <!-- PANTALLA DE MENSAJES Y RESULTADOS OVERLAY -->
+                    <div id="arcade-msg-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10 transition-opacity">
+                        <h2 id="arcade-overlay-title" class="text-3xl sm:text-4xl font-black text-amber-500 mb-2">¡LISTO EN LA PISTA!</h2>
+                        <p id="arcade-overlay-desc" class="text-sm text-zinc-300 max-w-md mb-6 leading-relaxed">
+                            Alterna rápido entre <strong class="text-amber-400">IZQUIERDA</strong> y <strong class="text-amber-400">DERECHA</strong> para esprintar. Pulsa <strong class="text-amber-400">SALTAR</strong> para superar cada valla.
+                        </p>
+                        <button type="button" onclick="arcade.startRace()" class="px-8 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black text-base rounded-xl shadow-lg shadow-amber-500/20 uppercase tracking-wider transition transform hover:scale-105">
+                            ¡A Competir!
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CONTROLES TÁCTILES VIRTUALES EN PANTALLA (Para móviles y tablets) -->
+                <div class="mt-6 grid grid-cols-3 gap-3 max-w-lg mx-auto">
+                    <button type="button" id="arcade-btn-left" class="arcade-btn py-4 rounded-2xl flex flex-col items-center justify-center text-white active:scale-95">
+                        <i data-lucide="arrow-left" class="w-6 h-6 mb-1 text-amber-400"></i>
+                        <span class="text-[10px] font-black uppercase tracking-wider">Paso Izq</span>
+                    </button>
+                    
+                    <button type="button" id="arcade-btn-action" class="arcade-btn arcade-btn-amber py-4 rounded-2xl flex flex-col items-center justify-center active:scale-95">
+                        <i data-lucide="zap" class="w-6 h-6 mb-1 fill-current"></i>
+                        <span class="text-[10px] font-black uppercase tracking-wider" id="arcade-action-label">Saltar / Lanzar</span>
+                    </button>
+
+                    <button type="button" id="arcade-btn-right" class="arcade-btn py-4 rounded-2xl flex flex-col items-center justify-center text-white active:scale-95">
+                        <i data-lucide="arrow-right" class="w-6 h-6 mb-1 text-amber-400"></i>
+                        <span class="text-[10px] font-black uppercase tracking-wider">Paso Der</span>
+                    </button>
+                </div>
+
+                <div class="mt-4 text-center text-xs text-zinc-500 flex items-center justify-center gap-4">
+                    <span>⌨️ <strong>Teclado PC:</strong> Flecha Izq/Der (Pasos) | Flecha Arriba / Espacio (Saltar / Lanzar)</span>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <!-- FIREBASE & LÓGICA JAVASCRIPT -->
+    <!-- FIREBASE, SINTETIZADOR DE SONIDO Y LÓGICA DE JUEGO EN JAVASCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -573,6 +683,7 @@
 
         lucide.createIcons();
 
+        // Configuración Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCZO4i0vQbMxdY3DMmfnbnoNOmTBDCiE0U",
             authDomain: "athleticstracker-15125.firebaseapp.com",
@@ -586,6 +697,538 @@
         const auth = getAuth(appFB);
         const db = getFirestore(appFB);
 
+        // ==========================================
+        // 🔊 SINTETIZADOR DE EFECTOS DE SONIDO (WEB AUDIO API)
+        // ==========================================
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+
+            playTone(freq, duration, type = 'sine', volume = 0.2) {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+
+            playGunStart() {
+                this.playTone(880, 0.15, 'square', 0.4);
+                setTimeout(() => this.playTone(440, 0.3, 'sawtooth', 0.3), 50);
+            }
+
+            playFootstep() {
+                this.playTone(120 + Math.random() * 40, 0.05, 'triangle', 0.1);
+            }
+
+            playJump() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(700, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                } catch(e) {}
+            }
+
+            playHurdleClack() {
+                this.playTone(150, 0.12, 'sawtooth', 0.3);
+            }
+
+            playCheer() {
+                this.playTone(523.25, 0.2, 'sine', 0.2);
+                setTimeout(() => this.playTone(659.25, 0.2, 'sine', 0.2), 150);
+                setTimeout(() => this.playTone(783.99, 0.4, 'sine', 0.3), 300);
+            }
+
+            playFoul() {
+                this.playTone(180, 0.4, 'sawtooth', 0.4);
+            }
+        }
+
+        const audio = new SoundEffects();
+
+        // ==========================================
+        // 🕹️ MOTOR DE JUEGO ARCADE ATHLETICS (HTML5 CANVAS 2D)
+        // ==========================================
+        class AthleticsArcade {
+            constructor() {
+                this.canvas = document.getElementById('arcadeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.mode = 'vallas'; // 'vallas', 'jabalina', 'longitud'
+                this.state = 'MENU';  // 'MENU', 'RUNNING', 'RESULT', 'FOUL'
+                
+                this.posX = 0;
+                this.speed = 0;
+                this.maxSpeed = 12;
+                this.lastFoot = null; // 'L' or 'R'
+                
+                // Salto / Vallas / Trajectoria
+                this.posY = 0;
+                this.velY = 0;
+                this.isJumping = false;
+                
+                // Jabalina / Ángulo
+                this.throwAngle = 45;
+                this.angleDirection = 1;
+                this.isChargingAngle = false;
+                this.javelinThrown = false;
+                this.javelinX = 0;
+                this.javelinY = 0;
+                this.javelinVX = 0;
+                this.javelinVY = 0;
+
+                // Salto de Longitud
+                this.tookOff = false;
+                this.takeoffBoardX = 250; // metros convertidos
+                this.landingX = 0;
+
+                // Vallas
+                this.hurdles = [];
+                
+                // Tiempos y Marcadores
+                this.startTime = 0;
+                this.elapsedTime = 0;
+                this.resultValue = 0;
+
+                this.initCanvasSize();
+                window.addEventListener('resize', () => this.initCanvasSize());
+                this.bindControls();
+                this.setupHurdles();
+                this.loop();
+            }
+
+            initCanvasSize() {
+                if (!this.canvas) return;
+                const rect = this.canvas.parentElement.getBoundingClientRect();
+                this.canvas.width = rect.width || 800;
+                this.canvas.height = rect.height || 450;
+            }
+
+            setupHurdles() {
+                // 10 Vallas reglamentarias en posiciones simuladas
+                this.hurdles = [];
+                const hurdleDistances = [13.72, 22.86, 32.00, 41.14, 50.28, 59.42, 68.56, 77.70, 86.84, 95.98];
+                hurdleDistances.forEach(d => {
+                    this.hurdles.push({ x: d * 20 + 80, hit: false }); // Escala px
+                });
+            }
+
+            selectMode(m) {
+                this.mode = m;
+                document.querySelectorAll('#mode-btn-vallas, #mode-btn-jabalina, #mode-btn-longitud').forEach(b => {
+                    b.className = "px-3 py-1.5 rounded text-xs font-bold transition text-zinc-400 hover:text-white";
+                });
+                document.getElementById(`mode-btn-${m}`).className = "px-3 py-1.5 rounded text-xs font-bold transition bg-amber-500 text-black";
+                
+                const actionLabel = document.getElementById('arcade-action-label');
+                if (m === 'vallas') actionLabel.textContent = "Saltar Valla";
+                else if (m === 'jabalina') actionLabel.textContent = "Ángulo / Lanzar";
+                else actionLabel.textContent = "Bate / Saltar";
+
+                this.resetGame();
+            }
+
+            toggleMute() {
+                audio.enabled = !audio.enabled;
+                const btn = document.getElementById('arcade-audio-btn');
+                btn.innerHTML = audio.enabled 
+                    ? `<i data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i> Sonido: ON`
+                    : `<i data-lucide="volume-x" class="w-4 h-4 text-red-400"></i> Sonido: OFF`;
+                lucide.createIcons();
+            }
+
+            resetGame() {
+                this.state = 'MENU';
+                this.posX = 0;
+                this.speed = 0;
+                this.posY = 0;
+                this.velY = 0;
+                this.isJumping = false;
+                this.lastFoot = null;
+                this.throwAngle = 30;
+                this.angleDirection = 1;
+                this.isChargingAngle = false;
+                this.javelinThrown = false;
+                this.tookOff = false;
+                this.landingX = 0;
+                this.setupHurdles();
+
+                const overlay = document.getElementById('arcade-msg-overlay');
+                const title = document.getElementById('arcade-overlay-title');
+                const desc = document.getElementById('arcade-overlay-desc');
+
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+
+                if (this.mode === 'vallas') {
+                    title.textContent = "🏃 100m VALLAS";
+                    desc.innerHTML = "Alterna los botones <strong class='text-amber-400'>PASO IZQ / DER</strong> para alcanzar velocidad máxima. Pulsa <strong class='text-amber-400'>SALTAR</strong> para superar cada valla sin tropezar.";
+                } else if (this.mode === 'jabalina') {
+                    title.textContent = "☄️ LANZAMIENTO DE JABALINA";
+                    desc.innerHTML = "Esprinta por la pasarela, mantén presionado <strong class='text-amber-400'>LANZAR</strong> para ajustar el ángulo óptimo (~42°-45°) y suelta ANTES de la línea roja de nulo.";
+                } else {
+                    title.textContent = "👟 SALTO DE LONGITUD";
+                    desc.innerHTML = "Consigue máxima velocidad en la carrera y pulsa <strong class='text-amber-400'>BATE/SALTAR</strong> justo sobre la tabla blanca de plastilina para volar sobre el foso.";
+                }
+
+                document.getElementById('hud-val-primary').textContent = "0.0 km/h";
+                document.getElementById('hud-val-secondary').textContent = "00:00.00";
+            }
+
+            startRace() {
+                this.resetGame();
+                this.state = 'RUNNING';
+                this.startTime = performance.now();
+                audio.playGunStart();
+                document.getElementById('arcade-msg-overlay').classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            bindControls() {
+                const handleStep = (foot) => {
+                    if (this.state !== 'RUNNING') return;
+                    if (this.lastFoot !== foot) {
+                        this.speed = Math.min(this.maxSpeed, this.speed + 1.2);
+                        this.lastFoot = foot;
+                        audio.playFootstep();
+                    } else {
+                        this.speed = Math.max(1, this.speed * 0.85); // Penalización por repetir pie
+                    }
+                };
+
+                const handleActionDown = () => {
+                    if (this.state !== 'RUNNING') return;
+                    
+                    if (this.mode === 'vallas' || this.mode === 'longitud') {
+                        if (!this.isJumping) {
+                            this.isJumping = true;
+                            this.velY = 11;
+                            audio.playJump();
+
+                            if (this.mode === 'longitud' && !this.tookOff) {
+                                this.tookOff = true;
+                                this.takeoffX = this.posX;
+                            }
+                        }
+                    } else if (this.mode === 'jabalina') {
+                        if (!this.javelinThrown) {
+                            this.isChargingAngle = true;
+                        }
+                    }
+                };
+
+                const handleActionUp = () => {
+                    if (this.mode === 'jabalina' && this.isChargingAngle && !this.javelinThrown && this.state === 'RUNNING') {
+                        this.isChargingAngle = false;
+                        this.throwJavelin();
+                    }
+                };
+
+                // Botones táctiles
+                document.getElementById('arcade-btn-left').addEventListener('click', () => handleStep('L'));
+                document.getElementById('arcade-btn-right').addEventListener('click', () => handleStep('R'));
+                
+                const actionBtn = document.getElementById('arcade-btn-action');
+                actionBtn.addEventListener('mousedown', handleActionDown);
+                actionBtn.addEventListener('mouseup', handleActionUp);
+                actionBtn.addEventListener('touchstart', (e) => { e.preventDefault(); handleActionDown(); });
+                actionBtn.addEventListener('touchend', (e) => { e.preventDefault(); handleActionUp(); });
+
+                // Teclado
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') handleStep('L');
+                    if (e.key === 'ArrowRight') handleStep('R');
+                    if (e.key === 'ArrowUp' || e.key === ' ') {
+                        if(!e.repeat) handleActionDown();
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    if (e.key === 'ArrowUp' || e.key === ' ') handleActionUp();
+                });
+            }
+
+            throwJavelin() {
+                this.javelinThrown = true;
+                const radians = (this.throwAngle * Math.PI) / 180;
+                const totalPower = this.speed * 2.2;
+                this.javelinX = this.posX;
+                this.javelinY = 40;
+                this.javelinVX = Math.cos(radians) * totalPower;
+                this.javelinVY = Math.sin(radians) * totalPower;
+                audio.playJump();
+
+                // Verificar Nulo en Jabalina (Línea en pos 300)
+                if (this.posX > 300) {
+                    this.triggerFoul("¡NULO! Has pisado la línea de lanzamiento.");
+                }
+            }
+
+            triggerFoul(msg) {
+                this.state = 'FOUL';
+                audio.playFoul();
+                const overlay = document.getElementById('arcade-msg-overlay');
+                document.getElementById('arcade-overlay-title').textContent = "❌ INTENTO NULO";
+                document.getElementById('arcade-overlay-desc').textContent = msg;
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            finishRace(resultVal, unit) {
+                this.state = 'RESULT';
+                this.resultValue = resultVal;
+                audio.playCheer();
+
+                const overlay = document.getElementById('arcade-msg-overlay');
+                document.getElementById('arcade-overlay-title').textContent = "🏆 ¡FINALIZADO!";
+                document.getElementById('arcade-overlay-desc').innerHTML = `Tu resultado oficial: <strong class="text-3xl text-amber-400 block mt-2">${resultVal} ${unit}</strong>`;
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+
+                // Sincronizar PB en Firebase
+                if (window.app) window.app.saveArcadePB(this.mode, resultVal);
+            }
+
+            update() {
+                if (this.state !== 'RUNNING') return;
+
+                // Fricción constante de velocidad
+                this.speed = Math.max(0, this.speed - 0.04);
+                this.posX += this.speed;
+
+                // Física de Salto / Gravedad
+                if (this.isJumping) {
+                    this.posY += this.velY;
+                    this.velY -= 0.65; // Gravedad
+                    if (this.posY <= 0) {
+                        this.posY = 0;
+                        this.velY = 0;
+                        this.isJumping = false;
+                    }
+                }
+
+                // Modo 1: 100m Vallas
+                if (this.mode === 'vallas') {
+                    this.elapsedTime = (performance.now() - this.startTime) / 1000;
+                    document.getElementById('hud-val-secondary').textContent = `${this.elapsedTime.toFixed(2)} s`;
+
+                    // Colisiones con Vallas
+                    this.hurdles.forEach(h => {
+                        if (!h.hit && Math.abs(this.posX - h.x) < 15) {
+                            if (this.posY < 25) { // No saltó lo suficiente
+                                h.hit = true;
+                                this.speed *= 0.4; // Gran choque de velocidad
+                                audio.playHurdleClack();
+                            }
+                        }
+                    });
+
+                    // Meta a los 2000px (100m)
+                    if (this.posX >= 2080) {
+                        this.finishRace(this.elapsedTime.toFixed(2), "s");
+                    }
+                }
+
+                // Modo 2: Lanzamiento de Jabalina
+                if (this.mode === 'jabalina') {
+                    if (this.isChargingAngle && !this.javelinThrown) {
+                        this.throwAngle += this.angleDirection * 2;
+                        if (this.throwAngle > 80) this.angleDirection = -1;
+                        if (this.throwAngle < 15) this.angleDirection = 1;
+                    }
+
+                    if (this.javelinThrown) {
+                        this.javelinX += this.javelinVX;
+                        this.javelinY += this.javelinVY;
+                        this.javelinVY -= 0.45; // Gravedad de jabalina
+
+                        if (this.javelinY <= 0) {
+                            this.javelinY = 0;
+                            const distanceMeters = ((this.javelinX - 300) / 12).toFixed(2);
+                            if (distanceMeters <= 0) this.triggerFoul("Lanzamiento demasiado corto.");
+                            else this.finishRace(distanceMeters, "m");
+                        }
+                    }
+
+                    document.getElementById('hud-val-secondary').textContent = `Ángulo: ${Math.round(this.throwAngle)}°`;
+                }
+
+                // Modo 3: Salto de Longitud
+                if (this.mode === 'longitud') {
+                    const boardPosPx = 300; // Posición de la tabla
+                    
+                    if (this.tookOff) {
+                        if (this.takeoffX > boardPosPx + 10) {
+                            this.triggerFoul("¡NULO! Has batido por delante de la tabla blanca.");
+                            return;
+                        }
+                        
+                        if (!this.isJumping && this.posY === 0) {
+                            const distanceMeters = ((this.posX - boardPosPx) / 15).toFixed(2);
+                            if (distanceMeters <= 0) this.triggerFoul("Has caído antes de la tabla.");
+                            else this.finishRace(distanceMeters, "m");
+                        }
+                    }
+
+                    document.getElementById('hud-val-secondary').textContent = `Tabla: ${(Math.max(0, (boardPosPx - this.posX)/15)).toFixed(2)} m`;
+                }
+
+                document.getElementById('hud-val-primary').textContent = `${(this.speed * 3.2).toFixed(1)} km/h`;
+            }
+
+            render() {
+                if (!this.ctx) return;
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+
+                // 1. Fondo del Estadio & Cielo
+                this.ctx.fillStyle = '#1e1b4b';
+                this.ctx.fillRect(0, 0, w, h);
+
+                // Grada con Público Retro
+                this.ctx.fillStyle = '#312e81';
+                this.ctx.fillRect(0, 40, w, 60);
+                for (let i = 0; i < w; i += 8) {
+                    this.ctx.fillStyle = (i % 16 === 0) ? '#f59e0b' : '#3b82f6';
+                    this.ctx.fillRect(i, 55 + (i % 3), 5, 8);
+                }
+
+                // 2. Pista de Tartán
+                const trackY = h - 140;
+                this.ctx.fillStyle = '#c2410c'; // Color rojo tartán
+                this.ctx.fillRect(0, trackY, w, 140);
+
+                // Líneas Blancas de Carril
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(0, trackY + 10, w, 3);
+                this.ctx.fillRect(0, trackY + 110, w, 3);
+
+                const cameraX = this.posX - 120;
+
+                // 3. Renderizado de Elementos Específicos según Modo
+                if (this.mode === 'vallas') {
+                    // Marcas de distancia
+                    this.ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    for (let m = 0; m <= 100; m += 10) {
+                        const lineX = (m * 20 + 80) - cameraX;
+                        if (lineX >= 0 && lineX <= w) {
+                            this.ctx.fillRect(lineX, trackY + 10, 2, 100);
+                            this.ctx.font = '10px Inter';
+                            this.ctx.fillText(`${m}m`, lineX + 3, trackY + 25);
+                        }
+                    }
+
+                    // Vallas
+                    this.hurdles.forEach(hurdle => {
+                        const hx = hurdle.x - cameraX;
+                        if (hx >= -20 && hx <= w + 20) {
+                            this.ctx.fillStyle = hurdle.hit ? '#991b1b' : '#f59e0b';
+                            this.ctx.fillRect(hx, trackY + 65, 6, 40);
+                            this.ctx.fillStyle = '#ffffff';
+                            this.ctx.fillRect(hx - 4, trackY + 65, 14, 6);
+                        }
+                    });
+                }
+
+                if (this.mode === 'jabalina') {
+                    // Línea de Nulo en Jabalina (Posición 300)
+                    const foulX = 300 - cameraX;
+                    if (foulX >= 0 && foulX <= w) {
+                        this.ctx.fillStyle = '#ef4444';
+                        this.ctx.fillRect(foulX, trackY + 10, 8, 100);
+                    }
+
+                    // Dibujar Jabalina en Vuelo
+                    if (this.javelinThrown) {
+                        const jx = this.javelinX - cameraX;
+                        const jy = trackY + 90 - this.javelinY;
+                        this.ctx.strokeStyle = '#f59e0b';
+                        this.ctx.lineWidth = 3;
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(jx, jy);
+                        this.ctx.lineTo(jx + 25, jy - 10);
+                        this.ctx.stroke();
+                    }
+                }
+
+                if (this.mode === 'longitud') {
+                    // Tabla Blanca de Batida (Posición 300) y Foso de Arena
+                    const boardX = 300 - cameraX;
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.fillRect(boardX, trackY + 10, 12, 100);
+                    this.ctx.fillStyle = '#ef4444'; // Plastilina roja
+                    this.ctx.fillRect(boardX + 12, trackY + 10, 4, 100);
+
+                    // Foso de Arena
+                    this.ctx.fillStyle = '#d97706';
+                    this.ctx.fillRect(boardX + 16, trackY + 10, 400, 100);
+                }
+
+                // 4. Dibujar Atleta (Monigote Deportivo Animado)
+                const runnerScreenX = this.posX - cameraX;
+                const runnerScreenY = trackY + 90 - this.posY;
+
+                this.ctx.fillStyle = '#f59e0b'; // Cabeza
+                this.ctx.beginPath();
+                this.ctx.arc(runnerScreenX, runnerScreenY - 38, 7, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                // Torso
+                this.ctx.strokeStyle = '#ffffff';
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                this.ctx.moveTo(runnerScreenX, runnerScreenY - 31);
+                this.ctx.lineTo(runnerScreenX, runnerScreenY - 12);
+                this.ctx.stroke();
+
+                // Extremidades con Animación de Carrera
+                const legAngle = Math.sin(this.posX * 0.15) * 0.6;
+                this.ctx.beginPath();
+                // Pierna 1
+                this.ctx.moveTo(runnerScreenX, runnerScreenY - 12);
+                this.ctx.lineTo(runnerScreenX + Math.sin(legAngle) * 14, runnerScreenY);
+                // Pierna 2
+                this.ctx.moveTo(runnerScreenX, runnerScreenY - 12);
+                this.ctx.lineTo(runnerScreenX - Math.sin(legAngle) * 14, runnerScreenY);
+                this.ctx.stroke();
+            }
+
+            loop() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.loop());
+            }
+        }
+
+        const arcade = new AthleticsArcade();
+        window.arcade = arcade;
+
+        // ==========================================
+        // 📊 LÓGICA PRINCIPAL ATHLETICS PRO APP
+        // ==========================================
         class AthleticsApp {
             constructor() {
                 this.currentUser = null;
@@ -595,6 +1238,7 @@
                     tests: [], 
                     competiciones: [], 
                     rmBase: {},
+                    arcadePBs: { vallas: null, jabalina: null, longitud: null },
                     ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar']
                 };
                 
@@ -698,11 +1342,14 @@
                 document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
                 document.querySelectorAll('.tab-btn').forEach(btn => {
-                    if(btn.dataset.target === tabId) btn.className = "tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
+                    if(btn.dataset.target === tabId) btn.className = "tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2 border-amber-500/40 text-amber-400";
                     else btn.className = "tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
                 });
                 
-                setTimeout(() => this.renderCharts(), 50);
+                setTimeout(() => {
+                    this.renderCharts();
+                    if(tabId === 'arcade') arcade.initCanvasSize();
+                }, 50);
                 if(tabId === 'gimnasio') this.actualizarCalculadoraSlider();
             }
 
@@ -871,6 +1518,7 @@
                             tests: d.tests||[], 
                             competiciones: d.competiciones||[], 
                             rmBase: d.rmBase||{},
+                            arcadePBs: d.arcadePBs||{ vallas: null, jabalina: null, longitud: null },
                             ejerciciosCatalogo: d.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar']
                         };
                     }
@@ -886,6 +1534,37 @@
                     if(qs.empty) await addDoc(collection(db, "atletismo_users"), payload);
                     else await setDoc(doc(db, "atletismo_users", qs.docs[0].id), payload);
                 } catch(e) {}
+            }
+
+            async saveArcadePB(mode, score) {
+                const numScore = parseFloat(score);
+                let isNewPB = false;
+
+                if (mode === 'vallas') {
+                    if (!this.data.arcadePBs.vallas || numScore < parseFloat(this.data.arcadePBs.vallas)) {
+                        this.data.arcadePBs.vallas = score; isNewPB = true;
+                    }
+                } else if (mode === 'jabalina') {
+                    if (!this.data.arcadePBs.jabalina || numScore > parseFloat(this.data.arcadePBs.jabalina)) {
+                        this.data.arcadePBs.jabalina = score; isNewPB = true;
+                    }
+                } else if (mode === 'longitud') {
+                    if (!this.data.arcadePBs.longitud || numScore > parseFloat(this.data.arcadePBs.longitud)) {
+                        this.data.arcadePBs.longitud = score; isNewPB = true;
+                    }
+                }
+
+                if (isNewPB) {
+                    await this.saveToCloud();
+                    this.showToast(`¡NUEVO RÉCORD EN ARCADE: ${score}!`);
+                    this.renderArcadePBs();
+                }
+            }
+
+            renderArcadePBs() {
+                document.getElementById('arcade-pb-vallas').textContent = this.data.arcadePBs?.vallas ? `${this.data.arcadePBs.vallas} s` : '-- s';
+                document.getElementById('arcade-pb-jabalina').textContent = this.data.arcadePBs?.jabalina ? `${this.data.arcadePBs.jabalina} m` : '-- m';
+                document.getElementById('arcade-pb-longitud').textContent = this.data.arcadePBs?.longitud ? `${this.data.arcadePBs.longitud} m` : '-- m';
             }
 
             async saveEspecifico() {
@@ -1019,37 +1698,6 @@
                 }
             }
 
-            exportJSON() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
-                const a = document.createElement('a');
-                a.href = dataStr; a.download = `backup_atletismo_pro.json`; a.click();
-            }
-
-            importJSON(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const parsed = JSON.parse(e.target.result);
-                        if(parsed && typeof parsed === 'object') {
-                            this.data = { 
-                                especifico: parsed.especifico||[], 
-                                gym: parsed.gym||[], 
-                                tests: parsed.tests||[], 
-                                competiciones: parsed.competiciones||[], 
-                                rmBase: parsed.rmBase||{},
-                                ejerciciosCatalogo: parsed.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust']
-                            };
-                            await this.saveToCloud();
-                            this.renderAll();
-                            this.showToast("Datos importados");
-                        }
-                    } catch(err) { alert("Error al leer JSON."); }
-                };
-                reader.readAsText(file);
-            }
-
             renderAll() {
                 document.getElementById('stat-esp').textContent = this.data.especifico.length;
                 document.getElementById('stat-lanz-count').textContent = this.data.tests.length;
@@ -1067,6 +1715,7 @@
                 this.renderTestsList();
                 this.renderCompeticionesList();
                 this.renderPBSummary(pbs);
+                this.renderArcadePBs();
                 this.renderCharts();
                 
                 lucide.createIcons();
@@ -1230,9 +1879,7 @@
                 Chart.defaults.color = '#71717a';
                 Chart.defaults.font.family = 'Inter';
 
-                // ==========================================
                 // 1. DASHBOARD: DOUGHNUT & RADAR CHARTS
-                // ==========================================
                 const ctxDashDoughnut = document.getElementById('dashDoughnutChart');
                 if (ctxDashDoughnut) {
                     if (this.dashDoughnutInstance) this.dashDoughnutInstance.destroy();
@@ -1253,11 +1900,8 @@
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { position: 'bottom', labels: { color: '#a1a1aa', boxWidth: 10, font: { size: 11 } } }
-                            },
+                            responsive: true, maintainAspectRatio: false,
+                            plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', boxWidth: 10, font: { size: 11 } } } },
                             cutout: '70%'
                         }
                     });
@@ -1287,8 +1931,7 @@
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: { legend: { display: false } },
                             scales: {
                                 r: {
@@ -1302,9 +1945,7 @@
                     });
                 }
 
-                // ==========================================
-                // 2. TAB TEST MENSUAL: GRÁFICO DINÁMICO DE PROGRESIÓN
-                // ==========================================
+                // 2. TAB TEST MENSUAL: GRÁFICO DINÁMICO
                 const ctxTest = document.getElementById('testChart');
                 if (ctxTest) {
                     const filterSelect = document.getElementById('test-chart-filter-name');
@@ -1334,18 +1975,12 @@
                                 data: testFiltrados.length ? testFiltrados.map(t => t.resultado) : [0],
                                 borderColor: '#f59e0b',
                                 backgroundColor: 'rgba(245, 158, 11, 0.12)',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#0b0b0c',
-                                pointBorderColor: '#f59e0b',
-                                pointBorderWidth: 2,
-                                pointRadius: 5,
-                                fill: true,
-                                tension: 0.3
+                                borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#f59e0b',
+                                pointBorderWidth: 2, pointRadius: 5, fill: true, tension: 0.3
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: { legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } } },
                             scales: {
                                 x: { grid: { color: '#27272a', drawBorder: false } },
@@ -1355,9 +1990,7 @@
                     });
                 }
 
-                // ==========================================
                 // 3. TAB COMPETICIONES: GRÁFICO POR DISCIPLINA
-                // ==========================================
                 const ctxComp = document.getElementById('compChart');
                 if (ctxComp) {
                     const compSelect = document.getElementById('comp-chart-filter-disc');
@@ -1383,18 +2016,12 @@
                                 data: comps.length ? comps.map(c => parseFloat(c.resultado) || 0) : [0],
                                 borderColor: '#3b82f6',
                                 backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                                borderWidth: 3,
-                                pointBackgroundColor: '#0b0b0c',
-                                pointBorderColor: '#3b82f6',
-                                pointBorderWidth: 2,
-                                pointRadius: 5,
-                                fill: true,
-                                tension: 0.3
+                                borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#3b82f6',
+                                pointBorderWidth: 2, pointRadius: 5, fill: true, tension: 0.3
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
+                            responsive: true, maintainAspectRatio: false,
                             plugins: { legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } } },
                             scales: {
                                 x: { grid: { color: '#27272a', drawBorder: false } },
