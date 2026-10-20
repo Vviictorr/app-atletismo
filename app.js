@@ -81,7 +81,7 @@ class ArcadeEngine {
         this.app = appInstance;
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.mode = 'sprint'; // 'sprint', 'javelin', 'longjump'
+        this.mode = 'sprint'; 
         
         this.resetVars();
         this.bindControls();
@@ -89,16 +89,15 @@ class ArcadeEngine {
     }
 
     resetVars() {
-        this.state = 'ready'; // 'ready', 'running', 'phase2', 'finished', 'foul'
+        this.state = 'ready'; 
         this.playerX = 50;
         this.speed = 0;
         this.maxSpeed = 12;
-        this.lastStep = null; // 'left' or 'right'
+        this.lastStep = null; 
         this.timer = 0;
         this.startTime = 0;
         this.endTime = 0;
         
-        // Jabalina & Longitud
         this.angle = 45;
         this.angleDir = 1;
         this.foulLineX = 650;
@@ -109,7 +108,6 @@ class ArcadeEngine {
         this.projVy = 0;
         this.markDistance = 0;
         
-        // Salto Longitud
         this.jumpY = 0;
         this.jumpVy = 0;
         this.isGrounded = true;
@@ -166,7 +164,7 @@ class ArcadeEngine {
             sfx.init();
             if(this.mode === 'javelin') {
                 if(this.state === 'running') {
-                    this.state = 'phase2'; // Congelar ángulo
+                    this.state = 'phase2';
                 } else if(this.state === 'phase2') {
                     if(this.playerX >= this.foulLineX) {
                         this.state = 'foul';
@@ -369,11 +367,7 @@ class ArcadeEngine {
 class AthleticsApp {
     constructor() {
         this.currentUser = null;
-        this.data = { 
-            especifico: [], gym: [], tests: [], competiciones: [], rmBase: {},
-            ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
-            arcadeRecords: {}
-        };
+        this.resetData(); // Inicializamos los datos limpios
         
         this.testChartInstance = null;
         this.dashDoughnutInstance = null;
@@ -390,6 +384,15 @@ class AthleticsApp {
         });
 
         this.initApp();
+    }
+
+    // NUEVO METODO PARA LIMPIAR LOS DATOS DE LA CUENTA
+    resetData() {
+        this.data = { 
+            especifico: [], gym: [], tests: [], competiciones: [], rmBase: {},
+            ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
+            arcadeRecords: {}
+        };
     }
 
     initApp() {
@@ -409,6 +412,7 @@ class AthleticsApp {
             document.getElementById('btn-install-pwa').classList.add('flex');
         });
 
+        // MODIFICACIÓN AQUI: LIMPIAMOS DATOS AL DESLOGUEARNOS
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 this.currentUser = user;
@@ -418,6 +422,7 @@ class AthleticsApp {
                 this.renderAll();
             } else {
                 this.currentUser = null;
+                this.resetData(); // <-- Evita que los datos sangren a cuentas nuevas
                 document.getElementById('auth-modal').classList.remove('hidden');
             }
         });
@@ -652,6 +657,9 @@ class AthleticsApp {
                     ejerciciosCatalogo: d.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
                     arcadeRecords: d.arcadeRecords || {}
                 };
+            } else {
+                // MODIFICACIÓN AQUI: Si es un usuario nuevo en Firebase, asegúrate de que sus datos estén limpios
+                this.resetData();
             }
         } catch(e) {}
     }
@@ -999,6 +1007,7 @@ class AthleticsApp {
         this.renderRankingTable();
     }
 
+    // MODIFICACIÓN AQUI: Mejoramos la identificación en el ranking
     async renderRankingTable() {
         const tipo = document.getElementById('ranking-tipo').value;
         const subtipo = document.getElementById('ranking-subtipo').value;
@@ -1011,8 +1020,12 @@ class AthleticsApp {
 
             qs.forEach(docSnap => {
                 const d = docSnap.data();
-                const email = d.userEmail || "Atleta Anónimo";
-                const atleteName = email.split('@')[0];
+                
+                // Creamos un nombre único uniendo su correo y los primeros 4 caracteres de su ID
+                const rawEmail = d.userEmail || "Atleta";
+                const baseName = rawEmail.split('@')[0];
+                const uniqueId = d.userId ? d.userId.substring(0, 4).toUpperCase() : '0000';
+                const atleteName = `${baseName} #${uniqueId}`;
 
                 if(tipo === 'competicion') {
                     if(d.competiciones) {
