@@ -396,7 +396,6 @@ class AthleticsApp {
     }
 
     initApp() {
-        // Inicializar Inputs de Minijuegos y Tests
         const lanzContainer = document.getElementById('intentos-lanz-container');
         if(lanzContainer) {
             lanzContainer.innerHTML = '';
@@ -406,7 +405,6 @@ class AthleticsApp {
         document.getElementById('comp-disciplina').addEventListener('change', () => this.updateCompeticionForm());
         this.updateCompeticionForm();
 
-        // Rellenar dinámicamente las temporadas
         const currentYear = new Date().getFullYear();
         let tempHTML = '<option value="todas">Histórico (Todas)</option>';
         for(let y = currentYear + 1; y >= 2023; y--) { 
@@ -415,7 +413,6 @@ class AthleticsApp {
         const selectTemp = document.getElementById('ranking-temporada');
         if(selectTemp) selectTemp.innerHTML = tempHTML;
 
-        // PWA Install Prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
@@ -699,7 +696,6 @@ class AthleticsApp {
                     arcadeRecords: d.arcadeRecords || {}
                 };
 
-                // Ordenar siempre los historiales por fecha (del más nuevo al más viejo)
                 const sortDesc = (a, b) => new Date(b.fecha) - new Date(a.fecha);
                 this.data.especifico.sort(sortDesc);
                 this.data.gym.sort(sortDesc);
@@ -715,7 +711,6 @@ class AthleticsApp {
     async saveToCloud() {
         if(!this.currentUser) return;
 
-        // Antes de subir, asegurarnos de que todo está ordenado cronológicamente (más nuevo arriba)
         const sortDesc = (a, b) => new Date(b.fecha) - new Date(a.fecha);
         if(this.data.especifico) this.data.especifico.sort(sortDesc);
         if(this.data.gym) this.data.gym.sort(sortDesc);
@@ -1177,60 +1172,127 @@ class AthleticsApp {
         Chart.defaults.color = '#71717a';
         Chart.defaults.font.family = 'Inter';
 
+        // ==========================================
+        // NUEVO GRÁFICO 1 DASHBOARD: CARGA Y VOLUMEN MENSUAL (BARRAS BORDES REDONDEADOS)
+        // ==========================================
         const ctxDashDoughnut = document.getElementById('dashDoughnutChart');
         if (ctxDashDoughnut) {
             if (this.dashDoughnutInstance) this.dashDoughnutInstance.destroy();
-            this.dashDoughnutInstance = new Chart(ctxDashDoughnut, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Fuerza / Gym', 'Específico', 'Tests', 'Competición'],
-                    datasets: [{
-                        data: [
-                            this.data.gym.length || 1,
-                            this.data.especifico.length || 1,
-                            this.data.tests.length || 1,
-                            this.data.competiciones.length || 1
-                        ],
-                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#a855f7'],
-                        borderWidth: 0, hoverOffset: 6
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', boxWidth: 10, font: { size: 11 } } } },
-                    cutout: '70%'
-                }
-            });
-        }
-
-        const ctxDashRadar = document.getElementById('dashRadarChart');
-        if (ctxDashRadar) {
-            if (this.dashRadarInstance) this.dashRadarInstance.destroy();
             
-            const scoreFuerza = Math.min(100, (Object.keys(this.data.rmBase).length * 20) || 20);
-            const scorePotencia = Math.min(100, (this.data.tests.length * 15) || 20);
-            const scoreEsp = Math.min(100, (this.data.especifico.length * 10) || 20);
-            const scoreComp = Math.min(100, (this.data.competiciones.length * 25) || 20);
-            const scoreConsistencia = Math.min(100, ((this.data.gym.length + this.data.especifico.length) * 8) || 20);
+            // Agrupamos todas las actividades por mes
+            const mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            const conteoMeses = Array(12).fill(0);
 
-            this.dashRadarInstance = new Chart(ctxDashRadar, {
-                type: 'radar',
+            const contarActividad = (arr) => {
+                if(!arr) return;
+                arr.forEach(item => {
+                    if(item.fecha) {
+                        const m = new Date(item.fecha).getMonth();
+                        if(!isNaN(m)) conteoMeses[m]++;
+                    }
+                });
+            };
+
+            contarActividad(this.data.gym);
+            contarActividad(this.data.especifico);
+            contarActividad(this.data.tests);
+            contarActividad(this.data.competiciones);
+
+            // Cogemos los últimos 6 meses para un gráfico compacto
+            const currentMonth = new Date().getMonth();
+            const labelsUltimosMeses = [];
+            const dataUltimosMeses = [];
+
+            for(let i = 5; i >= 0; i--) {
+                const idx = (currentMonth - i + 12) % 12;
+                labelsUltimosMeses.push(mesesNombres[idx]);
+                dataUltimosMeses.push(conteoMeses[idx]);
+            }
+
+            const ctx = ctxDashDoughnut.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, '#f59e0b');
+            gradient.addColorStop(1, 'rgba(245, 158, 11, 0.15)');
+
+            this.dashDoughnutInstance = new Chart(ctxDashDoughnut, {
+                type: 'bar',
                 data: {
-                    labels: ['Fuerza', 'Potencia', 'Específico', 'Competición', 'Consistencia'],
+                    labels: labelsUltimosMeses,
                     datasets: [{
-                        label: 'Nivel Atleta',
-                        data: [scoreFuerza, scorePotencia, scoreEsp, scoreComp, scoreConsistencia],
-                        backgroundColor: 'rgba(59, 130, 246, 0.25)', borderColor: '#3b82f6', borderWidth: 2, pointBackgroundColor: '#3b82f6'
+                        label: 'Sesiones Totales',
+                        data: dataUltimosMeses,
+                        backgroundColor: gradient,
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        borderSkipped: false
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { r: { angleLines: { color: '#27272a' }, grid: { color: '#27272a' }, pointLabels: { color: '#a1a1aa', font: { size: 10, weight: 'bold' } }, ticks: { display: false, max: 100, min: 0 } } }
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10, weight: 'bold' } } },
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#71717a', stepSize: 1 } }
+                    }
                 }
             });
         }
 
+        // ==========================================
+        // NUEVO GRÁFICO 2 DASHBOARD: DISTRIBUCIÓN DE TRABAJO (POLAR AREA CHART NEÓN)
+        // ==========================================
+        const ctxDashRadar = document.getElementById('dashRadarChart');
+        if (ctxDashRadar) {
+            if (this.dashRadarInstance) this.dashRadarInstance.destroy();
+            
+            const numGym = this.data.gym.length;
+            const numEsp = this.data.especifico.length;
+            const numTest = this.data.tests.length;
+            const numComp = this.data.competiciones.length;
+
+            const hasData = (numGym + numEsp + numTest + numComp) > 0;
+
+            this.dashRadarInstance = new Chart(ctxDashRadar, {
+                type: 'polarArea',
+                data: {
+                    labels: ['Fuerza / Gym', 'Trabajo Específico', 'Tests Mensuales', 'Competición'],
+                    datasets: [{
+                        data: hasData ? [numGym, numEsp, numTest, numComp] : [1, 1, 1, 1],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.6)',  // Ámbar
+                            'rgba(59, 130, 246, 0.6)',  // Azul
+                            'rgba(16, 185, 129, 0.6)',  // Esmeralda
+                            'rgba(168, 85, 247, 0.6)'   // Púrpura
+                        ],
+                        borderColor: [
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#a855f7'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#a1a1aa', boxWidth: 10, font: { size: 10 } } }
+                    },
+                    scales: {
+                        r: {
+                            grid: { color: '#27272a' },
+                            ticks: { display: false },
+                            angleLines: { color: '#27272a' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ==========================================
+        // GRÁFICO DE TESTS (ORDENADO CRONOLÓGICAMENTE)
+        // ==========================================
         const ctxTest = document.getElementById('testChart');
         if (ctxTest) {
             const filterSelect = document.getElementById('test-chart-filter-name');
@@ -1243,10 +1305,9 @@ class AthleticsApp {
 
             const testSeleccionado = filterSelect?.value || '';
             
-            // ORDENACIÓN CRONOLÓGICA PARA LA GRÁFICA DE TESTS
             const testFiltrados = this.data.tests
                 .filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === testSeleccionado)
-                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // De más antiguo a más nuevo
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
             if (this.testChartInstance) this.testChartInstance.destroy();
             this.testChartInstance = new Chart(ctxTest, {
@@ -1269,6 +1330,9 @@ class AthleticsApp {
             });
         }
 
+        // ==========================================
+        // GRÁFICO DE COMPETICIONES (ORDENADO CRONOLÓGICAMENTE)
+        // ==========================================
         const ctxComp = document.getElementById('compChart');
         if (ctxComp) {
             const compSelect = document.getElementById('comp-chart-filter-disc');
@@ -1281,10 +1345,9 @@ class AthleticsApp {
 
             const selectedCompDisc = compSelect?.value || '100m';
             
-            // ORDENACIÓN CRONOLÓGICA PARA LA GRÁFICA DE COMPETICIÓN
             const comps = this.data.competiciones
                 .filter(c => c.disciplina === selectedCompDisc)
-                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha)); // De más antiguo a más nuevo
+                .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
             if (this.compChartInstance) this.compChartInstance.destroy();
             this.compChartInstance = new Chart(ctxComp, {
