@@ -396,6 +396,7 @@ class AthleticsApp {
     }
 
     initApp() {
+        // Inicializar Inputs de Minijuegos y Tests
         const lanzContainer = document.getElementById('intentos-lanz-container');
         if(lanzContainer) {
             lanzContainer.innerHTML = '';
@@ -405,6 +406,16 @@ class AthleticsApp {
         document.getElementById('comp-disciplina').addEventListener('change', () => this.updateCompeticionForm());
         this.updateCompeticionForm();
 
+        // Rellenar dinámicamente las temporadas (del año actual hacia atrás hasta 2023)
+        const currentYear = new Date().getFullYear();
+        let tempHTML = '<option value="todas">Histórico (Todas)</option>';
+        for(let y = currentYear + 1; y >= 2023; y--) { // Pongo currentYear + 1 por si quieres registrar cosas del año que viene
+            tempHTML += `<option value="${y}">Temporada ${y}</option>`;
+        }
+        const selectTemp = document.getElementById('ranking-temporada');
+        if(selectTemp) selectTemp.innerHTML = tempHTML;
+
+        // PWA Install Prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
@@ -461,7 +472,6 @@ class AthleticsApp {
         this.agregarEjercicioGym();
     }
 
-    // NUEVO MÉTODO PARA CAMBIAR EL NOMBRE DE USUARIO
     async cambiarUsername() {
         if(!this.currentUser) return;
         const nuevo = prompt("Cambiar Nombre de Usuario (público para el ranking):", this.data.userName || "");
@@ -471,7 +481,6 @@ class AthleticsApp {
             document.getElementById('user-email-display').textContent = this.data.userName;
             this.showToast("Nombre de usuario actualizado");
             
-            // Refrescar el ranking si estamos en esa pestaña
             if(!document.getElementById('tab-ranking').classList.contains('hidden')) {
                 this.renderRankingTable();
             }
@@ -1038,10 +1047,12 @@ class AthleticsApp {
         this.renderRankingTable();
     }
 
-    // RANKING ULTRA ESTRICTO: Ignora vacíos y se queda con una marca por persona válida
+    // RANKING ACTUALIZADO: Filtro por Temporadas
     async renderRankingTable() {
         const tipo = document.getElementById('ranking-tipo').value;
         const subtipo = document.getElementById('ranking-subtipo').value;
+        const season = document.getElementById('ranking-temporada').value; // NUEVO: Cogemos el año
+        
         const tbody = document.getElementById('ranking-table-body');
         tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-zinc-500">Cargando clasificación global...</td></tr>`;
 
@@ -1051,8 +1062,6 @@ class AthleticsApp {
 
             qs.forEach(docSnap => {
                 const d = docSnap.data();
-                
-                // Si el documento está corrupto o no tiene ID de usuario, lo ignoramos por completo
                 if(!d.userId) return;
 
                 const rawName = d.userName && d.userName.trim() !== "" ? d.userName : (d.userEmail ? d.userEmail.split('@')[0] : "Atleta");
@@ -1061,8 +1070,13 @@ class AthleticsApp {
 
                 if(tipo === 'competicion') {
                     if(d.competiciones) {
-                        // Filtramos solo los que tengan un resultado que no esté en blanco
-                        const comps = d.competiciones.filter(c => c.disciplina === subtipo && c.resultado && c.resultado.toString().trim() !== "");
+                        let comps = d.competiciones.filter(c => c.disciplina === subtipo && c.resultado && c.resultado.toString().trim() !== "");
+                        
+                        // Si eligen una temporada en concreto, borramos las marcas que no sean de ese año
+                        if (season !== 'todas') {
+                            comps = comps.filter(c => c.fecha && c.fecha.substring(0, 4) === season);
+                        }
+
                         if(comps.length > 0) {
                             const isTime = ['100m','200m','400m','800m','1500m','60m vallas','110m vallas'].includes(subtipo);
                             const best = comps.reduce((prev, curr) => {
@@ -1080,15 +1094,24 @@ class AthleticsApp {
                         }
                     }
                 } else if(tipo === 'arcade') {
-                    if(d.arcadeRecords && d.arcadeRecords[subtipo]) {
-                        const val = parseFloat(d.arcadeRecords[subtipo]);
-                        if(!isNaN(val)) {
-                            rankingList.push({ name: atleteName, score: val, numericScore: val, date: 'Arcade Record' });
+                    // Si la gente filtra por temporada, el arcade no debe salir porque no tiene años
+                    if(season === 'todas') {
+                        if(d.arcadeRecords && d.arcadeRecords[subtipo]) {
+                            const val = parseFloat(d.arcadeRecords[subtipo]);
+                            if(!isNaN(val)) {
+                                rankingList.push({ name: atleteName, score: val, numericScore: val, date: 'Arcade Record' });
+                            }
                         }
                     }
                 } else if(tipo === 'test') {
                     if(d.tests) {
-                        const testsFiltrados = d.tests.filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === subtipo && t.resultado && t.resultado.toString().trim() !== "");
+                        let testsFiltrados = d.tests.filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === subtipo && t.resultado && t.resultado.toString().trim() !== "");
+                        
+                        // Si eligen una temporada, filtramos
+                        if (season !== 'todas') {
+                            testsFiltrados = testsFiltrados.filter(t => t.fecha && t.fecha.substring(0, 4) === season);
+                        }
+
                         if(testsFiltrados.length > 0) {
                             const best = testsFiltrados.reduce((prev, curr) => {
                                 const pVal = parseFloat(prev.resultado);
@@ -1113,7 +1136,8 @@ class AthleticsApp {
             });
 
             if(rankingList.length === 0) {
-                return tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-zinc-500">No hay registros para esta prueba.</td></tr>`;
+                let msj = season === 'todas' ? "No hay registros para esta prueba." : `Nadie ha registrado marcas en la temporada ${season}.`;
+                return tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-zinc-500">${msj}</td></tr>`;
             }
 
             tbody.innerHTML = rankingList.map((item, idx) => {
