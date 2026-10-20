@@ -388,7 +388,7 @@ class AthleticsApp {
 
     resetData() {
         this.data = { 
-            userName: "", // Nuevo campo
+            userName: "",
             especifico: [], gym: [], tests: [], competiciones: [], rmBase: {},
             ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
             arcadeRecords: {}
@@ -418,7 +418,6 @@ class AthleticsApp {
                 document.getElementById('auth-modal').classList.add('hidden');
                 await this.loadUserData();
                 
-                // Mostrar Username en la cabecera si existe, si no, el email
                 const displayName = this.data.userName && this.data.userName.trim() !== "" ? this.data.userName : user.email;
                 document.getElementById('user-email-display').textContent = displayName;
                 
@@ -439,7 +438,6 @@ class AthleticsApp {
             if (typeof isRegistering !== 'undefined' && isRegistering) {
                 try {
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    // Si se acaba de registrar, le guardamos su username enseguida
                     this.data.userName = usernameInput || email.split('@')[0];
                     await this.saveToCloud();
                 } catch(err) {
@@ -461,6 +459,23 @@ class AthleticsApp {
         document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
 
         this.agregarEjercicioGym();
+    }
+
+    // NUEVO MÉTODO PARA CAMBIAR EL NOMBRE DE USUARIO
+    async cambiarUsername() {
+        if(!this.currentUser) return;
+        const nuevo = prompt("Cambiar Nombre de Usuario (público para el ranking):", this.data.userName || "");
+        if(nuevo !== null && nuevo.trim() !== "") {
+            this.data.userName = nuevo.trim();
+            await this.saveToCloud();
+            document.getElementById('user-email-display').textContent = this.data.userName;
+            this.showToast("Nombre de usuario actualizado");
+            
+            // Refrescar el ranking si estamos en esa pestaña
+            if(!document.getElementById('tab-ranking').classList.contains('hidden')) {
+                this.renderRankingTable();
+            }
+        }
     }
 
     installPWA() {
@@ -1023,7 +1038,7 @@ class AthleticsApp {
         this.renderRankingTable();
     }
 
-    // RANKING ACTUALIZADO: Sin duplicados del mismo usuario en la misma prueba
+    // RANKING ULTRA ESTRICTO: Ignora vacíos y se queda con una marca por persona válida
     async renderRankingTable() {
         const tipo = document.getElementById('ranking-tipo').value;
         const subtipo = document.getElementById('ranking-subtipo').value;
@@ -1037,51 +1052,64 @@ class AthleticsApp {
             qs.forEach(docSnap => {
                 const d = docSnap.data();
                 
-                // Usamos el userName guardado, o recaemos al email si no existe
-                const rawName = d.userName && d.userName.trim() !== "" ? d.userName : (d.userEmail ? d.userEmail.split('@')[0] : "Atleta Anónimo");
-                const uniqueId = d.userId ? d.userId.substring(0, 4).toUpperCase() : '0000';
-                
-                // Si el usuario no puso username y cae al email, le añadimos el hash. Si puso su username bonito, lo respetamos sin hash feo.
+                // Si el documento está corrupto o no tiene ID de usuario, lo ignoramos por completo
+                if(!d.userId) return;
+
+                const rawName = d.userName && d.userName.trim() !== "" ? d.userName : (d.userEmail ? d.userEmail.split('@')[0] : "Atleta");
+                const uniqueId = d.userId.substring(0, 4).toUpperCase();
                 const atleteName = d.userName && d.userName.trim() !== "" ? d.userName : `${rawName} #${uniqueId}`;
 
-                // ATENCIÓN AQUI: Por cada usuario, sacamos SOLO SU MEJOR MARCA en la prueba seleccionada. 1 usuario = 1 entrada.
                 if(tipo === 'competicion') {
                     if(d.competiciones) {
-                        const comps = d.competiciones.filter(c => c.disciplina === subtipo);
+                        // Filtramos solo los que tengan un resultado que no esté en blanco
+                        const comps = d.competiciones.filter(c => c.disciplina === subtipo && c.resultado && c.resultado.toString().trim() !== "");
                         if(comps.length > 0) {
                             const isTime = ['100m','200m','400m','800m','1500m','60m vallas','110m vallas'].includes(subtipo);
                             const best = comps.reduce((prev, curr) => {
                                 const pVal = parseFloat(prev.resultado);
                                 const cVal = parseFloat(curr.resultado);
-                                if(isTime) return cVal < pVal ? curr : prev; // Menor es mejor
-                                else return cVal > pVal ? curr : prev;       // Mayor es mejor
+                                if(isNaN(cVal)) return prev;
+                                if(isNaN(pVal)) return curr;
+                                if(isTime) return cVal < pVal ? curr : prev;
+                                else return cVal > pVal ? curr : prev;
                             });
-                            rankingList.push({ name: atleteName, score: best.resultado, date: best.fecha });
+                            
+                            if(best && best.resultado && !isNaN(parseFloat(best.resultado))) {
+                                rankingList.push({ name: atleteName, score: best.resultado, numericScore: parseFloat(best.resultado), date: best.fecha || 'Sin fecha' });
+                            }
                         }
                     }
                 } else if(tipo === 'arcade') {
                     if(d.arcadeRecords && d.arcadeRecords[subtipo]) {
-                        rankingList.push({ name: atleteName, score: d.arcadeRecords[subtipo], date: 'Arcade Record' });
+                        const val = parseFloat(d.arcadeRecords[subtipo]);
+                        if(!isNaN(val)) {
+                            rankingList.push({ name: atleteName, score: val, numericScore: val, date: 'Arcade Record' });
+                        }
                     }
                 } else if(tipo === 'test') {
                     if(d.tests) {
-                        const testsFiltrados = d.tests.filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === subtipo);
+                        const testsFiltrados = d.tests.filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === subtipo && t.resultado && t.resultado.toString().trim() !== "");
                         if(testsFiltrados.length > 0) {
-                            // En tests de gimnasio y campo, mayor peso/distancia es mejor siempre
-                            const best = testsFiltrados.reduce((prev, curr) => (parseFloat(curr.resultado) > parseFloat(prev.resultado)) ? curr : prev);
-                            const unit = best.tipo === 'gimnasio' ? 'kg' : 'm';
-                            rankingList.push({ name: atleteName, score: `${best.resultado} ${unit}`, numericScore: parseFloat(best.resultado), date: best.fecha });
+                            const best = testsFiltrados.reduce((prev, curr) => {
+                                const pVal = parseFloat(prev.resultado);
+                                const cVal = parseFloat(curr.resultado);
+                                if(isNaN(cVal)) return prev;
+                                if(isNaN(pVal)) return curr;
+                                return cVal > pVal ? curr : prev;
+                            });
+                            
+                            if(best && best.resultado && !isNaN(parseFloat(best.resultado))) {
+                                const unit = best.tipo === 'gimnasio' ? 'kg' : 'm';
+                                rankingList.push({ name: atleteName, score: `${best.resultado} ${unit}`, numericScore: parseFloat(best.resultado), date: best.fecha || 'Sin fecha' });
+                            }
                         }
                     }
                 }
             });
 
-            // ORDENAR RANKING FINAL
             const isTime = ['100m','200m','400m','800m','1500m','60m vallas','110m vallas','100m Lisos'].includes(subtipo);
             rankingList.sort((a,b) => {
-                const numA = parseFloat(a.numericScore !== undefined ? a.numericScore : a.score);
-                const numB = parseFloat(b.numericScore !== undefined ? b.numericScore : b.score);
-                return isTime ? numA - numB : numB - numA;
+                return isTime ? a.numericScore - b.numericScore : b.numericScore - a.numericScore;
             });
 
             if(rankingList.length === 0) {
