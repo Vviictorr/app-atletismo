@@ -1,0 +1,43 @@
+body { font-family: 'Inter', sans-serif; background-color: #0b0b0c; color: #f4f4f5; }
+.solid-card { background-color: #16161a; border: 1px solid #27272a; border-radius: 1rem; }
+.header-bg { background-color: #121215; border-bottom: 1px solid #27272a; }
+.tab-btn { background-color: #1f1f23; color: #a1a1aa; border: 1px solid #27272a; transition: all 0.2s ease; }
+.tab-btn:hover { background-color: #27272a; color: #e4e4e7; }
+.tab-btn.active { background-color: #f59e0b; color: #000000; font-weight: 700; border-color: #f59e0b; }
+input, select, textarea { background-color: #0b0b0c !important; border: 1px solid #27272a !important; color: #ffffff !important; border-radius: 0.5rem !important; }
+input:focus, select:focus, textarea:focus { border-color: #f59e0b !important; outline: none !important; box-shadow: 0 0 0 1px #f59e0b !important; }
+
+/* Slider personalizado de Gimnasio */
+input[type=range] {
+    -webkit-appearance: none;
+    background: #27272a !important;
+    height: 8px;
+    border-radius: 4px;
+    border: none !important;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 22px; width: 22px; border-radius: 50%;
+    background: #f59e0b; cursor: pointer;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+/* Bloqueo Táctil / Arcade para que el juego no deslice la pantalla */
+canvas { touch-action: none; user-select: none; }
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0b0b0c; }
+::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+/* Notificaciones (Toast) */
+#toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+    background-color: #16161a; border-left: 4px solid #f59e0b; color: #fff;
+    padding: 12px 20px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    font-size: 0.875rem; animation: slideIn 0.3s ease forwards, fadeOut 0.3s 2.7s ease forwards;
+    opacity: 0; transform: translateX(100%);
+}
+@keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+@keyframes fadeOut { to { opacity: 0; transform: translateX(100%); } }
