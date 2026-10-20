@@ -11,7 +11,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
-    <!-- El MANIFEST EN BASE64 (Para que se instale con el rayo amarillo) -->
     <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiQXRobGV0aWNzIFBybyIsInNob3J0X25hbWUiOiJBdGhsZXRpY3MiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzBiMGIwYyIsInRoZW1lX2NvbG9yIjoiI2Y1OWUwYiIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCc+PHBhdGggZmlsbD0nI2Y1OWUwYicgZD0nTTEzIDJMMyAxNGg5bC0xIDggMTAtMTJoLTlsMS04eicvPjwvc3ZnPiIsInNpemVzIjoiMTkyeDE5MiA1MTJ4NTEyIiwidHlwZSI6ImltYWdlL3N2Zyt4bWwifV19">
     
     <!-- Tailwind CSS -->
@@ -190,30 +189,32 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- NUEVO GRÁFICO 1: CARGA Y VOLUMEN MENSUAL -->
                 <div class="solid-card p-6 lg:col-span-5 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-base flex items-center gap-2 text-white">
-                                <i data-lucide="pie-chart" class="w-5 h-5 text-amber-500"></i> Reparto de Sesiones
+                                <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-500"></i> Carga y Volumen Mensual
                             </h3>
-                            <span class="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">Carga Global</span>
+                            <span class="text-[10px] bg-amber-500/10 text-amber-400 font-bold px-2 py-0.5 rounded border border-amber-500/20">Sesiones / Mes</span>
                         </div>
-                        <p class="text-xs text-zinc-400 mb-4">Balance de actividad entre fuerza, específico, tests y eventos.</p>
+                        <p class="text-xs text-zinc-400 mb-4">Frecuencia total de entrenamientos agrupados por mes.</p>
                     </div>
                     <div class="h-60 w-full relative flex items-center justify-center">
                         <canvas id="dashDoughnutChart"></canvas>
                     </div>
                 </div>
 
+                <!-- NUEVO GRÁFICO 2: DISTRIBUCIÓN DE TRABAJO E INTENSIDAD -->
                 <div class="solid-card p-6 lg:col-span-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-base flex items-center gap-2 text-white">
-                                <i data-lucide="activity" class="w-5 h-5 text-blue-400"></i> Perfil del Atleta
+                                <i data-lucide="compass" class="w-5 h-5 text-blue-400"></i> Distribución de Trabajo
                             </h3>
-                            <span class="text-[10px] bg-blue-500/10 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-500/20">5 Ejes</span>
+                            <span class="text-[10px] bg-blue-500/10 text-blue-400 font-bold px-2 py-0.5 rounded border border-blue-500/20">4 Áreas</span>
                         </div>
-                        <p class="text-xs text-zinc-400 mb-2">Evaluación continua según tus registros cargados.</p>
+                        <p class="text-xs text-zinc-400 mb-2">Proporción de esfuerzo acumulado en cada área.</p>
                     </div>
                     <div class="h-60 w-full flex items-center justify-center">
                         <canvas id="dashRadarChart"></canvas>
@@ -629,9 +630,7 @@
                         <select id="ranking-subtipo" onchange="app.renderRankingTable()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#0b0b0c] text-amber-400 border border-zinc-700 w-full sm:w-auto">
                         </select>
 
-                        <!-- NUEVO SELECTOR DE TEMPORADAS -->
                         <select id="ranking-temporada" onchange="app.renderRankingTable()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#1a1a20] text-emerald-400 border border-emerald-900/50 w-full sm:w-auto">
-                            <!-- Se rellenará por JS dinámicamente con los años -->
                         </select>
 
                     </div>
