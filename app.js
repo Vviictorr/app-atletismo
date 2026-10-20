@@ -246,7 +246,7 @@ class ArcadeEngine {
         if(this.mode === 'javelin' && this.state === 'flying') {
             this.projX += this.projVx;
             this.projY += this.projVy;
-            this.projVy += 0.45; // Gravidad
+            this.projVy += 0.45; 
             if(this.projY >= 260) {
                 this.projY = 260;
                 this.state = 'finished';
@@ -259,7 +259,7 @@ class ArcadeEngine {
         if(this.mode === 'longjump' && this.state === 'jumping') {
             this.playerX += this.speed;
             this.jumpY += this.jumpVy;
-            this.jumpVy += 0.5; // Gravidad
+            this.jumpVy += 0.5; 
             if(this.jumpY >= 0) {
                 this.jumpY = 0;
                 this.isGrounded = true;
@@ -367,7 +367,7 @@ class ArcadeEngine {
 class AthleticsApp {
     constructor() {
         this.currentUser = null;
-        this.resetData(); // Inicializamos los datos limpios
+        this.resetData(); 
         
         this.testChartInstance = null;
         this.dashDoughnutInstance = null;
@@ -386,9 +386,9 @@ class AthleticsApp {
         this.initApp();
     }
 
-    // NUEVO METODO PARA LIMPIAR LOS DATOS DE LA CUENTA
     resetData() {
         this.data = { 
+            userName: "", // Nuevo campo
             especifico: [], gym: [], tests: [], competiciones: [], rmBase: {},
             ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
             arcadeRecords: {}
@@ -412,30 +412,46 @@ class AthleticsApp {
             document.getElementById('btn-install-pwa').classList.add('flex');
         });
 
-        // MODIFICACIÓN AQUI: LIMPIAMOS DATOS AL DESLOGUEARNOS
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 this.currentUser = user;
-                document.getElementById('user-email-display').textContent = user.email;
                 document.getElementById('auth-modal').classList.add('hidden');
                 await this.loadUserData();
+                
+                // Mostrar Username en la cabecera si existe, si no, el email
+                const displayName = this.data.userName && this.data.userName.trim() !== "" ? this.data.userName : user.email;
+                document.getElementById('user-email-display').textContent = displayName;
+                
                 this.renderAll();
             } else {
                 this.currentUser = null;
-                this.resetData(); // <-- Evita que los datos sangren a cuentas nuevas
+                this.resetData();
                 document.getElementById('auth-modal').classList.remove('hidden');
             }
         });
 
         document.getElementById('auth-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
-            catch(err) { this.showAuthError("Credenciales incorrectas."); }
-        });
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const usernameInput = document.getElementById('auth-username').value.trim();
 
-        document.getElementById('btn-register').addEventListener('click', async () => {
-            try { await createUserWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } 
-            catch(err) { this.showAuthError("Error al registrar cuenta."); }
+            if (typeof isRegistering !== 'undefined' && isRegistering) {
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    // Si se acaba de registrar, le guardamos su username enseguida
+                    this.data.userName = usernameInput || email.split('@')[0];
+                    await this.saveToCloud();
+                } catch(err) {
+                    this.showAuthError("Error al registrar cuenta. Puede que el correo ya exista o la contraseña sea muy corta.");
+                }
+            } else {
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } catch(err) {
+                    this.showAuthError("Credenciales incorrectas.");
+                }
+            }
         });
 
         document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
@@ -649,6 +665,7 @@ class AthleticsApp {
             if (!qs.empty) {
                 const d = qs.docs[0].data();
                 this.data = { 
+                    userName: d.userName || "",
                     especifico: d.especifico||[], 
                     gym: d.gym||[], 
                     tests: d.tests||[], 
@@ -658,7 +675,6 @@ class AthleticsApp {
                     arcadeRecords: d.arcadeRecords || {}
                 };
             } else {
-                // MODIFICACIÓN AQUI: Si es un usuario nuevo en Firebase, asegúrate de que sus datos estén limpios
                 this.resetData();
             }
         } catch(e) {}
@@ -1007,7 +1023,7 @@ class AthleticsApp {
         this.renderRankingTable();
     }
 
-    // MODIFICACIÓN AQUI: Mejoramos la identificación en el ranking
+    // RANKING ACTUALIZADO: Sin duplicados del mismo usuario en la misma prueba
     async renderRankingTable() {
         const tipo = document.getElementById('ranking-tipo').value;
         const subtipo = document.getElementById('ranking-subtipo').value;
@@ -1021,17 +1037,25 @@ class AthleticsApp {
             qs.forEach(docSnap => {
                 const d = docSnap.data();
                 
-                // Creamos un nombre único uniendo su correo y los primeros 4 caracteres de su ID
-                const rawEmail = d.userEmail || "Atleta";
-                const baseName = rawEmail.split('@')[0];
+                // Usamos el userName guardado, o recaemos al email si no existe
+                const rawName = d.userName && d.userName.trim() !== "" ? d.userName : (d.userEmail ? d.userEmail.split('@')[0] : "Atleta Anónimo");
                 const uniqueId = d.userId ? d.userId.substring(0, 4).toUpperCase() : '0000';
-                const atleteName = `${baseName} #${uniqueId}`;
+                
+                // Si el usuario no puso username y cae al email, le añadimos el hash. Si puso su username bonito, lo respetamos sin hash feo.
+                const atleteName = d.userName && d.userName.trim() !== "" ? d.userName : `${rawName} #${uniqueId}`;
 
+                // ATENCIÓN AQUI: Por cada usuario, sacamos SOLO SU MEJOR MARCA en la prueba seleccionada. 1 usuario = 1 entrada.
                 if(tipo === 'competicion') {
                     if(d.competiciones) {
                         const comps = d.competiciones.filter(c => c.disciplina === subtipo);
                         if(comps.length > 0) {
-                            const best = comps.reduce((prev, curr) => (parseFloat(curr.resultado) > parseFloat(prev.resultado)) ? curr : prev);
+                            const isTime = ['100m','200m','400m','800m','1500m','60m vallas','110m vallas'].includes(subtipo);
+                            const best = comps.reduce((prev, curr) => {
+                                const pVal = parseFloat(prev.resultado);
+                                const cVal = parseFloat(curr.resultado);
+                                if(isTime) return cVal < pVal ? curr : prev; // Menor es mejor
+                                else return cVal > pVal ? curr : prev;       // Mayor es mejor
+                            });
                             rankingList.push({ name: atleteName, score: best.resultado, date: best.fecha });
                         }
                     }
@@ -1043,6 +1067,7 @@ class AthleticsApp {
                     if(d.tests) {
                         const testsFiltrados = d.tests.filter(t => (t.tipo === 'gimnasio' ? t.ejercicio : t.subtipo) === subtipo);
                         if(testsFiltrados.length > 0) {
+                            // En tests de gimnasio y campo, mayor peso/distancia es mejor siempre
                             const best = testsFiltrados.reduce((prev, curr) => (parseFloat(curr.resultado) > parseFloat(prev.resultado)) ? curr : prev);
                             const unit = best.tipo === 'gimnasio' ? 'kg' : 'm';
                             rankingList.push({ name: atleteName, score: `${best.resultado} ${unit}`, numericScore: parseFloat(best.resultado), date: best.fecha });
@@ -1051,8 +1076,8 @@ class AthleticsApp {
                 }
             });
 
+            // ORDENAR RANKING FINAL
             const isTime = ['100m','200m','400m','800m','1500m','60m vallas','110m vallas','100m Lisos'].includes(subtipo);
-            
             rankingList.sort((a,b) => {
                 const numA = parseFloat(a.numericScore !== undefined ? a.numericScore : a.score);
                 const numB = parseFloat(b.numericScore !== undefined ? b.numericScore : b.score);
