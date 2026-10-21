@@ -1,7 +1,7 @@
 {
   "name": "Athletics Pro",
   "short_name": "Athletics",
-  "start_url": "./",
+  "start_url": "./Index.html",
   "display": "standalone",
   "background_color": "#0b0b0c",
   "theme_color": "#f59e0b",
