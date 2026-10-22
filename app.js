@@ -373,6 +373,7 @@ class AthleticsApp {
         this.dashDoughnutInstance = null;
         this.dashRadarInstance = null;
         this.compChartInstance = null;
+        this.gymProgressionChartInstance = null; // NUEVA GRÁFICA DE GIMNASIO
         
         this.activeTestType = 'gimnasio';
         this.deferredPrompt = null;
@@ -1172,14 +1173,11 @@ class AthleticsApp {
         Chart.defaults.color = '#71717a';
         Chart.defaults.font.family = 'Inter';
 
-        // ==========================================
-        // NUEVO GRÁFICO 1 DASHBOARD: CARGA Y VOLUMEN MENSUAL (BARRAS BORDES REDONDEADOS)
-        // ==========================================
+        // DASHBOARD 1: DOUGHNUT
         const ctxDashDoughnut = document.getElementById('dashDoughnutChart');
         if (ctxDashDoughnut) {
             if (this.dashDoughnutInstance) this.dashDoughnutInstance.destroy();
             
-            // Agrupamos todas las actividades por mes
             const mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
             const conteoMeses = Array(12).fill(0);
 
@@ -1198,7 +1196,6 @@ class AthleticsApp {
             contarActividad(this.data.tests);
             contarActividad(this.data.competiciones);
 
-            // Cogemos los últimos 6 meses para un gráfico compacto
             const currentMonth = new Date().getMonth();
             const labelsUltimosMeses = [];
             const dataUltimosMeses = [];
@@ -1239,9 +1236,7 @@ class AthleticsApp {
             });
         }
 
-        // ==========================================
-        // NUEVO GRÁFICO 2 DASHBOARD: DISTRIBUCIÓN DE TRABAJO (POLAR AREA CHART NEÓN)
-        // ==========================================
+        // DASHBOARD 2: POLAR AREA
         const ctxDashRadar = document.getElementById('dashRadarChart');
         if (ctxDashRadar) {
             if (this.dashRadarInstance) this.dashRadarInstance.destroy();
@@ -1259,18 +1254,8 @@ class AthleticsApp {
                     labels: ['Fuerza / Gym', 'Trabajo Específico', 'Tests Mensuales', 'Competición'],
                     datasets: [{
                         data: hasData ? [numGym, numEsp, numTest, numComp] : [1, 1, 1, 1],
-                        backgroundColor: [
-                            'rgba(245, 158, 11, 0.6)',  // Ámbar
-                            'rgba(59, 130, 246, 0.6)',  // Azul
-                            'rgba(16, 185, 129, 0.6)',  // Esmeralda
-                            'rgba(168, 85, 247, 0.6)'   // Púrpura
-                        ],
-                        borderColor: [
-                            '#f59e0b',
-                            '#3b82f6',
-                            '#10b981',
-                            '#a855f7'
-                        ],
+                        backgroundColor: ['rgba(245, 158, 11, 0.6)','rgba(59, 130, 246, 0.6)','rgba(16, 185, 129, 0.6)','rgba(168, 85, 247, 0.6)'],
+                        borderColor: ['#f59e0b','#3b82f6','#10b981','#a855f7'],
                         borderWidth: 2
                     }]
                 },
@@ -1280,19 +1265,110 @@ class AthleticsApp {
                         legend: { position: 'bottom', labels: { color: '#a1a1aa', boxWidth: 10, font: { size: 10 } } }
                     },
                     scales: {
-                        r: {
-                            grid: { color: '#27272a' },
-                            ticks: { display: false },
-                            angleLines: { color: '#27272a' }
-                        }
+                        r: { grid: { color: '#27272a' }, ticks: { display: false }, angleLines: { color: '#27272a' } }
                     }
                 }
             });
         }
 
         // ==========================================
-        // GRÁFICO DE TESTS (ORDENADO CRONOLÓGICAMENTE)
+        // NUEVO GRÁFICO: PROGRESIÓN DE ENTRENAMIENTOS (GIMNASIO)
         // ==========================================
+        const ctxGymProg = document.getElementById('gymProgressionChart');
+        if (ctxGymProg) {
+            const gymSelect = document.getElementById('gym-chart-filter');
+            let opcionesEjercicios = new Set();
+            
+            this.data.gym.forEach(s => s.ejercicios.forEach(e => opcionesEjercicios.add(e.ejercicio)));
+            opcionesEjercicios = Array.from(opcionesEjercicios);
+
+            if (gymSelect) {
+                const currentVal = gymSelect.value;
+                gymSelect.innerHTML = opcionesEjercicios.length ? opcionesEjercicios.map(o => `<option value="${o}">${o}</option>`).join('') : `<option value="">Sin registros</option>`;
+                if (opcionesEjercicios.includes(currentVal)) gymSelect.value = currentVal;
+                else if (opcionesEjercicios.length > 0) gymSelect.value = opcionesEjercicios[0];
+            }
+
+            const selectedGymEj = gymSelect?.value;
+            const gymData = [];
+
+            if (selectedGymEj) {
+                this.data.gym.forEach(sesion => {
+                    const ejData = sesion.ejercicios.find(e => e.ejercicio === selectedGymEj);
+                    if (ejData) {
+                        let maxKg = 0;
+                        let bestRmEst = 0;
+                        let desgloseStr = [];
+
+                        ejData.series.forEach((serie, idx) => {
+                            if (serie.kg > maxKg) maxKg = serie.kg;
+                            const rmEst = serie.kg * (1 + 0.0333 * serie.reps);
+                            if (rmEst > bestRmEst) bestRmEst = rmEst;
+                            desgloseStr.push(`Serie ${idx + 1}: ${serie.kg} kg × ${serie.reps} reps`);
+                        });
+
+                        gymData.push({
+                            fecha: sesion.fecha,
+                            maxKg: maxKg,
+                            rmEstimado: Math.round(bestRmEst),
+                            desglose: desgloseStr
+                        });
+                    }
+                });
+            }
+
+            gymData.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            if (this.gymProgressionChartInstance) this.gymProgressionChartInstance.destroy();
+
+            this.gymProgressionChartInstance = new Chart(ctxGymProg, {
+                type: 'line',
+                data: {
+                    labels: gymData.length ? gymData.map(d => d.fecha) : ['Sin datos'],
+                    datasets: [
+                        {
+                            label: 'Peso Máximo Levantado (kg)',
+                            data: gymData.length ? gymData.map(d => d.maxKg) : [0],
+                            borderColor: '#10b981', // Emerald
+                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                            borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#10b981',
+                            pointBorderWidth: 2, pointRadius: 5, fill: true, tension: 0.3
+                        },
+                        {
+                            label: '1RM Estimado del día',
+                            data: gymData.length ? gymData.map(d => d.rmEstimado) : [0],
+                            borderColor: 'rgba(245, 158, 11, 0.7)', // Amber dashed
+                            borderDash: [5, 5],
+                            borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                // Aquí añadimos el detalle de las series al Tooltip
+                                afterBody: function(context) {
+                                    if (gymData.length > 0) {
+                                        const idx = context[0].dataIndex;
+                                        return [' ', 'DETALLE DE SERIES:', ...gymData[idx].desglose];
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { color: '#27272a', drawBorder: false } },
+                        y: { grid: { color: '#27272a', drawBorder: false }, title: { display: true, text: 'Kilos (kg)', color: '#71717a' } }
+                    }
+                }
+            });
+        }
+
+        // GRÁFICO DE TESTS 
         const ctxTest = document.getElementById('testChart');
         if (ctxTest) {
             const filterSelect = document.getElementById('test-chart-filter-name');
@@ -1330,9 +1406,7 @@ class AthleticsApp {
             });
         }
 
-        // ==========================================
-        // GRÁFICO DE COMPETICIONES (ORDENADO CRONOLÓGICAMENTE)
-        // ==========================================
+        // GRÁFICO DE COMPETICIONES
         const ctxComp = document.getElementById('compChart');
         if (ctxComp) {
             const compSelect = document.getElementById('comp-chart-filter-disc');
