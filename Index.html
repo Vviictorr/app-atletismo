@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Athletics Pro - Tracker & Arcade</title>
     
-    <!-- CONFIGURACIÓN PWA PARA QUE SALGA EL ICONO EN WINDOWS/MÓVIL -->
     <meta name="theme-color" content="#f59e0b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+    
+    <!-- ENLACE AL MANIFEST CORRECTO (Archivo separado) -->
     <link rel="manifest" href="manifest.json">
     
     <!-- Tailwind CSS -->
@@ -189,7 +190,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- NUEVO GRÁFICO 1: CARGA Y VOLUMEN MENSUAL -->
+                <!-- GRÁFICO 1: CARGA Y VOLUMEN MENSUAL -->
                 <div class="solid-card p-6 lg:col-span-5 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
@@ -205,7 +206,7 @@
                     </div>
                 </div>
 
-                <!-- NUEVO GRÁFICO 2: DISTRIBUCIÓN DE TRABAJO E INTENSIDAD -->
+                <!-- GRÁFICO 2: DISTRIBUCIÓN DE TRABAJO E INTENSIDAD -->
                 <div class="solid-card p-6 lg:col-span-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
@@ -269,6 +270,8 @@
 
         <!-- TAB 3: GIMNASIO & CALCULADORA PORCENTAJES 1RM -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
+            
+            <!-- CALCULADORA DE 1RM -->
             <div class="solid-card p-6 bg-gradient-to-r from-[#16161a] to-[#1f1f28] border border-amber-500/30">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                     <div>
@@ -316,6 +319,7 @@
                 </div>
             </div>
 
+            <!-- REGISTRO Y CONFIGURACIÓN -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="solid-card p-6">
                     <div class="flex justify-between items-center mb-3">
@@ -352,6 +356,21 @@
                 </div>
             </div>
 
+            <!-- NUEVO: GRÁFICA DE PROGRESIÓN POR EJERCICIO (KILOS, SERIES Y REPS) -->
+            <div class="solid-card p-6 border-emerald-500/30">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-5 h-5"></i> Progresión y Series por Ejercicio
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-1">Evolución de tus entrenamientos. Pasa el ratón/dedo por los puntos de la gráfica para ver las series y repeticiones exactas de ese día.</p>
+                    </div>
+                    <select id="gym-chart-filter" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23] text-emerald-400 border border-zinc-700"></select>
+                </div>
+                <div class="h-80 w-full"><canvas id="gymProgressionChart"></canvas></div>
+            </div>
+
+            <!-- HISTORIAL GIMNASIO -->
             <div class="solid-card p-6">
                 <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-zinc-400"></i> Historial de Gimnasio</h3>
                 <div id="lista-gym" class="space-y-3"></div>
@@ -657,7 +676,7 @@
 
     </main>
 
-    <!-- ARCHIVO JAVASCRIPT EXTERNO (Importante: type="module") -->
+    <!-- ARCHIVO JAVASCRIPT EXTERNO -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
