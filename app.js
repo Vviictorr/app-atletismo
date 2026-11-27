@@ -2,7 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, doc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-lucide.createIcons();
+function safeCreateIcons() {
+    if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
+}
+
+safeCreateIcons();
 
 const firebaseConfig = {
     apiKey: "AIzaSyCZO4i0vQbMxdY3DMmfnbnoNOmTBDCiE0U",
@@ -106,12 +112,14 @@ class ArcadeEngine {
     constructor(appInstance) {
         this.app = appInstance;
         this.canvas = document.getElementById('gameCanvas');
-        this.ctx = this.canvas.getContext('2d');
+        this.ctx = this.canvas ? this.canvas.getContext('2d') : null;
         this.mode = 'sprint'; 
         
         this.resetVars();
         this.bindControls();
-        this.loop();
+        if (this.canvas && this.ctx) {
+            this.loop();
+        }
     }
 
     resetVars() {
@@ -225,7 +233,8 @@ class ArcadeEngine {
 
         window.addEventListener('keydown', (e) => {
             if(['ArrowLeft','ArrowRight','ArrowUp','Space','KeyA','KeyD','KeyW'].includes(e.code)) {
-                if(document.getElementById('tab-arcade').classList.contains('hidden') === false) {
+                const tabArcade = document.getElementById('tab-arcade');
+                if(tabArcade && tabArcade.classList.contains('hidden') === false) {
                     e.preventDefault();
                 }
             }
@@ -314,6 +323,7 @@ class ArcadeEngine {
     }
 
     draw() {
+        if (!this.ctx || !this.canvas) return;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.fillStyle = '#0f172a'; this.ctx.fillRect(0, 0, 800, 180);
@@ -388,9 +398,9 @@ class ArcadeEngine {
 }
 
 // ==========================================
-// SISTEMA DE RANGOS SYMMETRY (9 RANGOS / 25 DIVISIONES)
+// SISTEMA DE RANGOS (HIERRO -> OLÍMPICO CROMÁTICO)
 // ==========================================
-const SYMMETRY_TIERS = [
+const RANK_TIERS = [
     { name: 'Hierro I', tier: 'Hierro', color: '#71717a', bg: 'rgba(113,113,122,0.15)', border: 'rgba(113,113,122,0.4)' },
     { name: 'Hierro II', tier: 'Hierro', color: '#71717a', bg: 'rgba(113,113,122,0.18)', border: 'rgba(113,113,122,0.45)' },
     { name: 'Hierro III', tier: 'Hierro', color: '#a1a1aa', bg: 'rgba(161,161,170,0.2)', border: 'rgba(161,161,170,0.5)' },
@@ -415,7 +425,14 @@ const SYMMETRY_TIERS = [
     { name: 'Campeón I', tier: 'Campeón', color: '#a855f7', bg: 'rgba(168,85,247,0.16)', border: 'rgba(168,85,247,0.45)' },
     { name: 'Campeón II', tier: 'Campeón', color: '#a855f7', bg: 'rgba(168,85,247,0.22)', border: 'rgba(168,85,247,0.55)' },
     { name: 'Campeón III', tier: 'Campeón', color: '#c084fc', bg: 'rgba(192,132,252,0.28)', border: 'rgba(192,132,252,0.65)' },
-    { name: 'SIMÉTRICO', tier: 'Simétrico', color: '#fde047', bg: 'linear-gradient(135deg, rgba(250,204,21,0.28), rgba(56,189,248,0.25))', border: '#fde047', isSymmetric: true }
+    {
+        name: 'OLÍMPICO',
+        tier: 'Olímpico',
+        color: '#fde047',
+        bg: 'linear-gradient(120deg, rgba(255,0,128,0.25), rgba(255,215,0,0.25), rgba(0,229,255,0.25), rgba(168,85,247,0.25))',
+        border: '#ff0080',
+        isOlympic: true
+    }
 ];
 
 // ==========================================
@@ -435,7 +452,6 @@ class AthleticsApp {
         this.activeTestType = 'gimnasio';
         this.deferredPrompt = null;
 
-        // Estado de sesión en vivo (NO arranca hasta pulsar "Empezar Entrenamiento")
         this.isWorkoutActive = false;
         this.sessionStartTimestamp = null;
         this.sessionClockInterval = null;
@@ -472,8 +488,11 @@ class AthleticsApp {
             for(let i=1; i<=10; i++) lanzContainer.innerHTML += `<div><input type="number" step="0.01" placeholder="Int ${i}" class="test-lanz-val w-full px-2 py-2 text-sm text-center"></div>`;
         }
 
-        document.getElementById('comp-disciplina').addEventListener('change', () => this.updateCompeticionForm());
-        this.updateCompeticionForm();
+        const compDiscEl = document.getElementById('comp-disciplina');
+        if (compDiscEl) {
+            compDiscEl.addEventListener('change', () => this.updateCompeticionForm());
+            this.updateCompeticionForm();
+        }
 
         const currentYear = new Date().getFullYear();
         let tempHTML = '<option value="todas">Histórico (Todas)</option>';
@@ -486,18 +505,19 @@ class AthleticsApp {
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.deferredPrompt = e;
-            document.getElementById('btn-install-pwa').classList.remove('hidden');
-            document.getElementById('btn-install-pwa').classList.add('flex');
+            document.getElementById('btn-install-pwa')?.classList.remove('hidden');
+            document.getElementById('btn-install-pwa')?.classList.add('flex');
         });
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 this.currentUser = user;
-                document.getElementById('auth-modal').classList.add('hidden');
+                document.getElementById('auth-modal')?.classList.add('hidden');
                 await this.loadUserData();
                 
                 const displayName = this.data.userName && this.data.userName.trim() !== "" ? this.data.userName : user.email;
-                document.getElementById('user-email-display').textContent = displayName;
+                const emailDisp = document.getElementById('user-email-display');
+                if (emailDisp) emailDisp.textContent = displayName;
                 
                 const bwInput = document.getElementById('gym-bodyweight-input');
                 if(bwInput) bwInput.value = this.data.bodyWeight || 75;
@@ -507,17 +527,17 @@ class AthleticsApp {
             } else {
                 this.currentUser = null;
                 this.resetData();
-                document.getElementById('auth-modal').classList.remove('hidden');
+                document.getElementById('auth-modal')?.classList.remove('hidden');
             }
         });
 
-        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+        document.getElementById('auth-form')?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             const usernameInput = document.getElementById('auth-username').value.trim();
 
-            if (typeof isRegistering !== 'undefined' && isRegistering) {
+            if (window.isRegistering) {
                 try {
                     await createUserWithEmailAndPassword(auth, email, password);
                     this.data.userName = usernameInput || email.split('@')[0];
@@ -534,11 +554,11 @@ class AthleticsApp {
             }
         });
 
-        document.getElementById('form-especifico').addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
-        document.getElementById('form-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveGym(); });
-        document.getElementById('form-test-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
-        document.getElementById('form-test-lanz').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
-        document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
+        document.getElementById('form-especifico')?.addEventListener('submit', (e) => { e.preventDefault(); this.saveEspecifico(); });
+        document.getElementById('form-gym')?.addEventListener('submit', (e) => { e.preventDefault(); this.saveGym(); });
+        document.getElementById('form-test-gym')?.addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
+        document.getElementById('form-test-lanz')?.addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
+        document.getElementById('form-competicion')?.addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
     }
 
     // ==========================================
@@ -604,7 +624,7 @@ class AthleticsApp {
     }
 
     // ==========================================
-    // LÓGICA DE RANGOS SYMMETRY
+    // LÓGICA DE RANGOS (HIERRO -> OLÍMPICO)
     // ==========================================
     getExerciseProfile(ejName) {
         const lower = ejName.toLowerCase();
@@ -678,16 +698,16 @@ class AthleticsApp {
         const ratio = oneRM / bw;
         const normalized = (ratio - profile.minRatio) / (profile.maxRatio - profile.minRatio);
         const clamped = Math.max(0, Math.min(1, normalized));
-        const exactLevel = clamped * (SYMMETRY_TIERS.length - 1);
-        const index = Math.min(SYMMETRY_TIERS.length - 1, Math.floor(exactLevel));
-        const tierObj = SYMMETRY_TIERS[index];
+        const exactLevel = clamped * (RANK_TIERS.length - 1);
+        const index = Math.min(RANK_TIERS.length - 1, Math.floor(exactLevel));
+        const tierObj = RANK_TIERS[index];
 
         let progress = 100;
         let nextTargetKg = oneRM;
-        if (index < SYMMETRY_TIERS.length - 1) {
+        if (index < RANK_TIERS.length - 1) {
             const stepProgress = (exactLevel - index) * 100;
             progress = Math.max(6, Math.min(99, Math.round(stepProgress)));
-            const nextRatio = profile.minRatio + ((index + 1) / (SYMMETRY_TIERS.length - 1)) * (profile.maxRatio - profile.minRatio);
+            const nextRatio = profile.minRatio + ((index + 1) / (RANK_TIERS.length - 1)) * (profile.maxRatio - profile.minRatio);
             nextTargetKg = Math.ceil(nextRatio * bw);
         }
 
@@ -707,13 +727,13 @@ class AthleticsApp {
         if (!isNaN(val) && val >= 35 && val <= 250) {
             this.data.bodyWeight = val;
             await this.saveToCloud();
-            this.renderSymmetryRanks();
+            this.renderOlympicRanks();
             this.renderGymTopGlobal();
             this.showToast(`Peso corporal actualizado: ${val} kg`);
         }
     }
 
-    renderSymmetryRanks() {
+    renderOlympicRanks() {
         const bw = this.data.bodyWeight || 75;
         const exGrid = document.getElementById('gym-exercise-ranks-grid');
         const muscleGrid = document.getElementById('gym-muscle-ranks-grid');
@@ -734,18 +754,23 @@ class AthleticsApp {
                 if (muscleBuckets[rank.group]) muscleBuckets[rank.group].push(rank.index);
             }
 
-            const glowClass = rank.isSymmetric ? 'rank-symmetric-glow' : '';
+            const cardOlympicClass = rank.isOlympic ? 'rank-olympic-chromatic' : '';
+            const pillOlympicClass = rank.isOlympic ? 'rank-olympic-pill' : '';
+            const barStyle = rank.isOlympic
+                ? `width: ${rank.progress}%; background: linear-gradient(90deg, #ff0080, #ffd700, #00e676, #00e5ff, #a855f7);`
+                : `width: ${rank.progress}%; background-color: ${rank.color};`;
+
             const nextText = rank.index < 0
                 ? `Primer rango a los ${rank.nextTargetKg} kg`
-                : (rank.index < SYMMETRY_TIERS.length - 1
-                    ? `Sig: ${SYMMETRY_TIERS[rank.index + 1].name} (${rank.nextTargetKg} kg)`
-                    : '¡Rango Máximo Top 1%!');
+                : (rank.index < RANK_TIERS.length - 1
+                    ? `Sig: ${RANK_TIERS[rank.index + 1].name} (${rank.nextTargetKg} kg)`
+                    : '🏅 ¡Rango Olímpico Máximo!');
 
             return `
-                <div class="bg-[#0e0e12] p-3.5 rounded-xl border transition hover:border-zinc-600 ${glowClass}" style="border-color: ${rank.border}">
+                <div class="bg-[#0e0e12] p-3.5 rounded-xl border transition hover:border-zinc-600 ${cardOlympicClass}" style="border-color: ${rank.border}">
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <span class="text-xs font-bold text-white truncate" title="${ej}">${ej}</span>
-                        <span class="text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap ${pillOlympicClass}" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
                             ${rank.name}
                         </span>
                     </div>
@@ -754,7 +779,7 @@ class AthleticsApp {
                         <span class="text-zinc-500 font-semibold">${best1RM > 0 ? rank.ratio + '× PC' : ''}</span>
                     </div>
                     <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-500" style="width: ${rank.progress}%; background-color: ${rank.color}"></div>
+                        <div class="h-full rounded-full transition-all duration-500" style="${barStyle}"></div>
                     </div>
                     <div class="text-[10px] text-zinc-500 mt-1.5 truncate">${nextText}</div>
                 </div>
@@ -763,12 +788,14 @@ class AthleticsApp {
 
         muscleGrid.innerHTML = Object.entries(muscleBuckets).map(([groupName, indices]) => {
             const avgIdx = indices.length > 0 ? Math.round(indices.reduce((a, b) => a + b, 0) / indices.length) : -1;
-            const tier = avgIdx >= 0 ? SYMMETRY_TIERS[avgIdx] : { name: 'Sin Datos', color: '#71717a', bg: 'rgba(39,39,42,0.5)', border: '#3f3f46' };
+            const tier = avgIdx >= 0 ? RANK_TIERS[avgIdx] : { name: 'Sin Datos', color: '#71717a', bg: 'rgba(39,39,42,0.5)', border: '#3f3f46' };
+            const cardClass = tier.isOlympic ? 'rank-olympic-chromatic' : '';
+            const textClass = tier.isOlympic ? 'olympic-text-chromatic' : '';
             return `
-                <div class="bg-[#0e0e12] px-4 py-3 rounded-xl border flex items-center justify-between" style="border-color: ${tier.border}">
+                <div class="bg-[#0e0e12] px-4 py-3 rounded-xl border flex items-center justify-between ${cardClass}" style="border-color: ${tier.border}">
                     <div>
                         <span class="text-[10px] uppercase font-bold text-zinc-500 block">${groupName}</span>
-                        <span class="text-sm font-black mt-0.5 block" style="color: ${tier.color}">${tier.name}</span>
+                        <span class="text-sm font-black mt-0.5 block ${textClass}" style="color: ${tier.color}">${tier.name}</span>
                     </div>
                     <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: ${tier.bg}; color: ${tier.color}">
                         <i data-lucide="shield-check" class="w-5 h-5"></i>
@@ -780,32 +807,43 @@ class AthleticsApp {
         const globalBadge = document.getElementById('gym-global-rank-badge');
         const globalTitle = document.getElementById('gym-global-rank-title');
         const globalSub = document.getElementById('gym-global-rank-sub');
+        if (!globalBadge || !globalTitle || !globalSub) return;
 
         if (rankedIndices.length === 0) {
             globalTitle.textContent = 'Hierro I (Sin Marcas)';
+            globalTitle.className = 'text-2xl sm:text-3xl font-black text-zinc-400 mt-0.5';
             globalTitle.style.color = '#a1a1aa';
             globalBadge.style.borderColor = '#3f3f46';
             globalBadge.style.background = 'rgba(39,39,42,0.4)';
+            globalBadge.className = 'w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center shadow-lg';
             globalBadge.innerHTML = `<i data-lucide="shield" class="w-7 h-7 text-zinc-400"></i>`;
             globalSub.textContent = 'Completa tu primer entrenamiento para desbloquear tu rango global';
         } else {
             const sorted = [...rankedIndices].sort((a, b) => b - a);
             const topSlice = sorted.slice(0, Math.min(5, sorted.length));
             const globalIdx = Math.round(topSlice.reduce((a, b) => a + b, 0) / topSlice.length);
-            const gTier = SYMMETRY_TIERS[globalIdx];
+            const gTier = RANK_TIERS[globalIdx];
 
             globalTitle.textContent = gTier.name;
-            globalTitle.style.color = gTier.color;
-            globalBadge.style.borderColor = gTier.border;
-            globalBadge.style.background = gTier.bg;
-            globalBadge.className = `w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center shadow-lg ${gTier.isSymmetric ? 'rank-symmetric-glow' : ''}`;
-            globalBadge.innerHTML = `<i data-lucide="${gTier.isSymmetric ? 'crown' : 'trophy'}" class="w-8 h-8" style="color: ${gTier.color}"></i>`;
+            if (gTier.isOlympic) {
+                globalTitle.className = 'text-2xl sm:text-3xl font-black mt-0.5 olympic-text-chromatic';
+                globalTitle.style.color = '';
+                globalBadge.className = 'w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center shadow-lg rank-olympic-chromatic';
+                globalBadge.innerHTML = `<i data-lucide="crown" class="w-8 h-8 text-white"></i>`;
+            } else {
+                globalTitle.className = 'text-2xl sm:text-3xl font-black mt-0.5';
+                globalTitle.style.color = gTier.color;
+                globalBadge.style.borderColor = gTier.border;
+                globalBadge.style.background = gTier.bg;
+                globalBadge.className = 'w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center shadow-lg';
+                globalBadge.innerHTML = `<i data-lucide="trophy" class="w-8 h-8" style="color: ${gTier.color}"></i>`;
+            }
             globalSub.textContent = `Promedio de tus ${topSlice.length} mejores ejercicios · Peso corporal: ${bw} kg`;
         }
     }
 
     // ==========================================
-    // TEMPORIZADOR DE DESCANSO (CUENTA ATRÁS)
+    // TEMPORIZADOR DE DESCANSO
     // ==========================================
     startRestTimer(seconds, exerciseName = 'Descanso') {
         const sec = parseInt(seconds) || 90;
@@ -866,7 +904,7 @@ class AthleticsApp {
 
         if (pauseBtn) {
             pauseBtn.innerHTML = `<i data-lucide="${this.restPaused ? 'play' : 'pause'}" class="w-4 h-4"></i>`;
-            lucide.createIcons();
+            safeCreateIcons();
         }
     }
 
@@ -929,6 +967,7 @@ class AthleticsApp {
         const best1RM = this.getBest1RMForExercise(selectedEj);
         const rank = this.calculateExerciseRank(selectedEj, best1RM, this.data.bodyWeight);
         const prevSeries = this.getPreviousSetsForExercise(selectedEj);
+        const pillOlympicClass = rank.isOlympic ? 'rank-olympic-pill' : '';
 
         const div = document.createElement('div');
         div.className = "gym-ex-card bg-[#1a1a20] p-4 sm:p-5 rounded-xl border border-zinc-800 space-y-3";
@@ -951,7 +990,7 @@ class AthleticsApp {
                     <select onchange="app.onGymExerciseChange(this)" class="gym-ej-nombre px-3 py-1.5 text-sm font-black border border-zinc-700 rounded-lg bg-[#0b0b0c] text-white">
                         ${optionsHTML}
                     </select>
-                    <span class="gym-ex-rank-pill text-[10px] font-black px-2.5 py-1 rounded-md uppercase" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
+                    <span class="gym-ex-rank-pill text-[10px] font-black px-2.5 py-1 rounded-md uppercase ${pillOlympicClass}" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
                         ${rank.name} ${best1RM > 0 ? `· 1RM ${best1RM}kg` : ''}
                     </span>
                 </div>
@@ -991,7 +1030,7 @@ class AthleticsApp {
             </div>
         `;
         container.appendChild(div);
-        lucide.createIcons();
+        safeCreateIcons();
         this.updateLiveGymStats();
     }
 
@@ -1051,6 +1090,7 @@ class AthleticsApp {
         const rank = this.calculateExerciseRank(ejName, best1RM, this.data.bodyWeight);
         const pill = card.querySelector('.gym-ex-rank-pill');
         if (pill) {
+            pill.className = `gym-ex-rank-pill text-[10px] font-black px-2.5 py-1 rounded-md uppercase ${rank.isOlympic ? 'rank-olympic-pill' : ''}`;
             pill.style.background = rank.bg;
             pill.style.color = rank.color;
             pill.style.borderColor = rank.border;
@@ -1171,7 +1211,7 @@ class AthleticsApp {
             prev ? prev.reps : ''
         );
         seriesList.appendChild(wrapper.firstElementChild);
-        lucide.createIcons();
+        safeCreateIcons();
         this.updateLiveGymStats();
     }
 
@@ -1271,7 +1311,7 @@ class AthleticsApp {
     renderCustomRoutinesDropdown() {
         const baseHTML = `
             <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
-            <option value="torso">💪 Tren Superior & Potencia</option>
+            <option value="torso">💪 Tren Superior &amp; Potencia</option>
             <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
         `;
         let customHTML = '';
@@ -1337,7 +1377,7 @@ class AthleticsApp {
         this.lastSummaryText = `🏋️‍♂️ ATHLETICS PRO - ${summaryData.nombre} (${summaryData.fecha})\n⏱️ Duración: ${summaryData.duracion} | 📦 Volumen: ${summaryData.volumenTotal.toLocaleString()} kg\n\n${exercisesSummary}`;
 
         modal.classList.remove('hidden');
-        lucide.createIcons();
+        safeCreateIcons();
     }
 
     closeWorkoutSummaryModal() {
@@ -1470,6 +1510,7 @@ class AthleticsApp {
                 if (idx === 0) medal = `<span class="text-xl">🥇</span>`;
                 if (idx === 1) medal = `<span class="text-xl">🥈</span>`;
                 if (idx === 2) medal = `<span class="text-xl">🥉</span>`;
+                const pillOlympicClass = item.rank.isOlympic ? 'rank-olympic-pill' : '';
 
                 return `
                     <tr class="${item.isMe ? 'bg-amber-500/10' : 'hover:bg-[#1a1a20]'} transition">
@@ -1482,7 +1523,7 @@ class AthleticsApp {
                             <span class="text-[10px] text-zinc-500">${item.bestDate}</span>
                         </td>
                         <td class="py-3 px-4">
-                            <span class="text-[10px] font-black px-2.5 py-1 rounded uppercase inline-block" style="background: ${item.rank.bg}; color: ${item.rank.color}; border: 1px solid ${item.rank.border}">
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded uppercase inline-block ${pillOlympicClass}" style="background: ${item.rank.bg}; color: ${item.rank.color}; border: 1px solid ${item.rank.border}">
                                 ${item.rank.name}
                             </span>
                         </td>
@@ -1503,8 +1544,11 @@ class AthleticsApp {
     // CALCULADORA % 1RM + VISUALIZADOR DE DISCOS
     // ==========================================
     setCalcPct(pct) {
-        document.getElementById('calc-pct-slider').value = pct;
-        this.actualizarCalculadoraSlider();
+        const slider = document.getElementById('calc-pct-slider');
+        if (slider) {
+            slider.value = pct;
+            this.actualizarCalculadoraSlider();
+        }
     }
 
     actualizarCalculadoraSlider() {
@@ -1620,7 +1664,6 @@ class AthleticsApp {
         addDates(this.data.tests);
         addDates(this.data.competiciones);
 
-        const totalDays = 84; // 12 semanas x 7 días
         const today = new Date();
         let activeDaysCount = 0;
         let columnsHTML = '';
@@ -1658,10 +1701,10 @@ class AthleticsApp {
             document.getElementById('user-email-display').textContent = this.data.userName;
             this.showToast("Nombre de usuario actualizado");
             
-            if(!document.getElementById('tab-ranking').classList.contains('hidden')) {
+            if(!document.getElementById('tab-ranking')?.classList.contains('hidden')) {
                 this.renderRankingTable();
             }
-            if(!document.getElementById('tab-gimnasio').classList.contains('hidden')) {
+            if(!document.getElementById('tab-gimnasio')?.classList.contains('hidden')) {
                 this.renderGymTopGlobal();
             }
         }
@@ -1671,7 +1714,7 @@ class AthleticsApp {
         if (this.deferredPrompt) {
             this.deferredPrompt.prompt();
             this.deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') document.getElementById('btn-install-pwa').classList.add('hidden');
+                if (choiceResult.outcome === 'accepted') document.getElementById('btn-install-pwa')?.classList.add('hidden');
                 this.deferredPrompt = null;
             });
         }
@@ -1679,25 +1722,28 @@ class AthleticsApp {
 
     showToast(message) {
         const container = document.getElementById('toast-container');
+        if (!container) return;
         const toast = document.createElement('div');
         toast.className = 'toast';
         toast.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i><span>${message}</span></div>`;
         container.appendChild(toast);
-        lucide.createIcons();
+        safeCreateIcons();
         setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3500);
     }
 
     showAuthError(msg) {
         const err = document.getElementById('auth-error');
-        err.textContent = msg;
-        err.classList.remove('hidden');
+        if (err) {
+            err.textContent = msg;
+            err.classList.remove('hidden');
+        }
     }
 
     logout() { signOut(auth); }
 
     switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        document.getElementById(`tab-${tabId}`)?.classList.remove('hidden');
 
         document.querySelectorAll('.tab-btn').forEach(btn => {
             if(btn.dataset.target === tabId) btn.className = "tab-btn active px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2";
@@ -1707,7 +1753,7 @@ class AthleticsApp {
         setTimeout(() => this.renderCharts(), 50);
         if(tabId === 'gimnasio') {
             this.actualizarCalculadoraSlider();
-            this.renderSymmetryRanks();
+            this.renderOlympicRanks();
             this.renderGymTopGlobal();
         }
         if(tabId === 'ranking') this.updateRankingDropdown();
@@ -1716,13 +1762,13 @@ class AthleticsApp {
     setTestType(type) {
         this.activeTestType = type;
         if(type === 'gimnasio') {
-            document.getElementById('form-test-gym').classList.remove('hidden');
-            document.getElementById('form-test-lanz').classList.add('hidden');
+            document.getElementById('form-test-gym')?.classList.remove('hidden');
+            document.getElementById('form-test-lanz')?.classList.add('hidden');
             document.getElementById('btn-tipo-gym').className = "px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black";
             document.getElementById('btn-tipo-lanz').className = "px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white";
         } else {
-            document.getElementById('form-test-gym').classList.add('hidden');
-            document.getElementById('form-test-lanz').classList.remove('hidden');
+            document.getElementById('form-test-gym')?.classList.add('hidden');
+            document.getElementById('form-test-lanz')?.classList.remove('hidden');
             document.getElementById('btn-tipo-gym').className = "px-5 py-1.5 rounded-md text-xs font-bold transition text-zinc-400 hover:text-white";
             document.getElementById('btn-tipo-lanz').className = "px-5 py-1.5 rounded-md text-xs font-bold transition bg-amber-500 text-black";
         }
@@ -1762,19 +1808,22 @@ class AthleticsApp {
     }
 
     updateCompeticionForm() {
-        const disc = document.getElementById('comp-disciplina').value;
+        const discEl = document.getElementById('comp-disciplina');
+        if (!discEl) return;
+        const disc = discEl.value;
         const conViento = ['100m', '200m', '100m vallas', '110m vallas', 'Longitud', 'Triple Salto'];
         const conIntentos = ['Longitud', 'Triple Salto', 'Peso', 'Disco', 'Jabalina', 'Martillo'];
         const conProgresion = ['Altura', 'Pertiga'];
         const esCombinada = ['Decatlon', 'Heptatlon', 'Pentatlon'];
 
-        document.getElementById('container-viento').classList.toggle('hidden', !conViento.includes(disc));
-        document.getElementById('container-intentos').classList.toggle('hidden', !conIntentos.includes(disc));
-        document.getElementById('container-progresion').classList.toggle('hidden', !conProgresion.includes(disc));
-        document.getElementById('container-combinadas').classList.toggle('hidden', !esCombinada.includes(disc));
+        document.getElementById('container-viento')?.classList.toggle('hidden', !conViento.includes(disc));
+        document.getElementById('container-intentos')?.classList.toggle('hidden', !conIntentos.includes(disc));
+        document.getElementById('container-progresion')?.classList.toggle('hidden', !conProgresion.includes(disc));
+        document.getElementById('container-combinadas')?.classList.toggle('hidden', !esCombinada.includes(disc));
 
         if(esCombinada.includes(disc)) {
             const container = document.getElementById('inputs-combinadas-grid');
+            if (!container) return;
             let pruebas = [];
             if(disc === 'Decatlon') pruebas = ['100m', 'Longitud', 'Peso', 'Altura', '400m', '110m vallas', 'Disco', 'Pértiga', 'Jabalina', '1500m'];
             else if(disc === 'Heptatlon') pruebas = ['100m vallas', 'Altura', 'Peso', '200m', 'Longitud', 'Jabalina', '800m'];
@@ -1848,7 +1897,7 @@ class AthleticsApp {
             notas: document.getElementById('esp-notas').value
         });
         await this.saveToCloud();
-        document.getElementById('form-especifico').reset();
+        document.getElementById('form-especifico')?.reset();
         this.showToast("Sesión específica guardada");
         this.renderAll();
     }
@@ -1932,7 +1981,6 @@ class AthleticsApp {
         document.getElementById('gym-nombre').value = '';
         this.resetGymFormToDefault();
 
-        // Volver a la vista de lanzador pre-entrenamiento
         document.getElementById('gym-active-workspace')?.classList.add('hidden');
         document.getElementById('gym-preworkout-launcher')?.classList.remove('hidden');
 
@@ -1962,7 +2010,7 @@ class AthleticsApp {
             ejercicio, peso, reps, resultado: rmEstimado
         });
         await this.saveToCloud();
-        document.getElementById('form-test-gym').reset();
+        document.getElementById('form-test-gym')?.reset();
         this.showToast(`Test guardado: 1RM de ${ejercicio} = ${rmEstimado} kg`);
         this.renderAll();
     }
@@ -1983,7 +2031,7 @@ class AthleticsApp {
             subtipo: tipo, intentos, resultado: max, promedio: parseFloat(prom)
         });
         await this.saveToCloud();
-        document.getElementById('form-test-lanz').reset();
+        document.getElementById('form-test-lanz')?.reset();
         document.querySelectorAll('.test-lanz-val').forEach(i => i.value = '');
         this.showToast(`Test guardado. Marca: ${max}m`);
         this.renderAll();
@@ -1993,18 +2041,18 @@ class AthleticsApp {
         const disc = document.getElementById('comp-disciplina').value;
         const datosExtra = {};
 
-        if (!document.getElementById('container-viento').classList.contains('hidden')) {
+        if (!document.getElementById('container-viento')?.classList.contains('hidden')) {
             datosExtra.viento = document.getElementById('comp-viento').value.trim();
         }
-        if (!document.getElementById('container-intentos').classList.contains('hidden')) {
+        if (!document.getElementById('container-intentos')?.classList.contains('hidden')) {
             const ints = [];
             document.querySelectorAll('.comp-int').forEach(inp => { if(inp.value.trim() !== '') ints.push(inp.value.trim()); });
             datosExtra.intentos = ints;
         }
-        if (!document.getElementById('container-progresion').classList.contains('hidden')) {
+        if (!document.getElementById('container-progresion')?.classList.contains('hidden')) {
             datosExtra.progresion = document.getElementById('comp-progresion').value.trim();
         }
-        if (!document.getElementById('container-combinadas').classList.contains('hidden')) {
+        if (!document.getElementById('container-combinadas')?.classList.contains('hidden')) {
             const parciales = {};
             document.querySelectorAll('.input-combinada').forEach(inp => {
                 if(inp.value.trim() !== '') parciales[inp.dataset.prueba] = inp.value.trim();
@@ -2023,7 +2071,7 @@ class AthleticsApp {
         });
 
         await this.saveToCloud();
-        document.getElementById('form-competicion').reset();
+        document.getElementById('form-competicion')?.reset();
         document.querySelectorAll('.comp-int, .input-combinada, #comp-viento, #comp-progresion').forEach(i => i.value = '');
         this.updateCompeticionForm();
         this.showToast("Competición registrada");
@@ -2040,19 +2088,24 @@ class AthleticsApp {
     }
 
     renderAll() {
-        document.getElementById('stat-esp').textContent = this.data.especifico.length;
-        document.getElementById('stat-lanz-count').textContent = this.data.tests.length;
-        document.getElementById('stat-comp').textContent = this.data.competiciones.length;
+        const statEsp = document.getElementById('stat-esp');
+        const statLanz = document.getElementById('stat-lanz-count');
+        const statComp = document.getElementById('stat-comp');
+        const statPb = document.getElementById('stat-pb-count');
+
+        if (statEsp) statEsp.textContent = this.data.especifico.length;
+        if (statLanz) statLanz.textContent = this.data.tests.length;
+        if (statComp) statComp.textContent = this.data.competiciones.length;
 
         const pbs = {};
         this.data.competiciones.forEach(c => { if(!pbs[c.disciplina] || parseFloat(c.resultado) > parseFloat(pbs[c.disciplina])) pbs[c.disciplina] = c.resultado; });
         this.data.tests.forEach(t => { if(t.tipo === 'lanzamientos') { if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) pbs[t.subtipo] = t.resultado; } });
-        document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
+        if (statPb) statPb.textContent = Object.keys(pbs).length;
 
         this.renderConsistencyHeatmap();
         this.renderCatalogoDropdowns();
         this.renderCustomRoutinesDropdown();
-        this.renderSymmetryRanks();
+        this.renderOlympicRanks();
         this.renderGymTopGlobal();
         this.renderEspecificoList();
         this.renderGymList();
@@ -2062,11 +2115,12 @@ class AthleticsApp {
         this.renderPBSummary(pbs);
         this.renderCharts();
         
-        lucide.createIcons();
+        safeCreateIcons();
     }
 
     renderEspecificoList() {
         const c = document.getElementById('lista-especifico');
+        if (!c) return;
         if(!this.data.especifico.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
         c.innerHTML = this.data.especifico.map(item => `
             <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800/60 flex justify-between items-start">
@@ -2085,6 +2139,7 @@ class AthleticsApp {
 
     renderGymList() {
         const c = document.getElementById('lista-gym');
+        if (!c) return;
         if(!this.data.gym.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
         c.innerHTML = this.data.gym.map(item => {
             const vol = item.volumenTotal || item.ejercicios.reduce((acc, ej) => acc + ej.series.reduce((sAcc, s) => sAcc + (s.kg * s.reps), 0), 0);
@@ -2124,6 +2179,7 @@ class AthleticsApp {
 
     renderRMConfig() {
         const c = document.getElementById('rm-config-list');
+        if (!c) return;
         c.innerHTML = this.data.ejerciciosCatalogo.map(ej => {
             const best = this.getBest1RMForExercise(ej);
             return `
@@ -2147,6 +2203,7 @@ class AthleticsApp {
 
     renderTestsList() {
         const c = document.getElementById('lista-tests');
+        if (!c) return;
         if(!this.data.tests.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
         c.innerHTML = this.data.tests.map(item => `
             <div class="bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 flex justify-between items-center">
@@ -2163,6 +2220,7 @@ class AthleticsApp {
 
     renderCompeticionesList() {
         const c = document.getElementById('lista-competiciones');
+        if (!c) return;
         if(!this.data.competiciones.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
         c.innerHTML = this.data.competiciones.map(item => `
             <div class="bg-[#1f1f23] p-5 rounded-lg border border-zinc-800 flex justify-between items-start">
@@ -2231,8 +2289,11 @@ class AthleticsApp {
     }
 
     async updateRankingDropdown() {
-        const tipo = document.getElementById('ranking-tipo').value;
+        const tipoEl = document.getElementById('ranking-tipo');
         const subtipoSelect = document.getElementById('ranking-subtipo');
+        if (!tipoEl || !subtipoSelect) return;
+
+        const tipo = tipoEl.value;
         let options = [];
 
         if(tipo === 'competicion') {
@@ -2266,11 +2327,12 @@ class AthleticsApp {
     }
 
     async renderRankingTable() {
-        const tipo = document.getElementById('ranking-tipo').value;
-        const subtipo = document.getElementById('ranking-subtipo').value;
-        const season = document.getElementById('ranking-temporada').value; 
+        const tipo = document.getElementById('ranking-tipo')?.value || 'competicion';
+        const subtipo = document.getElementById('ranking-subtipo')?.value || '100m';
+        const season = document.getElementById('ranking-temporada')?.value || 'todas'; 
         
         const tbody = document.getElementById('ranking-table-body');
+        if (!tbody) return;
         tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-zinc-500">Cargando clasificación global...</td></tr>`;
 
         try {
@@ -2400,6 +2462,7 @@ class AthleticsApp {
     }
 
     renderCharts() {
+        if (typeof Chart === 'undefined') return;
         Chart.defaults.color = '#71717a';
         Chart.defaults.font.family = 'Inter';
 
