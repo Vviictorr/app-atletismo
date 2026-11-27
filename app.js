@@ -70,6 +70,32 @@ class SoundEffects {
         osc.connect(gain); gain.connect(this.ctx.destination);
         osc.start(); osc.stop(this.ctx.currentTime + 0.4);
     }
+    playCheck() {
+        this.init(); if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(780, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+    }
+    playTimerEnd() {
+        this.init(); if (!this.ctx) return;
+        [0, 0.18, 0.36].forEach((offset, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(idx === 2 ? 980 : 740, this.ctx.currentTime + offset);
+            gain.gain.setValueAtTime(0.35, this.ctx.currentTime + offset);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + offset + 0.14);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + offset);
+            osc.stop(this.ctx.currentTime + offset + 0.14);
+        });
+    }
 }
 const sfx = new SoundEffects();
 
@@ -362,6 +388,37 @@ class ArcadeEngine {
 }
 
 // ==========================================
+// SISTEMA DE RANGOS SYMMETRY (9 RANGOS / 25 DIVISIONES)
+// ==========================================
+const SYMMETRY_TIERS = [
+    { name: 'Hierro I', tier: 'Hierro', color: '#71717a', bg: 'rgba(113,113,122,0.15)', border: 'rgba(113,113,122,0.4)' },
+    { name: 'Hierro II', tier: 'Hierro', color: '#71717a', bg: 'rgba(113,113,122,0.18)', border: 'rgba(113,113,122,0.45)' },
+    { name: 'Hierro III', tier: 'Hierro', color: '#a1a1aa', bg: 'rgba(161,161,170,0.2)', border: 'rgba(161,161,170,0.5)' },
+    { name: 'Bronce I', tier: 'Bronce', color: '#cd7f32', bg: 'rgba(205,127,50,0.15)', border: 'rgba(205,127,50,0.4)' },
+    { name: 'Bronce II', tier: 'Bronce', color: '#cd7f32', bg: 'rgba(205,127,50,0.2)', border: 'rgba(205,127,50,0.45)' },
+    { name: 'Bronce III', tier: 'Bronce', color: '#e09145', bg: 'rgba(224,145,69,0.22)', border: 'rgba(224,145,69,0.5)' },
+    { name: 'Plata I', tier: 'Plata', color: '#cbd5e1', bg: 'rgba(203,213,225,0.15)', border: 'rgba(203,213,225,0.4)' },
+    { name: 'Plata II', tier: 'Plata', color: '#cbd5e1', bg: 'rgba(203,213,225,0.2)', border: 'rgba(203,213,225,0.45)' },
+    { name: 'Plata III', tier: 'Plata', color: '#f1f5f9', bg: 'rgba(241,245,249,0.22)', border: 'rgba(241,245,249,0.5)' },
+    { name: 'Oro I', tier: 'Oro', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', border: 'rgba(245,158,11,0.4)' },
+    { name: 'Oro II', tier: 'Oro', color: '#f59e0b', bg: 'rgba(245,158,11,0.2)', border: 'rgba(245,158,11,0.5)' },
+    { name: 'Oro III', tier: 'Oro', color: '#fbbf24', bg: 'rgba(251,191,36,0.25)', border: 'rgba(251,191,36,0.55)' },
+    { name: 'Rubí I', tier: 'Rubí', color: '#ef4444', bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.4)' },
+    { name: 'Rubí II', tier: 'Rubí', color: '#ef4444', bg: 'rgba(239,68,68,0.2)', border: 'rgba(239,68,68,0.5)' },
+    { name: 'Rubí III', tier: 'Rubí', color: '#f87171', bg: 'rgba(248,113,113,0.25)', border: 'rgba(248,113,113,0.55)' },
+    { name: 'Esmeralda I', tier: 'Esmeralda', color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.4)' },
+    { name: 'Esmeralda II', tier: 'Esmeralda', color: '#10b981', bg: 'rgba(16,185,129,0.2)', border: 'rgba(16,185,129,0.5)' },
+    { name: 'Esmeralda III', tier: 'Esmeralda', color: '#34d399', bg: 'rgba(52,211,153,0.25)', border: 'rgba(52,211,153,0.55)' },
+    { name: 'Diamante I', tier: 'Diamante', color: '#06b6d4', bg: 'rgba(6,182,212,0.15)', border: 'rgba(6,182,212,0.4)' },
+    { name: 'Diamante II', tier: 'Diamante', color: '#06b6d4', bg: 'rgba(6,182,212,0.22)', border: 'rgba(6,182,212,0.5)' },
+    { name: 'Diamante III', tier: 'Diamante', color: '#22d3ee', bg: 'rgba(34,211,238,0.26)', border: 'rgba(34,211,238,0.6)' },
+    { name: 'Campeón I', tier: 'Campeón', color: '#a855f7', bg: 'rgba(168,85,247,0.16)', border: 'rgba(168,85,247,0.45)' },
+    { name: 'Campeón II', tier: 'Campeón', color: '#a855f7', bg: 'rgba(168,85,247,0.22)', border: 'rgba(168,85,247,0.55)' },
+    { name: 'Campeón III', tier: 'Campeón', color: '#c084fc', bg: 'rgba(192,132,252,0.28)', border: 'rgba(192,132,252,0.65)' },
+    { name: 'SIMÉTRICO', tier: 'Simétrico', color: '#fde047', bg: 'linear-gradient(135deg, rgba(250,204,21,0.28), rgba(56,189,248,0.25))', border: '#fde047', isSymmetric: true }
+];
+
+// ==========================================
 // APLICACIÓN PRINCIPAL (TRACKER)
 // ==========================================
 class AthleticsApp {
@@ -373,10 +430,18 @@ class AthleticsApp {
         this.dashDoughnutInstance = null;
         this.dashRadarInstance = null;
         this.compChartInstance = null;
-        this.gymProgressionChartInstance = null; // NUEVA GRÁFICA DE GIMNASIO
+        this.gymProgressionChartInstance = null;
         
         this.activeTestType = 'gimnasio';
         this.deferredPrompt = null;
+
+        // Estado de sesión en vivo y temporizador de descanso
+        this.sessionStartTimestamp = Date.now();
+        this.sessionClockInterval = null;
+        this.restInterval = null;
+        this.restRemaining = 0;
+        this.restTotal = 90;
+        this.restPaused = false;
         
         const today = new Date().toISOString().split('T')[0];
         ['esp-fecha', 'gym-fecha', 'test-gym-fecha', 'test-lanz-fecha', 'comp-fecha'].forEach(id => {
@@ -390,8 +455,10 @@ class AthleticsApp {
     resetData() {
         this.data = { 
             userName: "",
+            bodyWeight: 75,
             especifico: [], gym: [], tests: [], competiciones: [], rmBase: {},
             ejerciciosCatalogo: ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
+            customRoutines: [],
             arcadeRecords: {}
         };
     }
@@ -430,7 +497,11 @@ class AthleticsApp {
                 const displayName = this.data.userName && this.data.userName.trim() !== "" ? this.data.userName : user.email;
                 document.getElementById('user-email-display').textContent = displayName;
                 
+                const bwInput = document.getElementById('gym-bodyweight-input');
+                if(bwInput) bwInput.value = this.data.bodyWeight || 75;
+
                 this.renderAll();
+                this.resetGymFormToDefault();
             } else {
                 this.currentUser = null;
                 this.resetData();
@@ -446,7 +517,7 @@ class AthleticsApp {
 
             if (typeof isRegistering !== 'undefined' && isRegistering) {
                 try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    await createUserWithEmailAndPassword(auth, email, password);
                     this.data.userName = usernameInput || email.split('@')[0];
                     await this.saveToCloud();
                 } catch(err) {
@@ -467,7 +538,819 @@ class AthleticsApp {
         document.getElementById('form-test-lanz').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
         document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
 
+        this.startSessionClock();
         this.agregarEjercicioGym();
+    }
+
+    startSessionClock() {
+        if (this.sessionClockInterval) clearInterval(this.sessionClockInterval);
+        this.sessionStartTimestamp = Date.now();
+        this.sessionClockInterval = setInterval(() => {
+            const el = document.getElementById('gym-session-timer');
+            if (!el) return;
+            const elapsedSec = Math.floor((Date.now() - this.sessionStartTimestamp) / 1000);
+            const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+            const secs = String(elapsedSec % 60).padStart(2, '0');
+            el.textContent = `${mins}:${secs}`;
+        }, 1000);
+    }
+
+    // ==========================================
+    // LÓGICA DE RANGOS SYMMETRY
+    // ==========================================
+    getExerciseProfile(ejName) {
+        const lower = ejName.toLowerCase();
+        if (lower.includes('sentadilla') && !lower.includes('búlgara') && !lower.includes('bulgara')) {
+            return { group: 'Pierna / Cadera', minRatio: 0.55, maxRatio: 2.75 };
+        }
+        if (lower.includes('muerto') || lower.includes('deadlift')) {
+            return { group: 'Pierna / Cadera', minRatio: 0.65, maxRatio: 3.10 };
+        }
+        if (lower.includes('thrust') || lower.includes('prensa')) {
+            return { group: 'Pierna / Cadera', minRatio: 0.70, maxRatio: 3.30 };
+        }
+        if (lower.includes('búlgara') || lower.includes('bulgara') || lower.includes('zancada') || lower.includes('gemelo') || lower.includes('femoral') || lower.includes('cuádriceps')) {
+            return { group: 'Pierna / Cadera', minRatio: 0.30, maxRatio: 1.65 };
+        }
+        if (lower.includes('banca') || lower.includes('bench') || lower.includes('pecho') || lower.includes('fondos')) {
+            return { group: 'Empuje (Pecho/Hombro)', minRatio: 0.40, maxRatio: 2.15 };
+        }
+        if (lower.includes('militar') || lower.includes('hombro') || lower.includes('press')) {
+            return { group: 'Empuje (Pecho/Hombro)', minRatio: 0.28, maxRatio: 1.45 };
+        }
+        return { group: 'Tirón / Potencia', minRatio: 0.38, maxRatio: 1.95 };
+    }
+
+    getBest1RMForExercise(ejName, customData = null) {
+        const source = customData || this.data;
+        let best = parseFloat(source.rmBase?.[ejName]) || 0;
+
+        if (source.gym) {
+            source.gym.forEach(ses => {
+                ses.ejercicios?.forEach(e => {
+                    if (e.ejercicio === ejName) {
+                        e.series?.forEach(s => {
+                            const est = (parseFloat(s.kg) || 0) * (1 + 0.0333 * (parseInt(s.reps) || 0));
+                            if (est > best) best = est;
+                        });
+                    }
+                });
+            });
+        }
+
+        if (source.tests) {
+            source.tests.forEach(t => {
+                if (t.tipo === 'gimnasio' && t.ejercicio === ejName && t.resultado > best) {
+                    best = parseFloat(t.resultado);
+                }
+            });
+        }
+
+        return Math.round(best * 10) / 10;
+    }
+
+    calculateExerciseRank(ejName, oneRM, bodyWeight = 75) {
+        const bw = Math.max(35, parseFloat(bodyWeight) || 75);
+        const profile = this.getExerciseProfile(ejName);
+        if (!oneRM || oneRM <= 0) {
+            return {
+                index: -1,
+                name: 'Sin Rango',
+                tier: 'Unranked',
+                color: '#71717a',
+                bg: 'rgba(39,39,42,0.5)',
+                border: '#3f3f46',
+                progress: 0,
+                ratio: 0,
+                nextTargetKg: Math.round(profile.minRatio * bw),
+                group: profile.group
+            };
+        }
+
+        const ratio = oneRM / bw;
+        const normalized = (ratio - profile.minRatio) / (profile.maxRatio - profile.minRatio);
+        const clamped = Math.max(0, Math.min(1, normalized));
+        const exactLevel = clamped * (SYMMETRY_TIERS.length - 1);
+        const index = Math.min(SYMMETRY_TIERS.length - 1, Math.floor(exactLevel));
+        const tierObj = SYMMETRY_TIERS[index];
+
+        let progress = 100;
+        let nextTargetKg = oneRM;
+        if (index < SYMMETRY_TIERS.length - 1) {
+            const stepProgress = (exactLevel - index) * 100;
+            progress = Math.max(6, Math.min(99, Math.round(stepProgress)));
+            const nextRatio = profile.minRatio + ((index + 1) / (SYMMETRY_TIERS.length - 1)) * (profile.maxRatio - profile.minRatio);
+            nextTargetKg = Math.ceil(nextRatio * bw);
+        }
+
+        return {
+            index,
+            ...tierObj,
+            progress,
+            ratio: ratio.toFixed(2),
+            nextTargetKg,
+            group: profile.group
+        };
+    }
+
+    async updateBodyweight() {
+        const input = document.getElementById('gym-bodyweight-input');
+        const val = parseFloat(input.value);
+        if (!isNaN(val) && val >= 35 && val <= 250) {
+            this.data.bodyWeight = val;
+            await this.saveToCloud();
+            this.renderSymmetryRanks();
+            this.renderGymTopGlobal();
+            this.showToast(`Peso corporal actualizado: ${val} kg`);
+        }
+    }
+
+    renderSymmetryRanks() {
+        const bw = this.data.bodyWeight || 75;
+        const exGrid = document.getElementById('gym-exercise-ranks-grid');
+        const muscleGrid = document.getElementById('gym-muscle-ranks-grid');
+        if (!exGrid || !muscleGrid) return;
+
+        const muscleBuckets = {
+            'Pierna / Cadera': [],
+            'Empuje (Pecho/Hombro)': [],
+            'Tirón / Potencia': []
+        };
+        const rankedIndices = [];
+
+        exGrid.innerHTML = this.data.ejerciciosCatalogo.map(ej => {
+            const best1RM = this.getBest1RMForExercise(ej);
+            const rank = this.calculateExerciseRank(ej, best1RM, bw);
+            if (rank.index >= 0) {
+                rankedIndices.push(rank.index);
+                if (muscleBuckets[rank.group]) muscleBuckets[rank.group].push(rank.index);
+            }
+
+            const glowClass = rank.isSymmetric ? 'rank-symmetric-glow' : '';
+            const nextText = rank.index < 0
+                ? `Primer rango a los ${rank.nextTargetKg} kg`
+                : (rank.index < SYMMETRY_TIERS.length - 1
+                    ? `Sig: ${SYMMETRY_TIERS[rank.index + 1].name} (${rank.nextTargetKg} kg)`
+                    : '¡Rango Máximo Top 1%!');
+
+            return `
+                <div class="bg-[#0e0e12] p-3.5 rounded-xl border transition hover:border-zinc-600 ${glowClass}" style="border-color: ${rank.border}">
+                    <div class="flex items-start justify-between gap-2 mb-2">
+                        <span class="text-xs font-bold text-white truncate" title="${ej}">${ej}</span>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded uppercase whitespace-nowrap" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
+                            ${rank.name}
+                        </span>
+                    </div>
+                    <div class="flex items-baseline justify-between text-[11px] mb-1.5">
+                        <span class="text-zinc-400">1RM: <strong class="text-white">${best1RM > 0 ? best1RM + ' kg' : '--'}</strong></span>
+                        <span class="text-zinc-500 font-semibold">${best1RM > 0 ? rank.ratio + '× PC' : ''}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500" style="width: ${rank.progress}%; background-color: ${rank.color}"></div>
+                    </div>
+                    <div class="text-[10px] text-zinc-500 mt-1.5 truncate">${nextText}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Render Muscle Groups
+        muscleGrid.innerHTML = Object.entries(muscleBuckets).map(([groupName, indices]) => {
+            const avgIdx = indices.length > 0 ? Math.round(indices.reduce((a, b) => a + b, 0) / indices.length) : -1;
+            const tier = avgIdx >= 0 ? SYMMETRY_TIERS[avgIdx] : { name: 'Sin Datos', color: '#71717a', bg: 'rgba(39,39,42,0.5)', border: '#3f3f46' };
+            return `
+                <div class="bg-[#0e0e12] px-4 py-3 rounded-xl border flex items-center justify-between" style="border-color: ${tier.border}">
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-zinc-500 block">${groupName}</span>
+                        <span class="text-sm font-black mt-0.5 block" style="color: ${tier.color}">${tier.name}</span>
+                    </div>
+                    <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: ${tier.bg}; color: ${tier.color}">
+                        <i data-lucide="shield-check" class="w-5 h-5"></i>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Render Global Symmetry Rank
+        const globalBadge = document.getElementById('gym-global-rank-badge');
+        const globalTitle = document.getElementById('gym-global-rank-title');
+        const globalSub = document.getElementById('gym-global-rank-sub');
+
+        if (rankedIndices.length === 0) {
+            globalTitle.textContent = 'Hierro I (Sin Marcas)';
+            globalTitle.style.color = '#a1a1aa';
+            globalBadge.style.borderColor = '#3f3f46';
+            globalBadge.style.background = 'rgba(39,39,42,0.4)';
+            globalBadge.innerHTML = `<i data-lucide="shield" class="w-7 h-7 text-zinc-400"></i>`;
+            globalSub.textContent = 'Completa tu primer entrenamiento para desbloquear tu rango global';
+        } else {
+            const sorted = [...rankedIndices].sort((a, b) => b - a);
+            const topSlice = sorted.slice(0, Math.min(5, sorted.length));
+            const globalIdx = Math.round(topSlice.reduce((a, b) => a + b, 0) / topSlice.length);
+            const gTier = SYMMETRY_TIERS[globalIdx];
+
+            globalTitle.textContent = gTier.name;
+            globalTitle.style.color = gTier.color;
+            globalBadge.style.borderColor = gTier.border;
+            globalBadge.style.background = gTier.bg;
+            globalBadge.className = `w-16 h-16 rounded-2xl border-2 flex flex-col items-center justify-center shadow-lg ${gTier.isSymmetric ? 'rank-symmetric-glow' : ''}`;
+            globalBadge.innerHTML = `<i data-lucide="${gTier.isSymmetric ? 'crown' : 'trophy'}" class="w-8 h-8" style="color: ${gTier.color}"></i>`;
+            globalSub.textContent = `Promedio de tus ${topSlice.length} mejores ejercicios · Peso corporal: ${bw} kg`;
+        }
+    }
+
+    // ==========================================
+    // TEMPORIZADOR DE DESCANSO (CUENTA ATRÁS)
+    // ==========================================
+    startRestTimer(seconds, exerciseName = 'Descanso') {
+        const sec = parseInt(seconds) || 90;
+        if (this.restInterval) clearInterval(this.restInterval);
+
+        this.restTotal = sec;
+        this.restRemaining = sec;
+        this.restPaused = false;
+
+        const bar = document.getElementById('rest-timer-bar');
+        const exLabel = document.getElementById('rest-timer-exercise');
+        if (bar) bar.classList.remove('hidden');
+        if (exLabel) exLabel.textContent = exerciseName;
+
+        this.updateRestTimerUI();
+
+        this.restInterval = setInterval(() => {
+            if (this.restPaused) return;
+            this.restRemaining--;
+            this.updateRestTimerUI();
+
+            if (this.restRemaining <= 0) {
+                clearInterval(this.restInterval);
+                this.restInterval = null;
+                sfx.playTimerEnd();
+                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                this.showToast(`⏰ ¡Descanso terminado! Siguiente serie de ${exerciseName}`);
+                setTimeout(() => this.stopRestTimer(), 2500);
+            }
+        }, 1000);
+    }
+
+    updateRestTimerUI() {
+        const display = document.getElementById('rest-timer-display');
+        const progress = document.getElementById('rest-timer-progress');
+        const pauseBtn = document.getElementById('btn-rest-pause');
+        if (!display || !progress) return;
+
+        const safeRem = Math.max(0, this.restRemaining);
+        const mins = String(Math.floor(safeRem / 60)).padStart(2, '0');
+        const secs = String(safeRem % 60).padStart(2, '0');
+        display.textContent = `${mins}:${secs}`;
+
+        const pct = this.restTotal > 0 ? Math.max(0, Math.min(100, (safeRem / this.restTotal) * 100)) : 0;
+        progress.style.width = `${pct}%`;
+
+        if (safeRem <= 10 && safeRem > 0) {
+            display.className = 'text-3xl font-black text-red-400 tabular-nums leading-none mt-0.5 animate-pulse';
+            progress.className = 'h-full bg-red-500 transition-all duration-300';
+        } else if (safeRem === 0) {
+            display.textContent = '¡LISTO!';
+            display.className = 'text-2xl font-black text-emerald-400 leading-none mt-0.5';
+            progress.className = 'h-full bg-emerald-500 transition-all duration-300';
+        } else {
+            display.className = 'text-3xl font-black text-white tabular-nums leading-none mt-0.5';
+            progress.className = 'h-full bg-amber-500 transition-all duration-300';
+        }
+
+        if (pauseBtn) {
+            pauseBtn.innerHTML = `<i data-lucide="${this.restPaused ? 'play' : 'pause'}" class="w-4 h-4"></i>`;
+            lucide.createIcons();
+        }
+    }
+
+    adjustRestTimer(delta) {
+        this.restRemaining = Math.max(5, this.restRemaining + delta);
+        if (this.restRemaining > this.restTotal) this.restTotal = this.restRemaining;
+        this.updateRestTimerUI();
+    }
+
+    toggleRestTimer() {
+        this.restPaused = !this.restPaused;
+        this.updateRestTimerUI();
+    }
+
+    stopRestTimer() {
+        if (this.restInterval) clearInterval(this.restInterval);
+        this.restInterval = null;
+        document.getElementById('rest-timer-bar')?.classList.add('hidden');
+    }
+
+    // ==========================================
+    // GESTIÓN DE SESIÓN DE GIMNASIO EN VIVO
+    // ==========================================
+    getPreviousSetsForExercise(ejName) {
+        if (!this.data.gym || this.data.gym.length === 0) return [];
+        for (const sesion of this.data.gym) {
+            const found = sesion.ejercicios?.find(e => e.ejercicio === ejName);
+            if (found && found.series && found.series.length > 0) {
+                return found.series;
+            }
+        }
+        return [];
+    }
+
+    resetGymFormToDefault() {
+        const container = document.getElementById('gym-ejercicios-container');
+        if (!container) return;
+        container.innerHTML = '';
+        this.agregarEjercicioGym();
+        this.updateLiveGymStats();
+    }
+
+    agregarEjercicioGym(presetExercise = null, presetSeries = null, presetRest = null) {
+        const container = document.getElementById('gym-ejercicios-container');
+        if (!container) return;
+
+        const defaultRest = presetRest || document.getElementById('gym-default-rest')?.value || '90';
+        const selectedEj = presetExercise && this.data.ejerciciosCatalogo.includes(presetExercise)
+            ? presetExercise
+            : (presetExercise || this.data.ejerciciosCatalogo[0] || 'Sentadilla Profunda');
+
+        if (!this.data.ejerciciosCatalogo.includes(selectedEj)) {
+            this.data.ejerciciosCatalogo.push(selectedEj);
+        }
+
+        const optionsHTML = this.data.ejerciciosCatalogo.map(ej =>
+            `<option value="${ej}" ${ej === selectedEj ? 'selected' : ''}>${ej}</option>`
+        ).join('');
+
+        const best1RM = this.getBest1RMForExercise(selectedEj);
+        const rank = this.calculateExerciseRank(selectedEj, best1RM, this.data.bodyWeight);
+        const prevSeries = this.getPreviousSetsForExercise(selectedEj);
+
+        const div = document.createElement('div');
+        div.className = "gym-ex-card bg-[#1a1a20] p-4 sm:p-5 rounded-xl border border-zinc-800 space-y-3";
+
+        const seriesToRender = presetSeries && presetSeries.length > 0
+            ? presetSeries
+            : (prevSeries.length > 0 ? prevSeries.map(s => ({ kg: '', reps: '' })) : [{ kg: '', reps: '' }]);
+
+        const rowsHTML = seriesToRender.map((s, idx) => {
+            const prev = prevSeries[idx];
+            const prevLabel = prev ? `${prev.kg}kg × ${prev.reps}` : '--';
+            const prevKg = prev ? prev.kg : '';
+            const prevReps = prev ? prev.reps : '';
+            return this.buildSerieRowHTML(idx + 1, s.kg, s.reps, prevLabel, prevKg, prevReps);
+        }).join('');
+
+        div.innerHTML = `
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800/80">
+                <div class="flex flex-wrap items-center gap-2 flex-1">
+                    <select onchange="app.onGymExerciseChange(this)" class="gym-ej-nombre px-3 py-1.5 text-sm font-black border border-zinc-700 rounded-lg bg-[#0b0b0c] text-white">
+                        ${optionsHTML}
+                    </select>
+                    <span class="gym-ex-rank-pill text-[10px] font-black px-2.5 py-1 rounded-md uppercase" style="background: ${rank.bg}; color: ${rank.color}; border: 1px solid ${rank.border}">
+                        ${rank.name} ${best1RM > 0 ? `· 1RM ${best1RM}kg` : ''}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 bg-[#0b0b0c] px-2 py-1 rounded-lg border border-zinc-800" title="Tiempo de descanso tras cada serie">
+                        <i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i>
+                        <select class="gym-ex-rest bg-transparent text-xs font-bold text-amber-400 focus:outline-none">
+                            <option value="45" ${defaultRest == '45' ? 'selected' : ''}>45s</option>
+                            <option value="60" ${defaultRest == '60' ? 'selected' : ''}>60s</option>
+                            <option value="90" ${defaultRest == '90' ? 'selected' : ''}>90s</option>
+                            <option value="120" ${defaultRest == '120' ? 'selected' : ''}>120s</option>
+                            <option value="180" ${defaultRest == '180' ? 'selected' : ''}>180s</option>
+                            <option value="240" ${defaultRest == '240' ? 'selected' : ''}>240s</option>
+                        </select>
+                    </div>
+                    <button type="button" onclick="this.closest('.gym-ex-card').remove(); app.updateLiveGymStats();" class="text-xs text-red-400 hover:text-red-300 px-2.5 py-1.5 bg-[#2a1215] rounded-lg border border-[#4a1c1f] flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div>
+                <div class="grid grid-cols-12 gap-2 text-[10px] uppercase font-bold text-zinc-500 px-2 mb-1.5">
+                    <div class="col-span-1 text-center">Set</div>
+                    <div class="col-span-3 text-center">Anterior</div>
+                    <div class="col-span-3 text-center">Kilos (kg)</div>
+                    <div class="col-span-2 text-center">Reps</div>
+                    <div class="col-span-3 text-right pr-1">Hecho / Timer</div>
+                </div>
+                <div class="gym-series-list space-y-2">
+                    ${rowsHTML}
+                </div>
+                <button type="button" onclick="app.agregarSerieGym(this)" class="mt-3 w-full py-1.5 bg-[#121216] hover:bg-zinc-800/80 text-amber-400 text-xs font-bold rounded-lg border border-dashed border-zinc-700 transition">
+                    + Añadir Serie
+                </button>
+            </div>
+        `;
+        container.appendChild(div);
+        lucide.createIcons();
+        this.updateLiveGymStats();
+    }
+
+    buildSerieRowHTML(num, kg = '', reps = '', prevLabel = '--', prevKg = '', prevReps = '') {
+        return `
+            <div class="grid grid-cols-12 gap-2 items-center serie-row bg-[#121216] p-1.5 rounded-lg border border-zinc-800/90 transition-colors" data-done="false">
+                <div class="col-span-1 text-center text-xs font-black text-zinc-400 serie-num">${num}</div>
+                <div class="col-span-3 text-center">
+                    <button type="button" onclick="app.applyPreviousSet(this, '${prevKg}', '${prevReps}')" class="text-[11px] font-semibold text-zinc-400 hover:text-amber-400 bg-zinc-900/90 px-2 py-1 rounded border border-zinc-800 w-full truncate transition" title="Tocar para copiar marca anterior">
+                        ${prevLabel}
+                    </button>
+                </div>
+                <div class="col-span-3">
+                    <input type="number" step="0.5" value="${kg}" placeholder="${prevKg || 'kg'}" oninput="app.onSerieInputChange(this)" class="serie-kg w-full px-2 py-1.5 text-sm font-bold text-center border border-zinc-700 rounded bg-[#0b0b0c] text-white" required>
+                </div>
+                <div class="col-span-2">
+                    <input type="number" value="${reps}" placeholder="${prevReps || 'reps'}" oninput="app.onSerieInputChange(this)" class="serie-reps w-full px-2 py-1.5 text-sm font-bold text-center border border-zinc-700 rounded bg-[#0b0b0c] text-white" required>
+                </div>
+                <div class="col-span-3 flex items-center justify-end gap-1">
+                    <span class="serie-pr-badge hidden text-[9px] font-black bg-amber-500 text-black px-1.5 py-0.5 rounded">PR</span>
+                    <button type="button" onclick="app.toggleSerieComplete(this)" class="btn-serie-check w-9 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 flex items-center justify-center transition" title="Marcar serie hecha e iniciar descanso">
+                        <i data-lucide="check" class="w-4 h-4"></i>
+                    </button>
+                    <button type="button" onclick="app.removeSerieRow(this)" class="text-xs text-zinc-600 hover:text-red-400 px-1">✕</button>
+                </div>
+            </div>
+        `;
+    }
+
+    onGymExerciseChange(selectEl) {
+        const card = selectEl.closest('.gym-ex-card');
+        const ejName = selectEl.value;
+        const best1RM = this.getBest1RMForExercise(ejName);
+        const rank = this.calculateExerciseRank(ejName, best1RM, this.data.bodyWeight);
+        const pill = card.querySelector('.gym-ex-rank-pill');
+        if (pill) {
+            pill.style.background = rank.bg;
+            pill.style.color = rank.color;
+            pill.style.borderColor = rank.border;
+            pill.textContent = `${rank.name} ${best1RM > 0 ? `· 1RM ${best1RM}kg` : ''}`;
+        }
+
+        const prevSeries = this.getPreviousSetsForExercise(ejName);
+        card.querySelectorAll('.serie-row').forEach((row, idx) => {
+            const prev = prevSeries[idx];
+            const prevBtn = row.querySelector('button[onclick^="app.applyPreviousSet"]');
+            if (prevBtn) {
+                prevBtn.textContent = prev ? `${prev.kg}kg × ${prev.reps}` : '--';
+                prevBtn.setAttribute('onclick', `app.applyPreviousSet(this, '${prev ? prev.kg : ''}', '${prev ? prev.reps : ''}')`);
+            }
+        });
+    }
+
+    applyPreviousSet(btn, kg, reps) {
+        if (!kg && !reps) return;
+        const row = btn.closest('.serie-row');
+        if (kg) row.querySelector('.serie-kg').value = kg;
+        if (reps) row.querySelector('.serie-reps').value = reps;
+        this.onSerieInputChange(row.querySelector('.serie-kg'));
+    }
+
+    onSerieInputChange(inputEl) {
+        const row = inputEl.closest('.serie-row');
+        const card = inputEl.closest('.gym-ex-card');
+        const ejName = card.querySelector('.gym-ej-nombre').value;
+        const kg = parseFloat(row.querySelector('.serie-kg').value) || 0;
+        const reps = parseInt(row.querySelector('.serie-reps').value) || 0;
+
+        const prevBest = this.getBest1RMForExercise(ejName);
+        const est1RM = kg * (1 + 0.0333 * reps);
+        const prBadge = row.querySelector('.serie-pr-badge');
+
+        if (prBadge) {
+            if (kg > 0 && reps > 0 && prevBest > 0 && est1RM > prevBest) {
+                prBadge.classList.remove('hidden');
+            } else {
+                prBadge.classList.add('hidden');
+            }
+        }
+        this.updateLiveGymStats();
+    }
+
+    toggleSerieComplete(btn) {
+        const row = btn.closest('.serie-row');
+        const card = btn.closest('.gym-ex-card');
+        const isDone = row.dataset.done === 'true';
+
+        if (!isDone) {
+            const kgInput = row.querySelector('.serie-kg');
+            const repsInput = row.querySelector('.serie-reps');
+            if (!kgInput.value && kgInput.placeholder && kgInput.placeholder !== 'kg') {
+                kgInput.value = kgInput.placeholder;
+            }
+            if (!repsInput.value && repsInput.placeholder && repsInput.placeholder !== 'reps') {
+                repsInput.value = repsInput.placeholder;
+            }
+
+            row.dataset.done = 'true';
+            row.classList.add('serie-completed');
+            btn.className = 'btn-serie-check w-9 h-8 rounded-lg bg-emerald-500 text-black font-black flex items-center justify-center transition shadow-md shadow-emerald-500/20';
+
+            sfx.playCheck();
+            this.onSerieInputChange(kgInput);
+
+            const ejName = card.querySelector('.gym-ej-nombre').value;
+            const restSecs = card.querySelector('.gym-ex-rest')?.value || 90;
+            this.startRestTimer(restSecs, ejName);
+
+            if (!row.querySelector('.serie-pr-badge')?.classList.contains('hidden')) {
+                this.showToast(`🔥 ¡NUEVO RÉCORD (PR) en ${ejName}!`);
+            }
+        } else {
+            row.dataset.done = 'false';
+            row.classList.remove('serie-completed');
+            btn.className = 'btn-serie-check w-9 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-400 border border-zinc-700 flex items-center justify-center transition';
+        }
+
+        this.updateLiveGymStats();
+    }
+
+    removeSerieRow(btn) {
+        const list = btn.closest('.gym-series-list');
+        btn.closest('.serie-row').remove();
+        list.querySelectorAll('.serie-num').forEach((el, i) => { el.textContent = i + 1; });
+        this.updateLiveGymStats();
+    }
+
+    agregarSerieGym(btn) {
+        const card = btn.closest('.gym-ex-card');
+        const seriesList = card.querySelector('.gym-series-list');
+        const nextNum = seriesList.querySelectorAll('.serie-row').length + 1;
+        const ejName = card.querySelector('.gym-ej-nombre').value;
+        const prevSeries = this.getPreviousSetsForExercise(ejName);
+        const prev = prevSeries[nextNum - 1];
+
+        // Si hay una serie justo encima, copiamos sus kilos como sugerencia cómoda
+        const lastRow = seriesList.querySelector('.serie-row:last-child');
+        const lastKg = lastRow ? lastRow.querySelector('.serie-kg').value : '';
+        const lastReps = lastRow ? lastRow.querySelector('.serie-reps').value : '';
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = this.buildSerieRowHTML(
+            nextNum,
+            lastKg,
+            lastReps,
+            prev ? `${prev.kg}kg × ${prev.reps}` : '--',
+            prev ? prev.kg : '',
+            prev ? prev.reps : ''
+        );
+        seriesList.appendChild(wrapper.firstElementChild);
+        lucide.createIcons();
+        this.updateLiveGymStats();
+    }
+
+    updateLiveGymStats() {
+        const rows = document.querySelectorAll('#gym-ejercicios-container .serie-row');
+        let totalSets = rows.length;
+        let doneSets = 0;
+        let volume = 0;
+
+        rows.forEach(row => {
+            const kg = parseFloat(row.querySelector('.serie-kg')?.value) || 0;
+            const reps = parseInt(row.querySelector('.serie-reps')?.value) || 0;
+            if (row.dataset.done === 'true') {
+                doneSets++;
+                volume += kg * reps;
+            }
+        });
+
+        const setsEl = document.getElementById('gym-live-sets-count');
+        const volEl = document.getElementById('gym-live-volume');
+        if (setsEl) setsEl.textContent = `${doneSets} / ${totalSets}`;
+        if (volEl) volEl.textContent = `${Math.round(volume).toLocaleString()} kg`;
+    }
+
+    cargarRutinaPlantilla() {
+        const val = document.getElementById('gym-routine-select')?.value;
+        if (!val) return alert("Selecciona una plantilla de rutina primero.");
+
+        const presets = {
+            explosiva: {
+                nombre: 'Fuerza Explosiva Atletismo (Pierna)',
+                ejercicios: [
+                    { ejercicio: 'Power Clean', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '180' },
+                    { ejercicio: 'Sentadilla Profunda', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '180' },
+                    { ejercicio: 'Hip Thrust', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '120' },
+                    { ejercicio: 'Sentadilla Búlgara', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '90' }
+                ]
+            },
+            torso: {
+                nombre: 'Tren Superior & Potencia',
+                ejercicios: [
+                    { ejercicio: 'Press Banca', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '150' },
+                    { ejercicio: 'Press Militar', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '120' },
+                    { ejercicio: 'Peso Muerto', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '180' }
+                ]
+            },
+            fullbody: {
+                nombre: 'Full Body Velocista / Saltador',
+                ejercicios: [
+                    { ejercicio: 'Power Clean', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '180' },
+                    { ejercicio: 'Sentadilla Profunda', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '150' },
+                    { ejercicio: 'Press Banca', series: [{kg:'',reps:''},{kg:'',reps:''},{kg:'',reps:''}], rest: '120' }
+                ]
+            }
+        };
+
+        let chosen = presets[val];
+        if (!chosen && val.startsWith('custom_')) {
+            const idx = parseInt(val.replace('custom_', ''));
+            chosen = this.data.customRoutines?.[idx];
+        }
+        if (!chosen) return;
+
+        document.getElementById('gym-nombre').value = chosen.nombre;
+        const container = document.getElementById('gym-ejercicios-container');
+        container.innerHTML = '';
+        chosen.ejercicios.forEach(item => {
+            this.agregarEjercicioGym(item.ejercicio, item.series, item.rest || '90');
+        });
+        this.showToast(`Rutina "${chosen.nombre}" cargada`);
+    }
+
+    async guardarRutinaPersonalizada() {
+        const nombre = document.getElementById('gym-nombre')?.value.trim() || prompt("Nombre para guardar esta rutina:");
+        if (!nombre) return;
+
+        const ejercicios = [];
+        document.querySelectorAll('#gym-ejercicios-container .gym-ex-card').forEach(card => {
+            const ejNombre = card.querySelector('.gym-ej-nombre').value;
+            const rest = card.querySelector('.gym-ex-rest')?.value || '90';
+            const numRows = card.querySelectorAll('.serie-row').length || 3;
+            ejercicios.push({
+                ejercicio: ejNombre,
+                rest,
+                series: Array.from({ length: numRows }, () => ({ kg: '', reps: '' }))
+            });
+        });
+
+        if (ejercicios.length === 0) return alert("Añade al menos un ejercicio.");
+        if (!this.data.customRoutines) this.data.customRoutines = [];
+        this.data.customRoutines.push({ nombre, ejercicios });
+        await this.saveToCloud();
+        this.renderCustomRoutinesDropdown();
+        this.showToast(`Plantilla "${nombre}" guardada`);
+    }
+
+    renderCustomRoutinesDropdown() {
+        const sel = document.getElementById('gym-routine-select');
+        if (!sel) return;
+        let html = `
+            <option value="">-- Seleccionar Plantilla --</option>
+            <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
+            <option value="torso">💪 Tren Superior & Potencia</option>
+            <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
+        `;
+        (this.data.customRoutines || []).forEach((r, idx) => {
+            html += `<option value="custom_${idx}">⭐ ${r.nombre}</option>`;
+        });
+        sel.innerHTML = html;
+    }
+
+    // ==========================================
+    // TOP GLOBAL DE GIMNASIO (PESO + REPS)
+    // ==========================================
+    async renderGymTopGlobal() {
+        const selectEl = document.getElementById('gym-top-exercise-select');
+        const sortEl = document.getElementById('gym-top-sort-select');
+        const tbody = document.getElementById('gym-top-table-body');
+        if (!selectEl || !tbody) return;
+
+        const prevSelection = selectEl.value;
+        tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-500">Calculando ranking mundial de fuerza...</td></tr>`;
+
+        try {
+            const qs = await getDocs(collection(db, "atletismo_users"));
+            const allExercises = new Set(this.data.ejerciciosCatalogo);
+            const usersDocs = [];
+
+            qs.forEach(docSnap => {
+                const d = docSnap.data();
+                if (!d.userId) return;
+                usersDocs.push(d);
+                d.gym?.forEach(ses => ses.ejercicios?.forEach(e => allExercises.add(e.ejercicio)));
+                d.tests?.forEach(t => { if (t.tipo === 'gimnasio' && t.ejercicio) allExercises.add(t.ejercicio); });
+            });
+
+            const sortedExList = Array.from(allExercises);
+            selectEl.innerHTML = sortedExList.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+            if (sortedExList.includes(prevSelection)) selectEl.value = prevSelection;
+
+            const chosenEx = selectEl.value;
+            const sortMode = sortEl?.value || '1rm';
+            const leaderboard = [];
+
+            usersDocs.forEach(d => {
+                const rawName = d.userName && d.userName.trim() !== "" ? d.userName : (d.userEmail ? d.userEmail.split('@')[0] : "Atleta");
+                const uniqueId = d.userId.substring(0, 4).toUpperCase();
+                const athleteName = d.userName && d.userName.trim() !== "" ? d.userName : `${rawName} #${uniqueId}`;
+                const bw = parseFloat(d.bodyWeight) || 75;
+
+                let best1RM = 0;
+                let maxKg = 0;
+                let bestSetLabel = '';
+                let bestDate = '';
+
+                d.gym?.forEach(ses => {
+                    ses.ejercicios?.forEach(e => {
+                        if (e.ejercicio === chosenEx) {
+                            e.series?.forEach(s => {
+                                const kg = parseFloat(s.kg) || 0;
+                                const reps = parseInt(s.reps) || 0;
+                                if (kg > 0 && reps > 0) {
+                                    const est = kg * (1 + 0.0333 * reps);
+                                    if (kg > maxKg) maxKg = kg;
+                                    if (est > best1RM) {
+                                        best1RM = est;
+                                        bestSetLabel = `${kg} kg × ${reps} reps`;
+                                        bestDate = ses.fecha || '';
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+
+                d.tests?.forEach(t => {
+                    if (t.tipo === 'gimnasio' && t.ejercicio === chosenEx) {
+                        const est = parseFloat(t.resultado) || 0;
+                        const kg = parseFloat(t.peso) || est;
+                        if (kg > maxKg) maxKg = kg;
+                        if (est > best1RM) {
+                            best1RM = est;
+                            bestSetLabel = t.peso && t.reps ? `${t.peso} kg × ${t.reps} reps` : `Test 1RM: ${est} kg`;
+                            bestDate = t.fecha || '';
+                        }
+                    }
+                });
+
+                if (best1RM === 0 && d.rmBase?.[chosenEx] > 0) {
+                    best1RM = parseFloat(d.rmBase[chosenEx]);
+                    maxKg = best1RM;
+                    bestSetLabel = `1RM Base: ${best1RM} kg`;
+                    bestDate = 'Registrado';
+                }
+
+                if (best1RM > 0) {
+                    const rounded1RM = Math.round(best1RM * 10) / 10;
+                    const rank = this.calculateExerciseRank(chosenEx, rounded1RM, bw);
+                    leaderboard.push({
+                        name: athleteName,
+                        isMe: d.userId === this.currentUser?.uid,
+                        bestSetLabel,
+                        bestDate,
+                        oneRM: rounded1RM,
+                        maxKg,
+                        relativeRatio: parseFloat((rounded1RM / bw).toFixed(2)),
+                        rank
+                    });
+                }
+            });
+
+            leaderboard.sort((a, b) => {
+                if (sortMode === 'maxkg') return b.maxKg - a.maxKg;
+                if (sortMode === 'relative') return b.relativeRatio - a.relativeRatio;
+                return b.oneRM - a.oneRM;
+            });
+
+            if (leaderboard.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-zinc-500">Aún no hay levantamientos registrados para <strong>${chosenEx}</strong>. ¡Sé el primero en entrar al Top!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = leaderboard.map((item, idx) => {
+                let medal = `<span class="text-zinc-500 font-bold">#${idx + 1}</span>`;
+                if (idx === 0) medal = `<span class="text-xl">🥇</span>`;
+                if (idx === 1) medal = `<span class="text-xl">🥈</span>`;
+                if (idx === 2) medal = `<span class="text-xl">🥉</span>`;
+
+                return `
+                    <tr class="${item.isMe ? 'bg-amber-500/10' : 'hover:bg-[#1a1a20]'} transition">
+                        <td class="py-3 px-4 font-bold">${medal}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-bold text-white flex items-center gap-2">
+                                <span>${item.name}</span>
+                                ${item.isMe ? '<span class="text-[9px] bg-amber-500 text-black font-black px-1.5 py-0.5 rounded uppercase">Tú</span>' : ''}
+                            </div>
+                            <span class="text-[10px] text-zinc-500">${item.bestDate}</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="text-[10px] font-black px-2.5 py-1 rounded uppercase inline-block" style="background: ${item.rank.bg}; color: ${item.rank.color}; border: 1px solid ${item.rank.border}">
+                                ${item.rank.name}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-right font-extrabold text-zinc-200">${item.bestSetLabel}</td>
+                        <td class="py-3 px-4 text-right">
+                            <span class="text-amber-400 font-black text-base">${item.oneRM} kg</span>
+                            <span class="block text-[10px] text-zinc-500">${item.relativeRatio}× PC</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-red-400">Error al cargar el Top Global de Gimnasio.</td></tr>`;
+        }
     }
 
     async cambiarUsername() {
@@ -481,6 +1364,9 @@ class AthleticsApp {
             
             if(!document.getElementById('tab-ranking').classList.contains('hidden')) {
                 this.renderRankingTable();
+            }
+            if(!document.getElementById('tab-gimnasio').classList.contains('hidden')) {
+                this.renderGymTopGlobal();
             }
         }
     }
@@ -502,7 +1388,7 @@ class AthleticsApp {
         toast.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i><span>${message}</span></div>`;
         container.appendChild(toast);
         lucide.createIcons();
-        setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3000);
+        setTimeout(() => { if(toast.parentElement) toast.remove(); }, 3500);
     }
 
     showAuthError(msg) {
@@ -523,7 +1409,11 @@ class AthleticsApp {
         });
         
         setTimeout(() => this.renderCharts(), 50);
-        if(tabId === 'gimnasio') this.actualizarCalculadoraSlider();
+        if(tabId === 'gimnasio') {
+            this.actualizarCalculadoraSlider();
+            this.renderSymmetryRanks();
+            this.renderGymTopGlobal();
+        }
         if(tabId === 'ranking') this.updateRankingDropdown();
     }
 
@@ -549,8 +1439,7 @@ class AthleticsApp {
             if (!this.data.ejerciciosCatalogo.includes(limpio)) {
                 this.data.ejerciciosCatalogo.push(limpio);
                 await this.saveToCloud();
-                this.renderCatalogoDropdowns();
-                this.renderRMConfig();
+                this.renderAll();
                 this.showToast(`Ejercicio "${limpio}" añadido`);
             } else {
                 alert("Ese ejercicio ya existe.");
@@ -577,16 +1466,16 @@ class AthleticsApp {
         const pct = parseInt(slider.value);
         pctDisplay.textContent = `${pct}%`;
 
-        const rm = this.data.rmBase[ejNombre];
-        if (rm !== undefined && rm > 0) {
+        const rm = this.getBest1RMForExercise(ejNombre);
+        if (rm > 0) {
             info1rm.innerHTML = `1RM Registrado: <strong class="text-amber-400">${rm} kg</strong>`;
             const kilos = ((rm * pct) / 100).toFixed(1);
             resultKg.textContent = `${kilos} kg`;
             subtext.textContent = `${pct}% de tu 1RM (${rm} kg)`;
         } else {
-            info1rm.innerHTML = `1RM Registrado: <strong class="text-zinc-500">Sin test (-- kg)</strong>`;
+            info1rm.innerHTML = `1RM Registrado: <strong class="text-zinc-500">Sin marcas (-- kg)</strong>`;
             resultKg.textContent = `-- kg`;
-            subtext.textContent = `Registra un test para calcular`;
+            subtext.textContent = `Registra series o un test`;
         }
     }
 
@@ -636,50 +1525,6 @@ class AthleticsApp {
         }
     }
 
-    agregarEjercicioGym() {
-        const container = document.getElementById('gym-ejercicios-container');
-        const div = document.createElement('div');
-        div.className = "bg-[#1f1f23] p-4 rounded-lg border border-zinc-800 space-y-3";
-        
-        const optionsHTML = this.data.ejerciciosCatalogo.map(ej => `<option value="${ej}">${ej}</option>`).join('');
-
-        div.innerHTML = `
-            <div class="flex items-center justify-between">
-                <select class="gym-ej-nombre px-3 py-1.5 text-sm font-bold w-2/3 border border-zinc-700 rounded bg-[#0b0b0c]">
-                    ${optionsHTML}
-                </select>
-                <button type="button" onclick="this.closest('.bg-\\[\\#1f1f23\\]').remove()" class="text-xs text-red-400 hover:text-red-300 px-3 py-1.5 bg-[#2a1215] rounded border border-[#4a1c1f] flex items-center gap-1"><i data-lucide="trash-2" class="w-3 h-3"></i> Quitar</button>
-            </div>
-            <div>
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] uppercase font-bold text-zinc-500">Series (Kilos / Reps)</span>
-                    <button type="button" onclick="app.agregarSerieGym(this)" class="text-[10px] text-amber-500 font-bold uppercase hover:underline">+ Añadir Serie</button>
-                </div>
-                <div class="gym-series-list space-y-2">
-                    <div class="flex items-center gap-2 serie-row">
-                        <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
-                        <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
-                        <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.appendChild(div);
-        lucide.createIcons();
-    }
-
-    agregarSerieGym(btn) {
-        const seriesList = btn.closest('div.space-y-3').querySelector('.gym-series-list');
-        const row = document.createElement('div');
-        row.className = "flex items-center gap-2 serie-row";
-        row.innerHTML = `
-            <input type="number" step="0.5" placeholder="Kilos (kg)" class="serie-kg px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
-            <input type="number" placeholder="Repeticiones" class="serie-reps px-3 py-1.5 text-sm w-1/2 border border-zinc-700 rounded bg-[#0b0b0c]" required>
-            <button type="button" onclick="this.closest('.serie-row').remove()" class="text-xs text-zinc-500 hover:text-red-400 px-2">✕</button>
-        `;
-        seriesList.appendChild(row);
-    }
-
     async loadUserData() {
         try {
             const q = query(collection(db, "atletismo_users"), where("userId", "==", this.currentUser.uid));
@@ -688,12 +1533,14 @@ class AthleticsApp {
                 const d = qs.docs[0].data();
                 this.data = { 
                     userName: d.userName || "",
+                    bodyWeight: d.bodyWeight || 75,
                     especifico: d.especifico||[], 
                     gym: d.gym||[], 
                     tests: d.tests||[], 
                     competiciones: d.competiciones||[], 
                     rmBase: d.rmBase||{},
                     ejerciciosCatalogo: d.ejerciciosCatalogo || ['Sentadilla Profunda', 'Press Banca', 'Peso Muerto', 'Power Clean', 'Hip Thrust', 'Sentadilla Búlgara', 'Press Militar'],
+                    customRoutines: d.customRoutines || [],
                     arcadeRecords: d.arcadeRecords || {}
                 };
 
@@ -743,29 +1590,76 @@ class AthleticsApp {
     }
 
     async saveGym() {
-        const ejerciciosDivs = document.querySelectorAll('#gym-ejercicios-container > div');
+        const cards = document.querySelectorAll('#gym-ejercicios-container .gym-ex-card');
         const ejercicios = [];
-        ejerciciosDivs.forEach(div => {
-            const ejNombre = div.querySelector('.gym-ej-nombre').value;
+        let totalVolumen = 0;
+        let rankUpMessages = [];
+
+        cards.forEach(card => {
+            const ejNombre = card.querySelector('.gym-ej-nombre').value;
+            const prevBest = this.getBest1RMForExercise(ejNombre);
+            const prevRank = this.calculateExerciseRank(ejNombre, prevBest, this.data.bodyWeight);
+
             const series = [];
-            div.querySelectorAll('.serie-row').forEach(row => {
-                series.push({ kg: parseFloat(row.querySelector('.serie-kg').value)||0, reps: parseInt(row.querySelector('.serie-reps').value)||0 });
+            let sessionBestEst = 0;
+
+            card.querySelectorAll('.serie-row').forEach(row => {
+                const kg = parseFloat(row.querySelector('.serie-kg').value) || 0;
+                const reps = parseInt(row.querySelector('.serie-reps').value) || 0;
+                if (kg > 0 || reps > 0) {
+                    series.push({
+                        kg,
+                        reps,
+                        done: row.dataset.done === 'true'
+                    });
+                    totalVolumen += kg * reps;
+                    const est = kg * (1 + 0.0333 * reps);
+                    if (est > sessionBestEst) sessionBestEst = est;
+                }
             });
-            if(series.length > 0) ejercicios.push({ ejercicio: ejNombre, series });
+
+            if (series.length > 0) {
+                ejercicios.push({ ejercicio: ejNombre, series });
+                const roundedEst = Math.round(sessionBestEst);
+                if (roundedEst > (this.data.rmBase[ejNombre] || 0)) {
+                    this.data.rmBase[ejNombre] = roundedEst;
+                }
+                const newRank = this.calculateExerciseRank(ejNombre, Math.max(prevBest, roundedEst), this.data.bodyWeight);
+                if (newRank.index > prevRank.index) {
+                    rankUpMessages.push(`${ejNombre} → ${newRank.name}`);
+                }
+            }
         });
-        if(ejercicios.length === 0) return alert("Añade al menos un ejercicio.");
+
+        if (ejercicios.length === 0) return alert("Añade al menos un ejercicio con kilos y repeticiones.");
+
+        this.stopRestTimer();
+        const duration = document.getElementById('gym-session-timer')?.textContent || '00:00';
 
         this.data.gym.unshift({
             id: Date.now().toString(),
             fecha: document.getElementById('gym-fecha').value,
             nombre: document.getElementById('gym-nombre').value,
+            duracion: duration,
+            volumenTotal: Math.round(totalVolumen),
             ejercicios
         });
+
         await this.saveToCloud();
-        document.getElementById('form-gym').reset();
-        document.getElementById('gym-ejercicios-container').innerHTML = '';
-        this.agregarEjercicioGym();
-        this.showToast("Entrenamiento de fuerza guardado");
+        sfx.playCheer();
+
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('gym-fecha').value = today;
+        document.getElementById('gym-nombre').value = '';
+        this.startSessionClock();
+        this.resetGymFormToDefault();
+
+        if (rankUpMessages.length > 0) {
+            this.showToast(`🏆 ¡SUBIDA DE RANGO SYMMETRY! ${rankUpMessages.join(' | ')}`);
+        } else {
+            this.showToast(`Entrenamiento guardado (${Math.round(totalVolumen)} kg movidos)`);
+        }
+
         this.renderAll();
     }
 
@@ -869,6 +1763,9 @@ class AthleticsApp {
         document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
 
         this.renderCatalogoDropdowns();
+        this.renderCustomRoutinesDropdown();
+        this.renderSymmetryRanks();
+        this.renderGymTopGlobal();
         this.renderEspecificoList();
         this.renderGymList();
         this.renderRMConfig();
@@ -901,11 +1798,17 @@ class AthleticsApp {
     renderGymList() {
         const c = document.getElementById('lista-gym');
         if(!this.data.gym.length) return c.innerHTML = `<p class="text-sm text-zinc-500">Vacío.</p>`;
-        c.innerHTML = this.data.gym.map(item => `
+        c.innerHTML = this.data.gym.map(item => {
+            const vol = item.volumenTotal || item.ejercicios.reduce((acc, ej) => acc + ej.series.reduce((sAcc, s) => sAcc + (s.kg * s.reps), 0), 0);
+            return `
             <div class="bg-[#1f1f23] p-5 rounded-lg border border-zinc-800/60">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h4 class="font-bold text-base text-white">${item.nombre}</h4>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h4 class="font-bold text-base text-white">${item.nombre}</h4>
+                            <span class="text-[10px] font-bold bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">${Math.round(vol).toLocaleString()} kg totales</span>
+                            ${item.duracion ? `<span class="text-[10px] font-semibold bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded">⏱ ${item.duracion}</span>` : ''}
+                        </div>
                         <span class="text-[11px] text-zinc-500">${item.fecha}</span>
                     </div>
                     <button onclick="app.deleteItem('gym', '${item.id}')" class="text-xs text-red-500 hover:text-red-400"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -917,7 +1820,7 @@ class AthleticsApp {
                             <div class="space-y-1">
                                 ${ej.series.map((s, i) => `
                                     <div class="text-[11px] text-zinc-400 flex justify-between bg-[#1a1a1f] px-2 py-1 rounded">
-                                        <span>Serie ${i+1}</span>
+                                        <span>Serie ${i+1} ${s.done ? '✓' : ''}</span>
                                         <span class="text-zinc-200 font-semibold">${s.kg} kg × ${s.reps} reps</span>
                                     </div>
                                 `).join('')}
@@ -926,26 +1829,29 @@ class AthleticsApp {
                     `).join('')}
                 </div>
             </div>
-        `).join('');
+        `;}).join('');
     }
 
     renderRMConfig() {
         const c = document.getElementById('rm-config-list');
-        c.innerHTML = this.data.ejerciciosCatalogo.map(ej => `
+        c.innerHTML = this.data.ejerciciosCatalogo.map(ej => {
+            const best = this.getBest1RMForExercise(ej);
+            return `
             <div class="bg-[#1f1f23] p-3 rounded-lg flex justify-between items-center border border-zinc-800">
                 <span class="text-sm font-semibold text-zinc-300 truncate max-w-[150px]">${ej}</span>
                 <div class="flex gap-3 items-center">
-                    <span class="text-sm text-amber-500 font-black">${this.data.rmBase[ej] ? this.data.rmBase[ej]+' kg' : '--'}</span>
+                    <span class="text-sm text-amber-500 font-black">${best > 0 ? best+' kg' : '--'}</span>
                     <button onclick="app.editarRM('${ej}')" class="text-[10px] font-bold bg-zinc-800 px-2.5 py-1 rounded flex items-center gap-1 hover:bg-zinc-700 transition">
                         <i data-lucide="edit-3" class="w-3 h-3"></i> Editar
                     </button>
                 </div>
             </div>
-        `).join('');
+        `;}).join('');
     }
 
     async editarRM(ej) {
-        const v = prompt(`Nuevo 1RM para ${ej} (kg):`, this.data.rmBase[ej]||'');
+        const current = this.getBest1RMForExercise(ej);
+        const v = prompt(`Nuevo 1RM para ${ej} (kg):`, current || '');
         if(v && !isNaN(parseFloat(v))) { this.data.rmBase[ej] = parseFloat(v); await this.saveToCloud(); this.renderAll(); }
     }
 
@@ -958,7 +1864,7 @@ class AthleticsApp {
                     <span class="text-[10px] text-zinc-500 font-medium">${item.fecha} - ${item.tipo === 'gimnasio'?'FUERZA (1RM)':'LANZAMIENTOS / CAMPO'}</span>
                     <h4 class="text-sm font-bold text-white mt-1">${item.tipo === 'gimnasio'?item.ejercicio:item.subtipo}</h4>
                     <p class="text-sm text-amber-500 font-extrabold mt-0.5">${item.tipo === 'gimnasio'?`${item.resultado} kg`:`${item.resultado} m`}</p>
-                    ${item.tipo === 'lanzamientos' ? `<p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Promedio: ${item.promedio}m <br> Intentos:${item.intentos.join(', ')}</p>` : ''}
+                    ${item.tipo === 'lanzamientos' ? `<p class="text-[10px] text-zinc-500 mt-1.5 leading-tight">Promedio: ${item.promedio}m <br> Intentos: ${item.intentos.join(', ')}</p>` : ''}
                 </div>
                 <button onclick="app.deleteItem('tests', '${item.id}')" class="text-xs text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
             </div>
@@ -1043,6 +1949,16 @@ class AthleticsApp {
             options = ['100m', '200m', '400m', '800m', '1500m', '60m vallas', '110m vallas', 'Longitud', 'Triple Salto', 'Altura', 'Pertiga', 'Peso', 'Disco', 'Jabalina', 'Martillo'];
         } else if(tipo === 'arcade') {
             options = ['100m Lisos', 'Lanzamiento de Jabalina', 'Salto de Longitud'];
+        } else if(tipo === 'gimnasio') {
+            const setGym = new Set(this.data.ejerciciosCatalogo);
+            try {
+                const qs = await getDocs(collection(db, "atletismo_users"));
+                qs.forEach(docSnap => {
+                    const d = docSnap.data();
+                    d.gym?.forEach(s => s.ejercicios?.forEach(e => setGym.add(e.ejercicio)));
+                });
+            } catch(e) {}
+            options = Array.from(setGym);
         } else if(tipo === 'test') {
             const setTests = new Set(this.data.ejerciciosCatalogo);
             try {
@@ -1102,6 +2018,30 @@ class AthleticsApp {
                                 rankingList.push({ name: atleteName, score: best.resultado, numericScore: parseFloat(best.resultado), date: best.fecha || 'Sin fecha' });
                             }
                         }
+                    }
+                } else if(tipo === 'gimnasio') {
+                    let best1RM = 0;
+                    let bestLabel = '';
+                    let bestDate = '';
+                    d.gym?.forEach(ses => {
+                        if (season !== 'todas' && (!ses.fecha || ses.fecha.substring(0, 4) !== season)) return;
+                        ses.ejercicios?.forEach(e => {
+                            if (e.ejercicio === subtipo) {
+                                e.series?.forEach(s => {
+                                    const kg = parseFloat(s.kg) || 0;
+                                    const reps = parseInt(s.reps) || 0;
+                                    const est = kg * (1 + 0.0333 * reps);
+                                    if (est > best1RM) {
+                                        best1RM = est;
+                                        bestLabel = `${Math.round(est)} kg (1RM) · ${kg}kg×${reps}`;
+                                        bestDate = ses.fecha || 'Sin fecha';
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    if (best1RM > 0) {
+                        rankingList.push({ name: atleteName, score: bestLabel, numericScore: best1RM, date: bestDate });
                     }
                 } else if(tipo === 'arcade') {
                     if(season === 'todas') {
@@ -1173,7 +2113,7 @@ class AthleticsApp {
         Chart.defaults.color = '#71717a';
         Chart.defaults.font.family = 'Inter';
 
-        // DASHBOARD 1: DOUGHNUT
+        // DASHBOARD 1: CARGA MENSUAL
         const ctxDashDoughnut = document.getElementById('dashDoughnutChart');
         if (ctxDashDoughnut) {
             if (this.dashDoughnutInstance) this.dashDoughnutInstance.destroy();
@@ -1271,9 +2211,7 @@ class AthleticsApp {
             });
         }
 
-        // ==========================================
-        // NUEVO GRÁFICO: PROGRESIÓN DE ENTRENAMIENTOS (GIMNASIO)
-        // ==========================================
+        // GRÁFICO DE PROGRESIÓN DE GIMNASIO
         const ctxGymProg = document.getElementById('gymProgressionChart');
         if (ctxGymProg) {
             const gymSelect = document.getElementById('gym-chart-filter');
@@ -1329,7 +2267,7 @@ class AthleticsApp {
                         {
                             label: 'Peso Máximo Levantado (kg)',
                             data: gymData.length ? gymData.map(d => d.maxKg) : [0],
-                            borderColor: '#10b981', // Emerald
+                            borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.15)',
                             borderWidth: 3, pointBackgroundColor: '#0b0b0c', pointBorderColor: '#10b981',
                             pointBorderWidth: 2, pointRadius: 5, fill: true, tension: 0.3
@@ -1337,7 +2275,7 @@ class AthleticsApp {
                         {
                             label: '1RM Estimado del día',
                             data: gymData.length ? gymData.map(d => d.rmEstimado) : [0],
-                            borderColor: 'rgba(245, 158, 11, 0.7)', // Amber dashed
+                            borderColor: 'rgba(245, 158, 11, 0.7)',
                             borderDash: [5, 5],
                             borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3
                         }
@@ -1350,7 +2288,6 @@ class AthleticsApp {
                         legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } },
                         tooltip: {
                             callbacks: {
-                                // Aquí añadimos el detalle de las series al Tooltip
                                 afterBody: function(context) {
                                     if (gymData.length > 0) {
                                         const idx = context[0].dataIndex;
