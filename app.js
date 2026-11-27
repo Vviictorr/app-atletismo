@@ -435,13 +435,15 @@ class AthleticsApp {
         this.activeTestType = 'gimnasio';
         this.deferredPrompt = null;
 
-        // Estado de sesión en vivo y temporizador de descanso
-        this.sessionStartTimestamp = Date.now();
+        // Estado de sesión en vivo (NO arranca hasta pulsar "Empezar Entrenamiento")
+        this.isWorkoutActive = false;
+        this.sessionStartTimestamp = null;
         this.sessionClockInterval = null;
         this.restInterval = null;
         this.restRemaining = 0;
         this.restTotal = 90;
         this.restPaused = false;
+        this.lastSummaryText = '';
         
         const today = new Date().toISOString().split('T')[0];
         ['esp-fecha', 'gym-fecha', 'test-gym-fecha', 'test-lanz-fecha', 'comp-fecha'].forEach(id => {
@@ -537,22 +539,68 @@ class AthleticsApp {
         document.getElementById('form-test-gym').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestGym(); });
         document.getElementById('form-test-lanz').addEventListener('submit', (e) => { e.preventDefault(); this.saveTestLanzamiento(); });
         document.getElementById('form-competicion').addEventListener('submit', (e) => { e.preventDefault(); this.saveCompeticion(); });
+    }
+
+    // ==========================================
+    // CONTROL MANUAL DE INICIO / FIN DE ENTRENAMIENTO
+    // ==========================================
+    startGymWorkout() {
+        sfx.init();
+        sfx.playCheck();
+
+        const preSelect = document.getElementById('gym-pre-routine-select')?.value || '';
+        this.isWorkoutActive = true;
+
+        document.getElementById('gym-preworkout-launcher')?.classList.add('hidden');
+        document.getElementById('gym-active-workspace')?.classList.remove('hidden');
+
+        const today = new Date().toISOString().split('T')[0];
+        const dateEl = document.getElementById('gym-fecha');
+        if (dateEl) dateEl.value = today;
+
+        if (preSelect) {
+            const activeSelect = document.getElementById('gym-routine-select');
+            if (activeSelect) activeSelect.value = preSelect;
+            this.cargarRutinaPlantilla();
+        } else {
+            this.resetGymFormToDefault();
+        }
 
         this.startSessionClock();
-        this.agregarEjercicioGym();
+        this.showToast("⏱️ ¡Entrenamiento iniciado! Cronómetro en marcha");
+    }
+
+    cancelGymWorkout() {
+        if (!confirm("¿Cancelar el entrenamiento actual? Se descartarán las series sin guardar.")) return;
+        this.stopSessionClock();
+        this.stopRestTimer();
+        this.isWorkoutActive = false;
+        this.resetGymFormToDefault();
+
+        document.getElementById('gym-active-workspace')?.classList.add('hidden');
+        document.getElementById('gym-preworkout-launcher')?.classList.remove('hidden');
+        this.showToast("Entrenamiento cancelado");
     }
 
     startSessionClock() {
-        if (this.sessionClockInterval) clearInterval(this.sessionClockInterval);
+        this.stopSessionClock();
         this.sessionStartTimestamp = Date.now();
         this.sessionClockInterval = setInterval(() => {
             const el = document.getElementById('gym-session-timer');
-            if (!el) return;
+            if (!el || !this.sessionStartTimestamp) return;
             const elapsedSec = Math.floor((Date.now() - this.sessionStartTimestamp) / 1000);
             const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
             const secs = String(elapsedSec % 60).padStart(2, '0');
             el.textContent = `${mins}:${secs}`;
         }, 1000);
+    }
+
+    stopSessionClock() {
+        if (this.sessionClockInterval) clearInterval(this.sessionClockInterval);
+        this.sessionClockInterval = null;
+        this.sessionStartTimestamp = null;
+        const el = document.getElementById('gym-session-timer');
+        if (el) el.textContent = '00:00';
     }
 
     // ==========================================
@@ -713,7 +761,6 @@ class AthleticsApp {
             `;
         }).join('');
 
-        // Render Muscle Groups
         muscleGrid.innerHTML = Object.entries(muscleBuckets).map(([groupName, indices]) => {
             const avgIdx = indices.length > 0 ? Math.round(indices.reduce((a, b) => a + b, 0) / indices.length) : -1;
             const tier = avgIdx >= 0 ? SYMMETRY_TIERS[avgIdx] : { name: 'Sin Datos', color: '#71717a', bg: 'rgba(39,39,42,0.5)', border: '#3f3f46' };
@@ -730,7 +777,6 @@ class AthleticsApp {
             `;
         }).join('');
 
-        // Render Global Symmetry Rank
         const globalBadge = document.getElementById('gym-global-rank-badge');
         const globalTitle = document.getElementById('gym-global-rank-title');
         const globalSub = document.getElementById('gym-global-rank-sub');
@@ -889,7 +935,7 @@ class AthleticsApp {
 
         const seriesToRender = presetSeries && presetSeries.length > 0
             ? presetSeries
-            : (prevSeries.length > 0 ? prevSeries.map(s => ({ kg: '', reps: '' })) : [{ kg: '', reps: '' }]);
+            : (prevSeries.length > 0 ? prevSeries.map(() => ({ kg: '', reps: '' })) : [{ kg: '', reps: '' }]);
 
         const rowsHTML = seriesToRender.map((s, idx) => {
             const prev = prevSeries[idx];
@@ -951,8 +997,10 @@ class AthleticsApp {
 
     buildSerieRowHTML(num, kg = '', reps = '', prevLabel = '--', prevKg = '', prevReps = '') {
         return `
-            <div class="grid grid-cols-12 gap-2 items-center serie-row bg-[#121216] p-1.5 rounded-lg border border-zinc-800/90 transition-colors" data-done="false">
-                <div class="col-span-1 text-center text-xs font-black text-zinc-400 serie-num">${num}</div>
+            <div class="grid grid-cols-12 gap-2 items-center serie-row bg-[#121216] p-1.5 rounded-lg border border-zinc-800/90 transition-colors" data-done="false" data-settype="normal" data-setnum="${num}">
+                <div class="col-span-1 text-center">
+                    <button type="button" onclick="app.cycleSetType(this)" class="serie-num w-6 h-6 rounded text-xs font-black text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700 transition" title="Tocar para cambiar: Efectiva / Calentamiento (W) / Fallo (F)">${num}</button>
+                </div>
                 <div class="col-span-3 text-center">
                     <button type="button" onclick="app.applyPreviousSet(this, '${prevKg}', '${prevReps}')" class="text-[11px] font-semibold text-zinc-400 hover:text-amber-400 bg-zinc-900/90 px-2 py-1 rounded border border-zinc-800 w-full truncate transition" title="Tocar para copiar marca anterior">
                         ${prevLabel}
@@ -973,6 +1021,27 @@ class AthleticsApp {
                 </div>
             </div>
         `;
+    }
+
+    cycleSetType(btn) {
+        const row = btn.closest('.serie-row');
+        const current = row.dataset.settype || 'normal';
+        const num = row.dataset.setnum || '1';
+
+        if (current === 'normal') {
+            row.dataset.settype = 'warmup';
+            btn.textContent = 'W';
+            btn.className = 'serie-num w-6 h-6 rounded text-xs font-black text-sky-400 bg-sky-950/60 border border-sky-700/50 transition';
+        } else if (current === 'warmup') {
+            row.dataset.settype = 'failure';
+            btn.textContent = 'F';
+            btn.className = 'serie-num w-6 h-6 rounded text-xs font-black text-red-400 bg-red-950/60 border border-red-700/50 transition';
+        } else {
+            row.dataset.settype = 'normal';
+            btn.textContent = num;
+            btn.className = 'serie-num w-6 h-6 rounded text-xs font-black text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700 transition';
+        }
+        this.onSerieInputChange(row.querySelector('.serie-kg'));
     }
 
     onGymExerciseChange(selectEl) {
@@ -1013,13 +1082,14 @@ class AthleticsApp {
         const ejName = card.querySelector('.gym-ej-nombre').value;
         const kg = parseFloat(row.querySelector('.serie-kg').value) || 0;
         const reps = parseInt(row.querySelector('.serie-reps').value) || 0;
+        const isWarmup = row.dataset.settype === 'warmup';
 
         const prevBest = this.getBest1RMForExercise(ejName);
         const est1RM = kg * (1 + 0.0333 * reps);
         const prBadge = row.querySelector('.serie-pr-badge');
 
         if (prBadge) {
-            if (kg > 0 && reps > 0 && prevBest > 0 && est1RM > prevBest) {
+            if (!isWarmup && kg > 0 && reps > 0 && prevBest > 0 && est1RM > prevBest) {
                 prBadge.classList.remove('hidden');
             } else {
                 prBadge.classList.add('hidden');
@@ -1069,7 +1139,13 @@ class AthleticsApp {
     removeSerieRow(btn) {
         const list = btn.closest('.gym-series-list');
         btn.closest('.serie-row').remove();
-        list.querySelectorAll('.serie-num').forEach((el, i) => { el.textContent = i + 1; });
+        list.querySelectorAll('.serie-row').forEach((row, i) => {
+            row.dataset.setnum = i + 1;
+            const numBtn = row.querySelector('.serie-num');
+            if (numBtn && (row.dataset.settype || 'normal') === 'normal') {
+                numBtn.textContent = i + 1;
+            }
+        });
         this.updateLiveGymStats();
     }
 
@@ -1081,7 +1157,6 @@ class AthleticsApp {
         const prevSeries = this.getPreviousSetsForExercise(ejName);
         const prev = prevSeries[nextNum - 1];
 
-        // Si hay una serie justo encima, copiamos sus kilos como sugerencia cómoda
         const lastRow = seriesList.querySelector('.serie-row:last-child');
         const lastKg = lastRow ? lastRow.querySelector('.serie-kg').value : '';
         const lastReps = lastRow ? lastRow.querySelector('.serie-reps').value : '';
@@ -1194,18 +1269,89 @@ class AthleticsApp {
     }
 
     renderCustomRoutinesDropdown() {
-        const sel = document.getElementById('gym-routine-select');
-        if (!sel) return;
-        let html = `
-            <option value="">-- Seleccionar Plantilla --</option>
+        const baseHTML = `
             <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
             <option value="torso">💪 Tren Superior & Potencia</option>
             <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
         `;
+        let customHTML = '';
         (this.data.customRoutines || []).forEach((r, idx) => {
-            html += `<option value="custom_${idx}">⭐ ${r.nombre}</option>`;
+            customHTML += `<option value="custom_${idx}">⭐ ${r.nombre}</option>`;
         });
-        sel.innerHTML = html;
+
+        const sel = document.getElementById('gym-routine-select');
+        if (sel) sel.innerHTML = `<option value="">-- Seleccionar Plantilla --</option>` + baseHTML + customHTML;
+
+        const preSel = document.getElementById('gym-pre-routine-select');
+        if (preSel) preSel.innerHTML = `<option value="">Entrenamiento Libre (Vacío)</option>` + baseHTML + customHTML;
+    }
+
+    // ==========================================
+    // MODAL RESUMEN POST-ENTRENAMIENTO
+    // ==========================================
+    openWorkoutSummaryModal(summaryData) {
+        const modal = document.getElementById('workout-summary-modal');
+        if (!modal) return;
+
+        document.getElementById('summary-workout-title').textContent = summaryData.nombre;
+        document.getElementById('summary-workout-date').textContent = summaryData.fecha;
+        document.getElementById('summary-duration').textContent = summaryData.duracion;
+        document.getElementById('summary-volume').textContent = `${summaryData.volumenTotal.toLocaleString()} kg`;
+        document.getElementById('summary-sets').textContent = summaryData.totalSeries;
+
+        const highlightsEl = document.getElementById('summary-highlights');
+        let badgesHTML = '';
+
+        if (summaryData.rankUps.length > 0) {
+            badgesHTML += summaryData.rankUps.map(ru => `
+                <div class="bg-amber-500/15 border border-amber-500/40 px-3 py-2 rounded-lg text-xs font-bold text-amber-300 flex items-center gap-2">
+                    <i data-lucide="arrow-up-circle" class="w-4 h-4 text-amber-400 shrink-0"></i>
+                    <span>Subida de Rango: ${ru}</span>
+                </div>
+            `).join('');
+        }
+
+        if (summaryData.prs.length > 0) {
+            badgesHTML += summaryData.prs.map(pr => `
+                <div class="bg-emerald-500/15 border border-emerald-500/40 px-3 py-2 rounded-lg text-xs font-bold text-emerald-300 flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+                    <span>Nuevo Récord Personal: ${pr}</span>
+                </div>
+            `).join('');
+        }
+
+        if (!badgesHTML) {
+            badgesHTML = `
+                <div class="bg-[#121216] border border-zinc-800 px-3 py-2.5 rounded-lg text-xs text-zinc-400 text-center">
+                    ¡Gran trabajo de consistencia! Cada sesión suma para subir de división.
+                </div>
+            `;
+        }
+
+        highlightsEl.innerHTML = badgesHTML;
+
+        const exercisesSummary = summaryData.ejercicios.map(e =>
+            `• ${e.ejercicio}: ${e.series.map(s => `${s.kg}kg×${s.reps}`).join(', ')}`
+        ).join('\n');
+
+        this.lastSummaryText = `🏋️‍♂️ ATHLETICS PRO - ${summaryData.nombre} (${summaryData.fecha})\n⏱️ Duración: ${summaryData.duracion} | 📦 Volumen: ${summaryData.volumenTotal.toLocaleString()} kg\n\n${exercisesSummary}`;
+
+        modal.classList.remove('hidden');
+        lucide.createIcons();
+    }
+
+    closeWorkoutSummaryModal() {
+        document.getElementById('workout-summary-modal')?.classList.add('hidden');
+    }
+
+    async copyWorkoutSummary() {
+        if (!this.lastSummaryText) return;
+        try {
+            await navigator.clipboard.writeText(this.lastSummaryText);
+            this.showToast("📋 Resumen copiado al portapapeles");
+        } catch (e) {
+            this.showToast("No se pudo copiar automáticamente");
+        }
     }
 
     // ==========================================
@@ -1353,6 +1499,156 @@ class AthleticsApp {
         }
     }
 
+    // ==========================================
+    // CALCULADORA % 1RM + VISUALIZADOR DE DISCOS
+    // ==========================================
+    setCalcPct(pct) {
+        document.getElementById('calc-pct-slider').value = pct;
+        this.actualizarCalculadoraSlider();
+    }
+
+    actualizarCalculadoraSlider() {
+        const ejSelect = document.getElementById('calc-ejercicio-select');
+        const slider = document.getElementById('calc-pct-slider');
+        const pctDisplay = document.getElementById('calc-pct-display');
+        const resultKg = document.getElementById('calc-kilos-result');
+        const info1rm = document.getElementById('calc-1rm-info');
+        const subtext = document.getElementById('calc-kilos-subtext');
+
+        if(!ejSelect || !slider) return;
+
+        const ejNombre = ejSelect.value;
+        const pct = parseInt(slider.value);
+        pctDisplay.textContent = `${pct}%`;
+
+        const rm = this.getBest1RMForExercise(ejNombre);
+        if (rm > 0) {
+            info1rm.innerHTML = `1RM Registrado: <strong class="text-amber-400">${rm} kg</strong>`;
+            const kilos = parseFloat(((rm * pct) / 100).toFixed(1));
+            resultKg.textContent = `${kilos} kg`;
+            subtext.textContent = `${pct}% de tu 1RM (${rm} kg)`;
+            this.renderBarbellPlates(kilos);
+        } else {
+            info1rm.innerHTML = `1RM Registrado: <strong class="text-zinc-500">Sin marcas (-- kg)</strong>`;
+            resultKg.textContent = `-- kg`;
+            subtext.textContent = `Registra series o un test`;
+            this.renderBarbellPlates(0);
+        }
+    }
+
+    renderBarbellPlates(targetWeight) {
+        const textEl = document.getElementById('calc-plates-text');
+        const visualEl = document.getElementById('calc-barbell-visual');
+        const barWeight = parseFloat(document.getElementById('calc-bar-weight')?.value ?? 20);
+        if (!textEl || !visualEl) return;
+
+        if (!targetWeight || targetWeight <= barWeight) {
+            textEl.textContent = barWeight > 0 ? `Solo barra (${barWeight} kg)` : 'Sin carga';
+            visualEl.innerHTML = `
+                <div class="flex items-center">
+                    <div class="w-32 h-2.5 bg-zinc-500 rounded-l"></div>
+                    <div class="w-2.5 h-6 bg-zinc-400 rounded-sm"></div>
+                    <div class="w-12 h-3.5 bg-zinc-600 rounded-r"></div>
+                </div>
+            `;
+            return;
+        }
+
+        let perSide = (targetWeight - barWeight) / 2;
+        const plateCatalog = [
+            { w: 25, bg: '#ef4444', text: '#fff', h: 'h-11', label: '25' },
+            { w: 20, bg: '#3b82f6', text: '#fff', h: 'h-11', label: '20' },
+            { w: 15, bg: '#eab308', text: '#000', h: 'h-10', label: '15' },
+            { w: 10, bg: '#22c55e', text: '#fff', h: 'h-9', label: '10' },
+            { w: 5,  bg: '#f4f4f5', text: '#000', h: 'h-8', label: '5' },
+            { w: 2.5, bg: '#18181b', text: '#f87171', h: 'h-7', label: '2.5' },
+            { w: 1.25, bg: '#a1a1aa', text: '#000', h: 'h-6', label: '1.25' }
+        ];
+
+        const chosenPlates = [];
+        for (const p of plateCatalog) {
+            while (perSide >= p.w - 0.01) {
+                chosenPlates.push(p);
+                perSide -= p.w;
+            }
+        }
+
+        if (chosenPlates.length === 0) {
+            textEl.textContent = `Barra (${barWeight} kg) + microcarga (< 1.25 kg/lado)`;
+        } else {
+            const counts = {};
+            chosenPlates.forEach(p => { counts[p.label] = (counts[p.label] || 0) + 1; });
+            textEl.textContent = Object.entries(counts).map(([lbl, cnt]) => `${cnt}×${lbl}kg`).join(' + ');
+        }
+
+        const platesHTML = chosenPlates.map(p => `
+            <div class="${p.h} px-1.5 rounded-sm flex items-center justify-center text-[9px] font-black border border-black/40 shadow" style="background: ${p.bg}; color: ${p.text}">
+                ${p.label}
+            </div>
+        `).join('');
+
+        visualEl.innerHTML = `
+            <div class="flex items-center gap-0.5">
+                <div class="w-14 h-2.5 bg-zinc-500 rounded-l"></div>
+                <div class="w-2 h-6 bg-zinc-400 rounded-sm mr-0.5"></div>
+                ${platesHTML}
+                <div class="w-5 h-3.5 bg-zinc-600 rounded-r ml-0.5"></div>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // MAPA DE CONSISTENCIA (12 SEMANAS)
+    // ==========================================
+    renderConsistencyHeatmap() {
+        const container = document.getElementById('dash-consistency-heatmap');
+        const activeDaysEl = document.getElementById('dash-active-days');
+        if (!container) return;
+
+        const countsByDate = {};
+        const addDates = (arr) => {
+            if (!arr) return;
+            arr.forEach(item => {
+                if (item.fecha) {
+                    countsByDate[item.fecha] = (countsByDate[item.fecha] || 0) + 1;
+                }
+            });
+        };
+
+        addDates(this.data.gym);
+        addDates(this.data.especifico);
+        addDates(this.data.tests);
+        addDates(this.data.competiciones);
+
+        const totalDays = 84; // 12 semanas x 7 días
+        const today = new Date();
+        let activeDaysCount = 0;
+        let columnsHTML = '';
+
+        for (let week = 11; week >= 0; week--) {
+            let weekCells = '';
+            for (let dayOffset = 6; dayOffset >= 0; dayOffset--) {
+                const daysAgo = week * 7 + dayOffset;
+                const d = new Date(today);
+                d.setDate(today.getDate() - daysAgo);
+                const iso = d.toISOString().split('T')[0];
+                const count = countsByDate[iso] || 0;
+                if (count > 0) activeDaysCount++;
+
+                let cellClass = 'bg-zinc-800/70 border-zinc-700/40';
+                if (count === 1) cellClass = 'bg-emerald-800/90 border-emerald-600/50';
+                else if (count === 2) cellClass = 'bg-emerald-600 border-emerald-400/60';
+                else if (count >= 3) cellClass = 'bg-emerald-400 border-emerald-200';
+
+                weekCells += `<div class="w-full aspect-square rounded-sm border ${cellClass} transition hover:scale-110" title="${iso}: ${count} ${count === 1 ? 'sesión' : 'sesiones'}"></div>`;
+            }
+            columnsHTML += `<div class="flex flex-col gap-1.5">${weekCells}</div>`;
+        }
+
+        container.innerHTML = columnsHTML;
+        if (activeDaysEl) activeDaysEl.textContent = `${activeDaysCount} días`;
+    }
+
     async cambiarUsername() {
         if(!this.currentUser) return;
         const nuevo = prompt("Cambiar Nombre de Usuario (público para el ranking):", this.data.userName || "");
@@ -1444,38 +1740,6 @@ class AthleticsApp {
             } else {
                 alert("Ese ejercicio ya existe.");
             }
-        }
-    }
-
-    setCalcPct(pct) {
-        document.getElementById('calc-pct-slider').value = pct;
-        this.actualizarCalculadoraSlider();
-    }
-
-    actualizarCalculadoraSlider() {
-        const ejSelect = document.getElementById('calc-ejercicio-select');
-        const slider = document.getElementById('calc-pct-slider');
-        const pctDisplay = document.getElementById('calc-pct-display');
-        const resultKg = document.getElementById('calc-kilos-result');
-        const info1rm = document.getElementById('calc-1rm-info');
-        const subtext = document.getElementById('calc-kilos-subtext');
-
-        if(!ejSelect || !slider) return;
-
-        const ejNombre = ejSelect.value;
-        const pct = parseInt(slider.value);
-        pctDisplay.textContent = `${pct}%`;
-
-        const rm = this.getBest1RMForExercise(ejNombre);
-        if (rm > 0) {
-            info1rm.innerHTML = `1RM Registrado: <strong class="text-amber-400">${rm} kg</strong>`;
-            const kilos = ((rm * pct) / 100).toFixed(1);
-            resultKg.textContent = `${kilos} kg`;
-            subtext.textContent = `${pct}% de tu 1RM (${rm} kg)`;
-        } else {
-            info1rm.innerHTML = `1RM Registrado: <strong class="text-zinc-500">Sin marcas (-- kg)</strong>`;
-            resultKg.textContent = `-- kg`;
-            subtext.textContent = `Registra series o un test`;
         }
     }
 
@@ -1593,7 +1857,9 @@ class AthleticsApp {
         const cards = document.querySelectorAll('#gym-ejercicios-container .gym-ex-card');
         const ejercicios = [];
         let totalVolumen = 0;
+        let totalSeriesCount = 0;
         let rankUpMessages = [];
+        let prMessages = [];
 
         cards.forEach(card => {
             const ejNombre = card.querySelector('.gym-ej-nombre').value;
@@ -1606,21 +1872,29 @@ class AthleticsApp {
             card.querySelectorAll('.serie-row').forEach(row => {
                 const kg = parseFloat(row.querySelector('.serie-kg').value) || 0;
                 const reps = parseInt(row.querySelector('.serie-reps').value) || 0;
+                const setType = row.dataset.settype || 'normal';
                 if (kg > 0 || reps > 0) {
                     series.push({
                         kg,
                         reps,
+                        type: setType,
                         done: row.dataset.done === 'true'
                     });
                     totalVolumen += kg * reps;
-                    const est = kg * (1 + 0.0333 * reps);
-                    if (est > sessionBestEst) sessionBestEst = est;
+                    totalSeriesCount++;
+                    if (setType !== 'warmup') {
+                        const est = kg * (1 + 0.0333 * reps);
+                        if (est > sessionBestEst) sessionBestEst = est;
+                    }
                 }
             });
 
             if (series.length > 0) {
                 ejercicios.push({ ejercicio: ejNombre, series });
                 const roundedEst = Math.round(sessionBestEst);
+                if (roundedEst > prevBest && prevBest > 0) {
+                    prMessages.push(`${ejNombre} (${roundedEst} kg 1RM est.)`);
+                }
                 if (roundedEst > (this.data.rmBase[ejNombre] || 0)) {
                     this.data.rmBase[ejNombre] = roundedEst;
                 }
@@ -1633,13 +1907,18 @@ class AthleticsApp {
 
         if (ejercicios.length === 0) return alert("Añade al menos un ejercicio con kilos y repeticiones.");
 
-        this.stopRestTimer();
+        const fechaVal = document.getElementById('gym-fecha').value;
+        const nombreVal = document.getElementById('gym-nombre').value;
         const duration = document.getElementById('gym-session-timer')?.textContent || '00:00';
+
+        this.stopRestTimer();
+        this.stopSessionClock();
+        this.isWorkoutActive = false;
 
         this.data.gym.unshift({
             id: Date.now().toString(),
-            fecha: document.getElementById('gym-fecha').value,
-            nombre: document.getElementById('gym-nombre').value,
+            fecha: fechaVal,
+            nombre: nombreVal,
             duracion: duration,
             volumenTotal: Math.round(totalVolumen),
             ejercicios
@@ -1651,16 +1930,24 @@ class AthleticsApp {
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('gym-fecha').value = today;
         document.getElementById('gym-nombre').value = '';
-        this.startSessionClock();
         this.resetGymFormToDefault();
 
-        if (rankUpMessages.length > 0) {
-            this.showToast(`🏆 ¡SUBIDA DE RANGO SYMMETRY! ${rankUpMessages.join(' | ')}`);
-        } else {
-            this.showToast(`Entrenamiento guardado (${Math.round(totalVolumen)} kg movidos)`);
-        }
+        // Volver a la vista de lanzador pre-entrenamiento
+        document.getElementById('gym-active-workspace')?.classList.add('hidden');
+        document.getElementById('gym-preworkout-launcher')?.classList.remove('hidden');
 
         this.renderAll();
+
+        this.openWorkoutSummaryModal({
+            nombre: nombreVal,
+            fecha: fechaVal,
+            duracion: duration,
+            volumenTotal: Math.round(totalVolumen),
+            totalSeries: totalSeriesCount,
+            ejercicios,
+            rankUps: rankUpMessages,
+            prs: prMessages
+        });
     }
 
     async saveTestGym() {
@@ -1762,6 +2049,7 @@ class AthleticsApp {
         this.data.tests.forEach(t => { if(t.tipo === 'lanzamientos') { if(!pbs[t.subtipo] || t.resultado > parseFloat(pbs[t.subtipo])) pbs[t.subtipo] = t.resultado; } });
         document.getElementById('stat-pb-count').textContent = Object.keys(pbs).length;
 
+        this.renderConsistencyHeatmap();
         this.renderCatalogoDropdowns();
         this.renderCustomRoutinesDropdown();
         this.renderSymmetryRanks();
@@ -1818,12 +2106,14 @@ class AthleticsApp {
                         <div class="bg-[#121215] p-3 rounded-lg border border-zinc-800">
                             <span class="text-xs font-bold text-amber-500 block mb-2">${ej.ejercicio}</span>
                             <div class="space-y-1">
-                                ${ej.series.map((s, i) => `
+                                ${ej.series.map((s, i) => {
+                                    const tag = s.type === 'warmup' ? '<span class="text-sky-400 font-bold">[W]</span>' : (s.type === 'failure' ? '<span class="text-red-400 font-bold">[F]</span>' : '');
+                                    return `
                                     <div class="text-[11px] text-zinc-400 flex justify-between bg-[#1a1a1f] px-2 py-1 rounded">
-                                        <span>Serie ${i+1} ${s.done ? '✓' : ''}</span>
+                                        <span>Serie ${i+1} ${tag} ${s.done ? '✓' : ''}</span>
                                         <span class="text-zinc-200 font-semibold">${s.kg} kg × ${s.reps} reps</span>
                                     </div>
-                                `).join('')}
+                                `;}).join('')}
                             </div>
                         </div>
                     `).join('')}
