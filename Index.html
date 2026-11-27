@@ -11,7 +11,6 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
     
-    <!-- ENLACE AL MANIFEST CORRECTO (Archivo separado) -->
     <link rel="manifest" href="manifest.json">
     
     <!-- Tailwind CSS -->
@@ -23,8 +22,21 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- NUESTRO ARCHIVO CSS EXTERNO -->
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        @keyframes symmetricGlow {
+            0%, 100% { box-shadow: 0 0 12px rgba(250, 204, 21, 0.35), inset 0 0 8px rgba(250, 204, 21, 0.2); }
+            50% { box-shadow: 0 0 22px rgba(56, 189, 248, 0.5), inset 0 0 12px rgba(250, 204, 21, 0.35); }
+        }
+        .rank-symmetric-glow {
+            animation: symmetricGlow 2.8s infinite ease-in-out;
+        }
+        .serie-completed {
+            background-color: rgba(16, 185, 129, 0.12) !important;
+            border-color: rgba(16, 185, 129, 0.45) !important;
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
@@ -87,6 +99,36 @@
     <!-- TOAST CONTAINER -->
     <div id="toast-container"></div>
 
+    <!-- BARRA FLOTANTE DE CUENTA ATRÁS DE DESCANSO (ESTILO SYMMETRY) -->
+    <div id="rest-timer-bar" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-xl bg-[#141418]/95 backdrop-blur-md border border-amber-500/40 rounded-2xl shadow-2xl shadow-black/80 p-4 transition-all">
+        <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                    <i data-lucide="timer" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] uppercase font-extrabold tracking-wider text-amber-400">Descanso Activo</span>
+                        <span id="rest-timer-exercise" class="text-[11px] text-zinc-400 truncate max-w-[140px]">Ejercicio</span>
+                    </div>
+                    <div id="rest-timer-display" class="text-3xl font-black text-white tabular-nums leading-none mt-0.5">01:30</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <button type="button" onclick="app.adjustRestTimer(-15)" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-lg border border-zinc-700 transition">-15s</button>
+                <button type="button" onclick="app.adjustRestTimer(15)" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold rounded-lg border border-zinc-700 transition">+15s</button>
+                <button type="button" id="btn-rest-pause" onclick="app.toggleRestTimer()" class="p-2 bg-zinc-800 hover:bg-zinc-700 text-amber-400 rounded-lg border border-zinc-700 transition" title="Pausar/Reanudar">
+                    <i data-lucide="pause" class="w-4 h-4"></i>
+                </button>
+                <button type="button" onclick="app.stopRestTimer()" class="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black rounded-lg transition">Saltar</button>
+            </div>
+        </div>
+        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden mt-3">
+            <div id="rest-timer-progress" class="h-full bg-amber-500 transition-all duration-300" style="width: 100%"></div>
+        </div>
+    </div>
+
     <!-- CABECERA PRINCIPAL -->
     <header class="header-bg sticky top-0 z-40">
         <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -133,7 +175,7 @@
                 <i data-lucide="timer" class="w-4 h-4"></i> Trabajo Específico
             </button>
             <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="gimnasio">
-                <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio (% 1RM)
+                <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio & Rangos
             </button>
             <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests">
                 <i data-lucide="target" class="w-4 h-4"></i> Test Mensual
@@ -151,7 +193,7 @@
     </nav>
 
     <!-- CONTENEDOR PRINCIPAL -->
-    <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main class="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 pb-28">
 
         <div class="solid-card px-5 py-3.5 flex items-center justify-between">
             <div class="flex items-center gap-2.5 text-sm">
@@ -190,7 +232,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- GRÁFICO 1: CARGA Y VOLUMEN MENSUAL -->
                 <div class="solid-card p-6 lg:col-span-5 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
@@ -206,7 +247,6 @@
                     </div>
                 </div>
 
-                <!-- GRÁFICO 2: DISTRIBUCIÓN DE TRABAJO E INTENSIDAD -->
                 <div class="solid-card p-6 lg:col-span-4 flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-4">
@@ -268,28 +308,198 @@
             </div>
         </section>
 
-        <!-- TAB 3: GIMNASIO & CALCULADORA PORCENTAJES 1RM -->
+        <!-- TAB 3: GIMNASIO & RANGOS SYMMETRY -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
-            
-            <!-- CALCULADORA DE 1RM -->
+
+            <!-- 1. PANEL DE RANGOS TIPO SYMMETRY (GLOBAL, MUSCULAR Y POR EJERCICIO) -->
+            <div class="solid-card p-6 bg-gradient-to-br from-[#141418] via-[#18181f] to-[#121216] border border-amber-500/30">
+                <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
+                    <!-- Rango Global Symmetry -->
+                    <div class="flex items-center gap-4">
+                        <div id="gym-global-rank-badge" class="w-16 h-16 rounded-2xl bg-amber-500/15 border-2 border-amber-500 flex flex-col items-center justify-center shadow-lg">
+                            <i data-lucide="shield" class="w-7 h-7 text-amber-400"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] uppercase font-extrabold tracking-widest text-zinc-400">Rango Global Fuerza</span>
+                                <span class="text-[10px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-500/20">Sistema Symmetry</span>
+                            </div>
+                            <h2 id="gym-global-rank-title" class="text-2xl sm:text-3xl font-black text-white mt-0.5">Hierro I</h2>
+                            <p id="gym-global-rank-sub" class="text-xs text-zinc-400 mt-0.5">Registra series o tests para subir de división</p>
+                        </div>
+                    </div>
+
+                    <!-- Peso Corporal y Acciones Rápidas -->
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
+                        <div class="bg-[#0b0b0c] px-4 py-2.5 rounded-xl border border-zinc-800 flex items-center gap-3">
+                            <div>
+                                <label for="gym-bodyweight-input" class="block text-[10px] uppercase font-bold text-zinc-500">Peso Corporal (kg)</label>
+                                <div class="flex items-center gap-1.5 mt-0.5">
+                                    <input type="number" step="0.5" min="35" max="200" id="gym-bodyweight-input" value="75" onchange="app.updateBodyweight()" class="w-20 px-2 py-1 text-sm font-black text-amber-400 bg-[#18181c] border border-zinc-700 rounded">
+                                    <span class="text-xs text-zinc-500 font-bold">kg</span>
+                                </div>
+                            </div>
+                            <div class="text-[10px] text-zinc-500 max-w-[120px] leading-tight hidden sm:block">
+                                Tus rangos se ajustan a tu peso corporal.
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="app.crearNuevoEjercicio()" class="px-4 py-3 bg-amber-500 hover:bg-amber-400 text-black text-xs font-black rounded-xl flex items-center gap-2 transition shadow-lg shadow-amber-500/10">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Nuevo Ejercicio
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rangos por Grupo Muscular -->
+                <div class="mt-5">
+                    <span class="text-[11px] uppercase font-bold tracking-wider text-zinc-400 block mb-3">Nivel por Grupo Muscular</span>
+                    <div id="gym-muscle-ranks-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+                </div>
+
+                <!-- Rangos por Ejercicio Individual -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-[11px] uppercase font-bold tracking-wider text-zinc-400">Rangos por Ejercicio (Hierro → Simétrico)</span>
+                        <span class="text-[10px] text-zinc-500">Basado en tu mejor 1RM estimado</span>
+                    </div>
+                    <div id="gym-exercise-ranks-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+                </div>
+            </div>
+
+            <!-- 2. ENTRENAMIENTO EN VIVO ESTILO SYMMETRY (CHECKLIST + CUENTA ATRÁS DESCANSO) -->
+            <div class="solid-card p-6 border-emerald-500/30">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <h2 class="text-lg font-black text-white">Sesión de Entrenamiento en Vivo</h2>
+                        </div>
+                        <p class="text-xs text-zinc-400 mt-1">Marca el <strong class="text-emerald-400">✓</strong> al completar cada serie para activar la cuenta atrás de descanso y registrar tu progreso.</p>
+                    </div>
+
+                    <!-- KPIs en Vivo de la Sesión Actual -->
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3 bg-[#0b0b0c] p-2.5 rounded-xl border border-zinc-800">
+                        <div class="px-2 sm:px-3 text-center border-r border-zinc-800">
+                            <span class="block text-[9px] uppercase font-bold text-zinc-500">Duración</span>
+                            <span id="gym-session-timer" class="text-sm sm:text-base font-black text-white tabular-nums">00:00</span>
+                        </div>
+                        <div class="px-2 sm:px-3 text-center border-r border-zinc-800">
+                            <span class="block text-[9px] uppercase font-bold text-zinc-500">Series ✓</span>
+                            <span id="gym-live-sets-count" class="text-sm sm:text-base font-black text-emerald-400 tabular-nums">0 / 1</span>
+                        </div>
+                        <div class="px-2 sm:px-3 text-center">
+                            <span class="block text-[9px] uppercase font-bold text-zinc-500">Volumen</span>
+                            <span id="gym-live-volume" class="text-sm sm:text-base font-black text-amber-400 tabular-nums">0 kg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Selector de Rutinas Rápidas -->
+                <div class="flex flex-wrap items-center justify-between gap-3 my-4 bg-[#121216] p-3 rounded-xl border border-zinc-800/80">
+                    <div class="flex flex-wrap items-center gap-2 flex-1">
+                        <span class="text-[11px] font-bold uppercase text-zinc-400 flex items-center gap-1"><i data-lucide="layers" class="w-3.5 h-3.5 text-amber-500"></i> Rutina:</span>
+                        <select id="gym-routine-select" class="px-3 py-1.5 text-xs font-bold bg-[#1f1f24] text-white border border-zinc-700 rounded-lg">
+                            <option value="">-- Seleccionar Plantilla --</option>
+                            <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
+                            <option value="torso">💪 Tren Superior & Potencia</option>
+                            <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
+                        </select>
+                        <button type="button" onclick="app.cargarRutinaPlantilla()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold rounded-lg border border-zinc-700 transition">Cargar</button>
+                    </div>
+                    <button type="button" onclick="app.guardarRutinaPersonalizada()" class="px-3 py-1.5 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold rounded-lg border border-zinc-700 flex items-center gap-1.5 transition">
+                        <i data-lucide="bookmark-plus" class="w-3.5 h-3.5 text-emerald-400"></i> Guardar como Plantilla
+                    </button>
+                </div>
+
+                <form id="form-gym" class="space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
+                            <input type="date" id="gym-fecha" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre de la Sesión</label>
+                            <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Máxima Tren Inferior" required class="w-full px-4 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Descanso por Defecto</label>
+                            <select id="gym-default-rest" class="w-full px-4 py-2 font-bold text-amber-400">
+                                <option value="60">60 seg (Hipertrofia / Metabólico)</option>
+                                <option value="90" selected>90 seg (Estándar)</option>
+                                <option value="120">2 min (Fuerza)</option>
+                                <option value="180">3 min (Fuerza Máxima / Potencia)</option>
+                                <option value="240">4 min (Básicos Pesados)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
+                            <label class="text-xs uppercase font-bold text-zinc-400">Ejercicios de la Sesión</label>
+                            <button type="button" onclick="app.agregarEjercicioGym()" class="px-3.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 flex items-center gap-1.5 transition">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Añadir Ejercicio
+                            </button>
+                        </div>
+                        <div id="gym-ejercicios-container" class="space-y-4"></div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black py-3 rounded-xl text-sm transition shadow-lg shadow-emerald-500/15 flex items-center justify-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5"></i> Finalizar y Guardar Entrenamiento
+                    </button>
+                </form>
+            </div>
+
+            <!-- 3. TOP GLOBAL DE GIMNASIO (RANKING MUNDIAL POR EJERCICIO SEGÚN PESO Y REPS) -->
+            <div class="solid-card p-6 border-blue-500/30">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+                    <div>
+                        <h3 class="text-lg font-black text-blue-400 flex items-center gap-2">
+                            <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Top Global de Gimnasio 🌍
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-1">Clasificación mundial por ejercicio calculada según peso levantado, repeticiones y rango Symmetry.</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+                        <select id="gym-top-exercise-select" onchange="app.renderGymTopGlobal()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#0b0b0c] text-amber-400 border border-zinc-700 w-full sm:w-auto"></select>
+                        <select id="gym-top-sort-select" onchange="app.renderGymTopGlobal()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#18181f] text-white border border-zinc-700 w-full sm:w-auto">
+                            <option value="1rm">Ordenar: Fuerza Total (Peso + Reps)</option>
+                            <option value="maxkg">Ordenar: Peso Máximo (kg)</option>
+                            <option value="relative">Ordenar: Fuerza Relativa (× Peso Corp.)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-zinc-300">
+                        <thead class="bg-[#121215] text-[11px] font-bold text-zinc-400 uppercase border-b border-zinc-800">
+                            <tr>
+                                <th class="py-3 px-4">Puesto</th>
+                                <th class="py-3 px-4">Atleta</th>
+                                <th class="py-3 px-4">Rango Symmetry</th>
+                                <th class="py-3 px-4 text-right">Mejor Serie (Peso × Reps)</th>
+                                <th class="py-3 px-4 text-right">1RM Est. / Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gym-top-table-body" class="divide-y divide-zinc-800/60 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. CALCULADORA INTERACTIVA % 1RM -->
             <div class="solid-card p-6 bg-gradient-to-r from-[#16161a] to-[#1f1f28] border border-amber-500/30">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                     <div>
                         <h2 class="text-lg font-black text-amber-500 flex items-center gap-2">
                             <i data-lucide="calculator" class="w-5 h-5"></i> Calculadora Interactiva % 1RM
                         </h2>
-                        <p class="text-xs text-zinc-400 mt-1">Mueve la barrita para saber cuántos kilos debes cargar en tu entrenamiento según tu test de fuerza.</p>
+                        <p class="text-xs text-zinc-400 mt-1">Mueve la barrita para saber cuántos kilos cargar según tu máximo registrado.</p>
                     </div>
-                    <button type="button" onclick="app.crearNuevoEjercicio()" class="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/30 flex items-center gap-2 transition">
-                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Crear Nuevo Ejercicio
-                    </button>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                     <div class="md:col-span-4 space-y-2">
                         <label class="block text-xs uppercase font-bold text-zinc-400">Selecciona Ejercicio</label>
-                        <select id="calc-ejercicio-select" onchange="app.actualizarCalculadoraSlider()" class="w-full px-4 py-2.5 font-bold text-white text-sm">
-                        </select>
+                        <select id="calc-ejercicio-select" onchange="app.actualizarCalculadoraSlider()" class="w-full px-4 py-2.5 font-bold text-white text-sm"></select>
                         <p class="text-[11px] text-zinc-500 flex justify-between" id="calc-1rm-info">1RM Registrado: <strong class="text-amber-400">-- kg</strong></p>
                     </div>
 
@@ -319,58 +529,31 @@
                 </div>
             </div>
 
-            <!-- REGISTRO Y CONFIGURACIÓN -->
+            <!-- 5. 1RM BASE + GRÁFICA DE PROGRESIÓN POR EJERCICIO -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="solid-card p-6">
                     <div class="flex justify-between items-center mb-3">
                         <h2 class="text-base font-bold text-amber-500 flex items-center gap-2"><i data-lucide="settings-2" class="w-5 h-5"></i> 1RM Base Registrados</h2>
                     </div>
-                    <p class="text-[11px] text-zinc-400 mb-4">Tus máximos teóricos registrados para cada ejercicio de tu catálogo.</p>
+                    <p class="text-[11px] text-zinc-400 mb-4">Se actualizan solos al superar tu marca o puedes editarlos manualmente.</p>
                     <div id="rm-config-list" class="space-y-2 max-h-80 overflow-y-auto pr-1"></div>
                 </div>
 
-                <div class="solid-card p-6 lg:col-span-2">
-                    <h2 class="text-base font-bold mb-5 text-amber-500 flex items-center gap-2"><i data-lucide="plus-circle" class="w-5 h-5"></i> Registrar Entrenamiento de Fuerza</h2>
-                    <form id="form-gym" class="space-y-5">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Fecha</label>
-                                <input type="date" id="gym-fecha" required class="w-full px-4 py-2">
-                            </div>
-                            <div>
-                                <label class="block text-xs uppercase font-bold text-zinc-500 mb-1.5">Nombre Sesión</label>
-                                <input type="text" id="gym-nombre" placeholder="Ej: Fuerza Explosiva Pierna" required class="w-full px-4 py-2">
-                            </div>
+                <div class="solid-card p-6 lg:col-span-2 border-emerald-500/20">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                        <div>
+                            <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2">
+                                <i data-lucide="trending-up" class="w-5 h-5"></i> Progresión y Series por Ejercicio
+                            </h3>
+                            <p class="text-xs text-zinc-400 mt-1">Pasa el cursor o toca los puntos para ver el desglose exacto de series y reps.</p>
                         </div>
-
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between border-b border-zinc-800 pb-2">
-                                <label class="text-xs uppercase font-bold text-zinc-500">Ejercicios de la Sesión</label>
-                                <button type="button" onclick="app.agregarEjercicioGym()" class="px-3 py-1 bg-[#1f1f23] hover:bg-[#27272a] text-amber-500 text-xs font-bold rounded border border-zinc-700 flex items-center gap-1">+ Añadir Ejercicio</button>
-                            </div>
-                            <div id="gym-ejercicios-container" class="space-y-4"></div>
-                        </div>
-
-                        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold py-2.5 rounded-lg text-sm transition">Guardar Entrenamiento de Gimnasio</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- NUEVO: GRÁFICA DE PROGRESIÓN POR EJERCICIO (KILOS, SERIES Y REPS) -->
-            <div class="solid-card p-6 border-emerald-500/30">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                    <div>
-                        <h3 class="font-bold text-base text-emerald-400 flex items-center gap-2">
-                            <i data-lucide="trending-up" class="w-5 h-5"></i> Progresión y Series por Ejercicio
-                        </h3>
-                        <p class="text-xs text-zinc-400 mt-1">Evolución de tus entrenamientos. Pasa el ratón/dedo por los puntos de la gráfica para ver las series y repeticiones exactas de ese día.</p>
+                        <select id="gym-chart-filter" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23] text-emerald-400 border border-zinc-700"></select>
                     </div>
-                    <select id="gym-chart-filter" onchange="app.renderCharts()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#1f1f23] text-emerald-400 border border-zinc-700"></select>
+                    <div class="h-72 w-full"><canvas id="gymProgressionChart"></canvas></div>
                 </div>
-                <div class="h-80 w-full"><canvas id="gymProgressionChart"></canvas></div>
             </div>
 
-            <!-- HISTORIAL GIMNASIO -->
+            <!-- 6. HISTORIAL DE GIMNASIO -->
             <div class="solid-card p-6">
                 <h3 class="font-bold text-base mb-4 text-white flex items-center gap-2"><i data-lucide="book-open" class="w-5 h-5 text-zinc-400"></i> Historial de Gimnasio</h3>
                 <div id="lista-gym" class="space-y-3"></div>
@@ -575,7 +758,7 @@
             </div>
         </section>
 
-        <!-- TAB 6: ARCADE ATHLETICS (100M LISOS, JABALINA, LONGITUD) -->
+        <!-- TAB 6: ARCADE ATHLETICS -->
         <section id="tab-arcade" class="space-y-6 tab-content hidden">
             <div class="solid-card p-6 border-amber-500/30">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
@@ -593,11 +776,9 @@
                     </div>
                 </div>
 
-                <!-- CANVAS DE JUEGO -->
                 <div class="relative w-full overflow-hidden bg-[#101014] rounded-xl border border-zinc-800 flex flex-col items-center">
                     <canvas id="gameCanvas" width="800" height="320" class="w-full max-w-[800px] h-auto bg-slate-900"></canvas>
                     
-                    <!-- HUD / Instrucciones en vivo -->
                     <div class="w-full p-4 bg-[#16161a] border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-300">
                         <div id="arcade-instructions" class="flex items-center gap-2">
                             <span class="bg-amber-500/20 text-amber-400 px-2 py-1 rounded font-bold uppercase">Teclas</span>
@@ -611,7 +792,6 @@
                     </div>
                 </div>
 
-                <!-- BOTOES DE CONTROL TÁCTIL EN PANTALLA (Para Móviles) -->
                 <div class="grid grid-cols-3 gap-3 mt-4">
                     <button id="btn-touch-left" class="py-5 bg-zinc-800 active:bg-amber-500 active:text-black font-black text-lg rounded-xl border border-zinc-700 select-none">
                         ◀ PASO IZQ (A / ◄)
@@ -637,11 +817,10 @@
                         <p class="text-xs text-zinc-400 mt-1">Compara tus marcas con las de todos los atletas registrados en la plataforma.</p>
                     </div>
 
-                    <!-- Filtros de Clasificación -->
                     <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-                        
                         <select id="ranking-tipo" onchange="app.updateRankingDropdown()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#0b0b0c] text-white border border-zinc-700 w-full sm:w-auto">
                             <option value="competicion">Competición Oficial</option>
+                            <option value="gimnasio">Gimnasio (1RM Peso + Reps)</option>
                             <option value="test">Test Mensual</option>
                             <option value="arcade">Juego Arcade 🕹️</option>
                         </select>
@@ -651,11 +830,9 @@
 
                         <select id="ranking-temporada" onchange="app.renderRankingTable()" class="px-3 py-2 text-xs font-bold rounded-lg bg-[#1a1a20] text-emerald-400 border border-emerald-900/50 w-full sm:w-auto">
                         </select>
-
                     </div>
                 </div>
 
-                <!-- TABLA DEL RANKING GLOBAL -->
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm text-zinc-300">
                         <thead class="bg-[#121215] text-xs font-bold text-zinc-400 uppercase border-b border-zinc-800">
@@ -666,9 +843,7 @@
                                 <th class="py-3 px-4 text-center">Fecha / Registro</th>
                             </tr>
                         </thead>
-                        <tbody id="ranking-table-body" class="divide-y divide-zinc-800/60 font-medium">
-                            <!-- Filas cargadas dinámicamente -->
-                        </tbody>
+                        <tbody id="ranking-table-body" class="divide-y divide-zinc-800/60 font-medium"></tbody>
                     </table>
                 </div>
             </div>
@@ -676,7 +851,6 @@
 
     </main>
 
-    <!-- ARCHIVO JAVASCRIPT EXTERNO -->
     <script type="module" src="app.js"></script>
 </body>
 </html>
