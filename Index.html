@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Athletics Pro - Tracker & Arcade</title>
+    <title>Athletics Pro - Tracker &amp; Arcade</title>
     
     <meta name="theme-color" content="#f59e0b">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b' stroke='%23f59e0b' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59e0b'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E">
     
     <link rel="manifest" href="manifest.json">
     
@@ -25,13 +26,131 @@
     <link rel="stylesheet" href="styles.css">
 
     <style>
-        @keyframes symmetricGlow {
-            0%, 100% { box-shadow: 0 0 12px rgba(250, 204, 21, 0.35), inset 0 0 8px rgba(250, 204, 21, 0.2); }
-            50% { box-shadow: 0 0 22px rgba(56, 189, 248, 0.5), inset 0 0 12px rgba(250, 204, 21, 0.35); }
+        body {
+            background-color: #09090b;
+            color: #f4f4f5;
+            font-family: 'Inter', sans-serif;
         }
-        .rank-symmetric-glow {
-            animation: symmetricGlow 2.8s infinite ease-in-out;
+        .header-bg {
+            background-color: rgba(11, 11, 12, 0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.8);
         }
+        .solid-card {
+            background-color: #141417;
+            border: 1px solid #27272a;
+            border-radius: 1rem;
+        }
+        input, select, textarea {
+            background-color: #0e0e11;
+            border: 1px solid #27272a;
+            border-radius: 0.5rem;
+            color: #f4f4f5;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #f59e0b;
+        }
+        .tab-btn {
+            background-color: #141417;
+            color: #a1a1aa;
+            border: 1px solid #27272a;
+            font-weight: 600;
+        }
+        .tab-btn:hover {
+            color: #ffffff;
+            border-color: #3f3f46;
+        }
+        .tab-btn.active {
+            background-color: #f59e0b;
+            color: #09090b;
+            border-color: #f59e0b;
+            font-weight: 800;
+        }
+        #toast-container {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.25rem;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .toast {
+            background-color: #18181b;
+            color: #f4f4f5;
+            border: 1px solid #3f3f46;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* ==========================================
+           RANGO OLÍMPICO: ANIMACIÓN CROMÁTICA DINÁMICA
+           ========================================== */
+        @keyframes olympicChromaticFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes olympicChromaticGlow {
+            0% {
+                box-shadow: 0 0 16px rgba(255, 0, 128, 0.45), inset 0 0 10px rgba(255, 215, 0, 0.25);
+                border-color: #ff0080;
+            }
+            25% {
+                box-shadow: 0 0 18px rgba(255, 200, 0, 0.5), inset 0 0 10px rgba(0, 230, 118, 0.25);
+                border-color: #ffd700;
+            }
+            50% {
+                box-shadow: 0 0 18px rgba(0, 229, 255, 0.5), inset 0 0 10px rgba(168, 85, 247, 0.25);
+                border-color: #00e5ff;
+            }
+            75% {
+                box-shadow: 0 0 18px rgba(168, 85, 247, 0.5), inset 0 0 10px rgba(255, 0, 128, 0.25);
+                border-color: #a855f7;
+            }
+            100% {
+                box-shadow: 0 0 16px rgba(255, 0, 128, 0.45), inset 0 0 10px rgba(255, 215, 0, 0.25);
+                border-color: #ff0080;
+            }
+        }
+
+        .rank-olympic-chromatic {
+            background: linear-gradient(120deg, rgba(255, 0, 128, 0.22), rgba(255, 140, 0, 0.22), rgba(255, 215, 0, 0.22), rgba(0, 230, 118, 0.22), rgba(0, 229, 255, 0.22), rgba(168, 85, 247, 0.22), rgba(255, 0, 128, 0.22)) !important;
+            background-size: 300% 300% !important;
+            animation: olympicChromaticFlow 4.5s ease infinite, olympicChromaticGlow 4.5s ease infinite !important;
+        }
+
+        .rank-olympic-pill {
+            background: linear-gradient(90deg, #ff0080, #ff8c00, #ffd700, #00e676, #00e5ff, #a855f7, #ff0080) !important;
+            background-size: 300% 300% !important;
+            animation: olympicChromaticFlow 3.5s linear infinite !important;
+            color: #09090b !important;
+            font-weight: 900 !important;
+            border: 1px solid rgba(255, 255, 255, 0.65) !important;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        .olympic-text-chromatic {
+            background: linear-gradient(90deg, #ff4da6, #ffb703, #00f5d4, #38bdf8, #c084fc, #ff4da6);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent !important;
+            animation: olympicChromaticFlow 3.5s linear infinite;
+        }
+
         .serie-completed {
             background-color: rgba(16, 185, 129, 0.12) !important;
             border-color: rgba(16, 185, 129, 0.45) !important;
@@ -76,7 +195,7 @@
         </div>
     </div>
 
-    <!-- MODAL RESUMEN POST-ENTRENAMIENTO (VICTORY CARD) -->
+    <!-- MODAL RESUMEN POST-ENTRENAMIENTO -->
     <div id="workout-summary-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm hidden p-4">
         <div class="solid-card p-6 sm:p-8 w-full max-w-md border-2 border-amber-500/50 shadow-2xl relative overflow-hidden">
             <div class="text-center">
@@ -117,17 +236,17 @@
     </div>
 
     <script>
-        let isRegistering = false;
-        document.getElementById('tab-login').addEventListener('click', () => {
-            isRegistering = false;
+        window.isRegistering = false;
+        document.getElementById('tab-login').addEventListener('click', function() {
+            window.isRegistering = false;
             document.getElementById('container-username').classList.add('hidden');
             document.getElementById('tab-login').className = "flex-1 py-2 text-xs font-bold rounded-md bg-[#27272a] text-white transition";
             document.getElementById('tab-register').className = "flex-1 py-2 text-xs font-bold rounded-md text-zinc-500 hover:text-zinc-300 transition";
             document.getElementById('btn-submit-auth').textContent = "Entrar";
             document.getElementById('auth-error').classList.add('hidden');
         });
-        document.getElementById('tab-register').addEventListener('click', () => {
-            isRegistering = true;
+        document.getElementById('tab-register').addEventListener('click', function() {
+            window.isRegistering = true;
             document.getElementById('container-username').classList.remove('hidden');
             document.getElementById('tab-register').className = "flex-1 py-2 text-xs font-bold rounded-md bg-[#27272a] text-white transition";
             document.getElementById('tab-login').className = "flex-1 py-2 text-xs font-bold rounded-md text-zinc-500 hover:text-zinc-300 transition";
@@ -215,13 +334,13 @@
                 <i data-lucide="timer" class="w-4 h-4"></i> Trabajo Específico
             </button>
             <button onclick="app.switchTab('gimnasio')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="gimnasio">
-                <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio & Rangos
+                <i data-lucide="dumbbell" class="w-4 h-4"></i> Gimnasio &amp; Rangos
             </button>
             <button onclick="app.switchTab('tests')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="tests">
                 <i data-lucide="target" class="w-4 h-4"></i> Test Mensual
             </button>
             <button onclick="app.switchTab('competiciones')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2" data-target="competiciones">
-                <i data-lucide="award" class="w-4 h-4"></i> Competiciones & PBs
+                <i data-lucide="award" class="w-4 h-4"></i> Competiciones &amp; PBs
             </button>
             <button onclick="app.switchTab('arcade')" class="tab-btn px-5 py-2.5 rounded-lg text-sm transition whitespace-nowrap flex items-center gap-2 text-amber-400 border-amber-500/30" data-target="arcade">
                 <i data-lucide="gamepad-2" class="w-4 h-4"></i> Arcade Athletics 🕹️
@@ -375,10 +494,10 @@
             </div>
         </section>
 
-        <!-- TAB 3: GIMNASIO & RANGOS SYMMETRY -->
+        <!-- TAB 3: GIMNASIO & RANGOS -->
         <section id="tab-gimnasio" class="space-y-6 tab-content hidden">
 
-            <!-- 1. PANEL DE RANGOS TIPO SYMMETRY -->
+            <!-- 1. PANEL DE RANGOS -->
             <div class="solid-card p-6 bg-gradient-to-br from-[#141418] via-[#18181f] to-[#121216] border border-amber-500/30">
                 <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-zinc-800/80">
                     <div class="flex items-center gap-4">
@@ -388,7 +507,7 @@
                         <div>
                             <div class="flex items-center gap-2">
                                 <span class="text-[10px] uppercase font-extrabold tracking-widest text-zinc-400">Rango Global Fuerza</span>
-                                <span class="text-[10px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-500/20">Sistema Symmetry</span>
+                                <span class="text-[10px] bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded font-bold border border-amber-500/20">Sistema de Rangos</span>
                             </div>
                             <h2 id="gym-global-rank-title" class="text-2xl sm:text-3xl font-black text-white mt-0.5">Hierro I</h2>
                             <p id="gym-global-rank-sub" class="text-xs text-zinc-400 mt-0.5">Registra series o tests para subir de división</p>
@@ -422,7 +541,7 @@
 
                 <div class="mt-6">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-[11px] uppercase font-bold tracking-wider text-zinc-400">Rangos por Ejercicio (Hierro → Simétrico)</span>
+                        <span class="text-[11px] uppercase font-bold tracking-wider text-zinc-400">Rangos por Ejercicio (Hierro → Olímpico)</span>
                         <span class="text-[10px] text-zinc-500">Basado en tu mejor 1RM estimado</span>
                     </div>
                     <div id="gym-exercise-ranks-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
@@ -432,7 +551,7 @@
             <!-- 2. ENTRENAMIENTO EN VIVO (CON PANTALLA DE INICIO + CRONO CONTROLADO) -->
             <div class="solid-card p-6 border-emerald-500/30">
                 
-                <!-- VISTA A: LANZADOR PRE-ENTRENAMIENTO (CUANDO AÚN NO HAS EMPEZADO) -->
+                <!-- VISTA A: LANZADOR PRE-ENTRENAMIENTO -->
                 <div id="gym-preworkout-launcher" class="flex flex-col md:flex-row items-center justify-between gap-6 py-2">
                     <div class="flex items-start gap-4">
                         <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
@@ -447,7 +566,7 @@
                                 <select id="gym-pre-routine-select" class="px-3 py-2 text-xs font-bold bg-[#121216] text-white border border-zinc-700 rounded-lg">
                                     <option value="">Entrenamiento Libre (Vacío)</option>
                                     <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
-                                    <option value="torso">💪 Tren Superior & Potencia</option>
+                                    <option value="torso">💪 Tren Superior &amp; Potencia</option>
                                     <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
                                 </select>
                             </div>
@@ -459,7 +578,7 @@
                     </button>
                 </div>
 
-                <!-- VISTA B: ESPACIO DE ENTRENAMIENTO ACTIVO (SE ABRE AL DAR A EMPEZAR) -->
+                <!-- VISTA B: ESPACIO DE ENTRENAMIENTO ACTIVO -->
                 <div id="gym-active-workspace" class="hidden">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
                         <div>
@@ -489,14 +608,13 @@
                         </div>
                     </div>
 
-                    <!-- Selector de Rutinas Rápidas dentro de la sesión -->
                     <div class="flex flex-wrap items-center justify-between gap-3 my-4 bg-[#121216] p-3 rounded-xl border border-zinc-800/80">
                         <div class="flex flex-wrap items-center gap-2 flex-1">
                             <span class="text-[11px] font-bold uppercase text-zinc-400 flex items-center gap-1"><i data-lucide="layers" class="w-3.5 h-3.5 text-amber-500"></i> Plantilla:</span>
                             <select id="gym-routine-select" class="px-3 py-1.5 text-xs font-bold bg-[#1f1f24] text-white border border-zinc-700 rounded-lg">
                                 <option value="">-- Seleccionar Plantilla --</option>
                                 <option value="explosiva">⚡ Fuerza Explosiva Atletismo (Pierna)</option>
-                                <option value="torso">💪 Tren Superior & Potencia</option>
+                                <option value="torso">💪 Tren Superior &amp; Potencia</option>
                                 <option value="fullbody">🔥 Full Body Velocista / Saltador</option>
                             </select>
                             <button type="button" onclick="app.cargarRutinaPlantilla()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-amber-400 text-xs font-bold rounded-lg border border-zinc-700 transition">Cargar</button>
@@ -552,7 +670,7 @@
                         <h3 class="text-lg font-black text-blue-400 flex items-center gap-2">
                             <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i> Top Global de Gimnasio 🌍
                         </h3>
-                        <p class="text-xs text-zinc-400 mt-1">Clasificación mundial por ejercicio calculada según peso levantado, repeticiones y rango Symmetry.</p>
+                        <p class="text-xs text-zinc-400 mt-1">Clasificación mundial por ejercicio calculada según peso levantado, repeticiones y rango.</p>
                     </div>
 
                     <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
@@ -571,7 +689,7 @@
                             <tr>
                                 <th class="py-3 px-4">Puesto</th>
                                 <th class="py-3 px-4">Atleta</th>
-                                <th class="py-3 px-4">Rango Symmetry</th>
+                                <th class="py-3 px-4">Rango</th>
                                 <th class="py-3 px-4 text-right">Mejor Serie (Peso × Reps)</th>
                                 <th class="py-3 px-4 text-right">1RM Est. / Ratio</th>
                             </tr>
@@ -920,7 +1038,7 @@
             </div>
         </section>
 
-        <!-- TAB 7: RANKING GLOBAL (COMUNIDAD FIREBASE) -->
+        <!-- TAB 7: RANKING GLOBAL -->
         <section id="tab-ranking" class="space-y-6 tab-content hidden">
             <div class="solid-card p-6 border-blue-500/30">
                 <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
